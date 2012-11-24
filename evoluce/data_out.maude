@@ -1,3 +1,40 @@
+fmod SEQENCE{X :: TRIV} is
+	
+	sorts NeList{X} List{X} .
+	subsort X$Elt < NeList{X} < List{X} .
+	pr QID .
+	
+	op [] : -> List{X} [ctor] .
+	op __ : List{X} List{X} -> List{X} [ctor assoc] .
+	
+	
+	
+	op name : X$Elt -> Qid .
+	
+	op head : List{X} -> X$Elt .
+	
+	var E : X$Elt .
+	var L : List{X} .
+	var Q : Qid .
+	
+	eq [] L = L .
+	eq L [] = L .
+
+---	unused
+---	eq head([]) = [] .
+---	eq head(E L) = E .
+---	eq head(E) = E .
+	
+	op containsName : List{X} Qid -> Bool .
+	
+	eq containsName([], Q) = false .
+	eq containsName(E, Q) = name(E) == Q .
+	ceq containsName(E L, Q) = true if name(E) == Q .
+	eq containsName(E L, Q) = containsName(L, Q) [owise].
+	
+endfm
+	
+
 fmod DIS is
 		
 	sorts  Table PrimaryKey ForeignKey Column Constraint Schema Type .
@@ -23,10 +60,10 @@ endv
 fmod DIR is
 	pr DIS .
 	pr QID .
-	pr LIST{Table} .
-	pr LIST{Column} .
-	pr LIST{ForeignKey} .
-	pr LIST{Constraint} .
+	pr SEQENCE{Table} .
+	pr SEQENCE{Column} .
+	pr SEQENCE{ForeignKey} .
+	pr SEQENCE{Constraint} .
 
 --- Constraint = < NOTNULL | UNIQUE >	
 	op NOTNULL : -> Constraint [ctor] .
@@ -126,8 +163,8 @@ endv
 
 fmod DATA is
 	pr PREDATA .
-	pr LIST{FKVal} .
-	pr LIST{ColumnVal} .
+	pr SEQENCE{FKVal} .
+	pr SEQENCE{ColumnVal} .
 	
 	sort Data .
 	
@@ -156,7 +193,7 @@ endv
 
 fmod DATABASE is
 	pr DATA .
-	pr LIST{Row} .
+	pr SEQENCE{Row} .
 	
 	sort Database .
 
@@ -176,17 +213,18 @@ fmod DATABASE is
 	eq data(database(Tabs, Rows)) = Rows .
 
 
-  --- DDL
-
---- CREATE TABLE "table_name" ("column 1" "data_type_for_column_1", ... )
-	op createTable : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
-	
+--- DATA DEFINITION LANGUAGE
 	var D : Database .
 	var N : Qid .
 	var PK : PrimaryKey .
 	var Cols : List{Column} .
 	var FKs : List{ForeignKey} .
+
+
+--- CREATE TABLE "table_name" ("column 1" "data_type_for_column_1", ... )
+	op CREATE_TABLE : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
+	ceq CREATE_TABLE(D, N, PK, Cols, FKs) = D  if containsName(tables(D), N) .
+	eq CREATE_TABLE(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
 	
-	eq createTable(D, N, PK, Cols, FKs) = D .
-	
+
 endfm
