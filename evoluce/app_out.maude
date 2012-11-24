@@ -1,0 +1,122 @@
+fmod AS is
+	
+	sort Bound .	
+	sorts Class Association Property Type .
+	
+---NAT and "*"?	
+	op |* : -> Bound [ctor] .	
+	op |0 :	-> Bound [ctor] .
+	op |1 : -> Bound [ctor] .
+	
+endfm
+
+view Association from TRIV to AS is
+	sort Elt to Association .
+endv 
+
+view Property from TRIV to AS is
+	sort Elt to Property .
+endv
+
+view Class from TRIV to AS is
+	sort Elt to Class .
+endv
+
+fmod AR is
+	pr AS .
+	pr QID .
+	pr BOOL .
+	pr LIST{Property} .
+	pr LIST{Association} .
+	
+	op STRING : -> Type [ctor] .
+	
+--- Class = < label, property*, association* >
+	op class : Qid List{Property} List{Association} -> Class [ctor] .
+	op name : Class -> Qid .
+	op properties : Class -> List{Property} .
+	op associations : Class -> List{Association} .
+	
+--- Property = < label, type, defaultValue, ordered, unique, upperBound, lowerBound >
+	op property : Qid Type String Bool Bool Bound Bound -> Property [ctor] .
+	op name : Property -> Qid . 
+	op type : Property -> Type .
+	op defaultValue : Property -> String .
+	op ordered : Property -> Bool .
+	op unique : Property -> Bool .
+	op upperBound : Property -> Bound .
+	op lowwerBound : Property -> Bound . 
+	
+--- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound 
+	op association : Qid Qid Bool Bool Bound Bound -> Association [ctor] .
+	op name : Association -> Qid .
+	op reference : Association -> Qid .
+	op ordered : Association -> Bool .
+	op unique : Association -> Bool .
+	op upperBound : Association -> Bound .
+	op lowwerBound : Association -> Bound .
+	
+	
+endfm
+
+fmod APPDATA is
+	pr AR .
+	pr LIST{Qid} .
+	pr LIST{String} .
+	
+	sorts PropertyValue AssociationValue .
+	
+--- propVal = < propertyName, values >	
+	op propVal : Qid List{String} -> PropertyValue [ctor] .
+	op reference : PropertyValue -> Qid .
+	op val : PropertyValue -> List{String} .
+	
+--- asocVal = < accociationName, referencedInstancies >
+	op assocVal : Qid List{Qid} -> AssociationValue [ctor] .
+	op reference : AssociationValue -> Qid .
+	op val : AssociationValue -> List{Qid} .
+	
+endfm
+
+view PropertyValue from TRIV to APPDATA is
+	sort Elt to PropertyValue .
+endv
+
+view AssociationValue from TRIV to APPDATA is
+	sort Elt to AssociationValue .
+endv
+
+fmod IN is
+	pr APPDATA .
+	pr LIST{PropertyValue} .
+	pr LIST{AssociationValue} . 
+	
+	sort Instance .
+
+--- instance = < name, property*, association* >	
+	op instance : Qid List{PropertyValue} List{AssociationValue} -> Instance [ctor] .
+	op name : Instance -> Qid .
+	op props : Instance -> List{PropertyValue} .
+	op assocs : Instance -> List{AssociationValue} .
+
+endfm
+
+view Instance from TRIV to IN is
+	sort Elt to Instance .
+endv
+
+fmod APP is
+	pr IN .
+	pr LIST{Instance} .
+	pr LIST{Class} .
+	
+	sort Application .
+
+--- application = <name, class*, instance* >	
+	op application : Qid List{Class} List{Instance} -> Application [ctor] .
+	op name : Application -> Qid .
+	op classes : Application -> List{Class} .
+	op instances : Application -> List{Instance} .
+	
+	
+endfm

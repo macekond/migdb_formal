@@ -1,0 +1,51 @@
+fmod DIS is
+	pr STRING .
+	
+	sorts  Row PrimaryKey ForeignKey Column Constraint Schema Type .
+		
+endfm
+
+view Row from TRIV to DIS is
+	sort Elt to Row .
+endv
+
+view Column from TRIV to DIS is
+	sort Elt to Column .
+endv
+
+view Constraint from TRIV to DIS is
+	sort Elt to Constraint .
+endv
+
+view ForeignKey from TRIV to DIS is
+	sort Elt to ForeignKey .
+endv
+
+fmod DIR is
+	pr DIS .
+	pr QID .
+	pr LIST{Row} .
+	pr LIST{Column} .
+	pr LIST{ForeignKey} .
+	pr LIST{Constraint} .
+	
+	op NOTNULL : -> Constraint [ctor] .
+	op UNIQUE : -> Constraint [ctor] .		
+	op STRING : -> Type [ctor] .
+	
+	op row : Qid PrimaryKey List{Column} List{ForeignKey} -> Row [ctor].
+	op column : Qid Type List{Constraint} String -> Column [ctor] .
+	op foreignKey : Qid Qid Nat -> ForeignKey [ctor] . --- Constraints on FK?
+	op primaryKey : Nat -> PrimaryKey [ctor] . 
+	
+endfm
+
+
+fmod DATABASE is
+	pr DIR .
+	
+	sort Database .
+	
+	op database : List{Row} -> Database [ctor] .
+	
+endfm
