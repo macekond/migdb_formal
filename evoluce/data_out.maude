@@ -221,10 +221,16 @@ fmod DATABASE is
 	var FKs : List{ForeignKey} .
 
 
---- CREATE TABLE "table_name" ("column 1" "data_type_for_column_1", ... )
+--- CREATE TABLE
+--- all referenced tables have to exist
 	op CREATE_TABLE : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
-	ceq CREATE_TABLE(D, N, PK, Cols, FKs) = D  if containsName(tables(D), N) .
+	ceq CREATE_TABLE(D, N, PK, Cols, FKs) = D  if containsName(tables(D), N) /\ referencesExists .
 	eq CREATE_TABLE(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
 	
-
+--- DROP TABLE	
+--- there is no data in table
+--- the table is not referenced by a FK
+	op DELETE_TABLE : Database Qid -> Database .
+	ceq DELETE_TABLE(D, N) = D  if (not containsName(tables(D), N)) \/ dataExist \/ isReferenced .
+	eq DELETE_TABLE(D, N) = database(removeByName(tables(D)), data(D)) .
 endfm
