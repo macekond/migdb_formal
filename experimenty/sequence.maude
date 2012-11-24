@@ -1,76 +1,230 @@
-%
-%  sequence
-%
-%  Created by Ondřej Macek on 2012-11-24.
-%  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
-%
-\documentclass[]{article}
+fmod SEQENCE{X :: TRIV} is
+	
+	sorts NeList{X} List{X} .
+	subsort X$Elt < NeList{X} < List{X} .
+	pr QID .
+	
+	op [] : -> List{X} [ctor] .
+	op __ : List{X} List{X} -> List{X} [ctor assoc] .
+	
+	
+	
+	op name : X$Elt -> Qid .
+	
+	op head : List{X} -> X$Elt .
+	
+	var E : X$Elt .
+	var L : List{X} .
+	var Q : Qid .
+	
+	eq [] L = L .
+	eq L [] = L .
 
-% Use utf-8 encoding for foreign characters
-\usepackage[utf8]{inputenc}
+---	unused
+---	eq head([]) = [] .
+---	eq head(E L) = E .
+---	eq head(E) = E .
+	
+	op containsName : List{X} Qid -> Bool .
+	
+	eq containsName([], Q) = false .
+	eq containsName(E, Q) = name(E) == Q .
+	ceq containsName(E L, Q) = true if name(E) == Q .
+	eq containsName(E L, Q) = containsName(L, Q) [owise].
+	
+endfm
+	
 
-% Setup for fullpage use
-\usepackage{fullpage}
+fmod DIS is
+		
+	sorts  Table PrimaryKey ForeignKey Column Constraint Schema Type .
+	
+endfm
 
-% Uncomment some of the following if you use the features
-%
-% Running Headers and footers
-%\usepackage{fancyhdr}
+view Table from TRIV to DIS is
+	sort Elt to Table .
+endv
 
-% Multipart figures
-%\usepackage{subfigure}
+view Column from TRIV to DIS is
+	sort Elt to Column .
+endv
 
-% More symbols
-%\usepackage{amsmath}
-%\usepackage{amssymb}
-%\usepackage{latexsym}
+view Constraint from TRIV to DIS is
+	sort Elt to Constraint .
+endv
 
-% Surround parts of graphics with box
-\usepackage{boxedminipage}
+view ForeignKey from TRIV to DIS is
+	sort Elt to ForeignKey .
+endv
 
-% Package for including code in the document
-\usepackage{listings}
+fmod DIR is
+	pr DIS .
+	pr QID .
+	pr SEQENCE{Table} .
+	pr SEQENCE{Column} .
+	pr SEQENCE{ForeignKey} .
+	pr SEQENCE{Constraint} .
 
-% If you want to generate a toc for each chapter (use with book)
-\usepackage{minitoc}
+--- Constraint = < NOTNULL | UNIQUE >	
+	op NOTNULL : -> Constraint [ctor] .
+	op UNIQUE : -> Constraint [ctor] .
 
-% This is now the recommended way for checking for PDFLaTeX:
-\usepackage{ifpdf}
+--- Type = < STRING >				
+	op STRING : -> Type [ctor] .
+	
+--- Table = < name, PK, column*, foreignKey* >	
+	op table : Qid PrimaryKey List{Column} List{ForeignKey} -> Table [ctor].
+	op name : Table -> Qid .
+	op pkName : Table -> Qid .
+	op columns : Table -> List{Column} . 
+	op foreignKeys : Table -> List{ForeignKey} . 
+	
+--- Column = < name, type, constraint* >	
+	op column : Qid Type List{Constraint} -> Column [ctor] .
+	op name : Column -> Qid .
+	op type : Column -> Type .
+	op constraints : Column -> List{Constraint} .
 
-%\newif\ifpdf
-%\ifx\pdfoutput\undefined
-%\pdffalse % we are not running PDFLaTeX
-%\else
-%\pdfoutput=1 % we are running PDFLaTeX
-%\pdftrue
-%\fi
+--- ForeignKey = < name, referencedTableName >	
+--- At the moment it is possible to reference an ID column
+	op foreignKey : Qid Qid -> ForeignKey [ctor] . --- Constraints on FK?
+	op name : ForeignKey -> Qid .
+	op reference : ForeignKey -> Qid .
+	
+--- PrimaryKey = < name > 	
+--- Sequence could be part of primary key
+	op primaryKey : Qid -> PrimaryKey [ctor] . 
+	op name : PrimaryKey -> Qid .
 
-\ifpdf
-\usepackage[pdftex]{graphicx}
-\else
-\usepackage{graphicx}
-\fi
-\title{A LaTeX Article}
-\author{  }
+		
+	var N M : Qid .
+	var PK : PrimaryKey .
+	var Cols : List{Column} .
+	var FKs : List{ForeignKey} .
+	var T : Type .
+	var Cons : List{Constraint} .
+	
+	eq name(primaryKey(N)) = N .		
+	
+	eq name(table(N, PK, Cols, FKs)) = N .
+	eq pkName(table(N, PK, Cols, FKs)) = name(PK) .
+	eq columns(table(N, PK, Cols, FKs)) = Cols .
+	eq foreignKeys(table(N, PK, Cols, FKs)) = FKs .
+	
+	eq name(column(N, T, Cons)) = N .
+	eq type(column(N, T, Cons)) = T .
+	eq constraints(column(N, T, Cons)) = Cons .
+	
+	eq name(foreignKey(N, M)) = N .
+	eq reference(foreignKey(N, M)) = M .
 
-\date{2012-11-24}
+endfm
 
-\begin{document}
+fmod PREDATA is
+	pr DIR .
+	pr NAT .
+		
+	sort ColumnVal PKVal FKVal .
 
-\ifpdf
-\DeclareGraphicsExtensions{.pdf, .jpg, .tif}
-\else
-\DeclareGraphicsExtensions{.eps, .jpg}
-\fi
+--- ColumnValue = < columnName, value >	
+	op col(_ _) : Qid String -> ColumnVal [ctor] .
+	op columnName : ColumnVal -> Qid .
+	op value : ColumnVal -> String . 
 
-\maketitle
+--- PrimaryKeyValue = < value > 	
+	op pk(_) : NzNat -> PKVal [ctor] .
+	op value : PKVal -> NzNat .
+
+--- ForeignKey = < foreignKeyName, value >	
+	op fk(_ _) : Qid NzNat -> FKVal [ctor] . 
+	op name : FKVal -> Qid .
+	op value : FKVal -> NzNat . 
+	
+	var N : Qid .
+	var S :	String . 
+	var P : NzNat .
+	
+	eq columnName(col(N S)) = N .
+	eq value(col(N S)) = S .	
+	
+	eq value(pk(P)) = P .
+	
+	eq name(fk(N P)) = N .
+	eq value(fk(N P)) = P .
+endfm
+
+view ColumnVal from TRIV to PREDATA is
+	sort Elt to ColumnVal .
+endv
+
+view FKVal from TRIV to PREDATA is
+	sort Elt to FKVal .
+endv
+
+fmod DATA is
+	pr PREDATA .
+	pr SEQENCE{FKVal} .
+	pr SEQENCE{ColumnVal} .
+	
+	sort Data .
+	
+--- Row = < tableName, pkValue, columnValue*, foreignKeyValue* >	
+	op row : Qid PKVal List{ColumnVal} List{FKVal} -> Data [ctor] .
+	op inTable : Data -> Qid .
+	op keyValue : Data -> NzNat .
+	op columns : Data -> List{ColumnVal} .
+	op fkeys : Data -> List{FKVal} .
+	
+	var N : Qid .
+	var PK : PKVal .
+	var ColVals : List{ColumnVal} .
+	var FKVals : List{FKVal} .
+	
+	eq inTable(row(N, PK, ColVals, FKVals)) = N .
+	eq keyValue(row(N, PK, ColVals, FKVals)) = value(PK) .
+	eq columns(row(N, PK, ColVals, FKVals)) = ColVals .
+	eq fkeys(row(N, PK, ColVals, FKVals)) = FKVals . 
+	
+endfm
+
+view Row from TRIV to DATA is
+	sort Elt to Data . 
+endv
+
+fmod DATABASE is
+	pr DATA .
+	pr SEQENCE{Row} .
+	
+	sort Database .
+
+--- Database = < table*, row *>
+--- possible implementations:	
+--- 1. table has a list of rows
+--- 2. there are only rows => table is a set of rows with the same structure => it is imposible to add structural information into database (simple CREATE table will not wokr, there has to be at least one row)
+	op database : List{Table} List{Row} -> Database [ctor] .
+	op tables : Database -> List{Table} .
+	op data : Database -> List{Row} . 
+	
+	
+	var Tabs : List{Table} .
+	var Rows : List{Row} .
+	
+	eq tables(database(Tabs, Rows)) = Tabs .
+	eq data(database(Tabs, Rows)) = Rows .
 
 
-\begin{abstract}
-\end{abstract}
+--- DATA DEFINITION LANGUAGE
+	var D : Database .
+	var N : Qid .
+	var PK : PrimaryKey .
+	var Cols : List{Column} .
+	var FKs : List{ForeignKey} .
 
-\section{Introduction}
 
-\bibliographystyle{plain}
-\bibliography{}
-\end{document}
+--- CREATE TABLE "table_name" ("column 1" "data_type_for_column_1", ... )
+	op CREATE_TABLE : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
+	ceq CREATE_TABLE(D, N, PK, Cols, FKs) = D  if containsName(tables(D), N) .
+	eq CREATE_TABLE(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
+	
+
+endfm

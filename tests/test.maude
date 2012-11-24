@@ -1,0 +1,26 @@
+red name(table('N, primaryKey('Id), [], [])) .
+red keyName(table('N, primaryKey('Id), [], [])) .
+red pkName(table('N, primaryKey('Id), [], [])) .
+red columns(table('N, primaryKey('Id), [], [])) .
+red foreignkeys(table('N, primaryKey('Id), [], [])) .
+red name(column('N, STRING, [])) .
+red type(column('N, STRING, [])) .
+red constraints(column('N, STRING, [])) .
+red name(foreignKey('n, 'm)) .
+red name(foreignKey('n, 'm)) .
+red reference(foreignKey('n, 'm)) .
+red pkName(table('N, primaryKey('Id), [], [])) .
+red columnName(col('N "val")) .
+red value(col('N "val")) .
+red value(pk(6)) .
+red name(fk('n 8)) .
+red value(fk('n 8)) .
+red inTable(row('x, pk(8), [], [])) .
+red keyValue(row('x, pk(8), [], [])) .
+red columns(row('x, pk(8), [], [])) .
+red fkeys(row('x, pk(8), [], [])) .
+red tables(database([], [])) .
+red data(database([], [])) .
+red createTable(database([], []), 'person, primaryKey('id), [], []) .
+red table('person, primaryKey('id)) = table('person, primaryKey('id)) .
+red table('person, primaryKey('id), [], []) == table('person, primaryKey('id2), [], []) .
