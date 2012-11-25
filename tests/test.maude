@@ -1,3 +1,4 @@
+load /Users/macekond/Projects/migdb_fd_2/experimenty/sequence.maude
 red name(table('N, primaryKey('Id), [], [])) .
 red keyName(table('N, primaryKey('Id), [], [])) .
 red pkName(table('N, primaryKey('Id), [], [])) .
@@ -21,6 +22,29 @@ red columns(row('x, pk(8), [], [])) .
 red fkeys(row('x, pk(8), [], [])) .
 red tables(database([], [])) .
 red data(database([], [])) .
-red createTable(database([], []), 'person, primaryKey('id), [], []) .
-red table('person, primaryKey('id)) = table('person, primaryKey('id)) .
-red table('person, primaryKey('id), [], []) == table('person, primaryKey('id2), [], []) .
+
+--- name collision
+red addTable(database(table('person, primaryKey('id), [], []), []), 'person, primaryKey('id), [], []) .
+--- OK
+red addTable(database(table('person, primaryKey('id), [], []), []), 'perso, primaryKey('id), [], foreignKey('a,'person)) .
+--- OK
+red addTable(database(table('person, primaryKey('id), [], []), []), 'perso, primaryKey('id), [], []) .
+--- reference does not exist
+red addTable(database(table('person, primaryKey('id), [], []), []), 'perso, primaryKey('id), [], foreignKey('a,'pers)) .
+
+
+red referencesExist(foreignKey('a, 'b), []) == false .
+red referencesExist([], []) == false . 
+red referencesExist([], table('a, primaryKey('c), [], [])) == true .
+red referencesExist(foreignKey('b,'b), table('a, primaryKey('c), [], [])) == false .
+red referencesExist(foreignKey('b,'a), table('d, primaryKey('c), [], []) table('q, primaryKey('c), [], [])) == false .
+red referencesExist(foreignKey('b,'a), table('d, primaryKey('c), [], []) table('a, primaryKey('c), [], [])) == true .
+
+red referencesExist([], tables(database([], []))) == false .
+red referencesExist(foreignKey('a, 'b), tables(database([], []))) == false .
+red referencesExist([], tables(database(table('a, primaryKey('c), [], []), []))) == true .
+red referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c), [], []) table('a, primaryKey('c), [], []), []))) == true .
+
+
+red referencesExist(foreignKey('b,'b), table('a, primaryKey('c), [], [])) == false .
+red referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c), [], []) table('q, primaryKey('c), [], []), []))) == false .

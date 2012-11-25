@@ -7,11 +7,7 @@ fmod SEQENCE{X :: TRIV} is
 	op [] : -> List{X} [ctor] .
 	op __ : List{X} List{X} -> List{X} [ctor assoc] .
 	
-	
-	
 	op name : X$Elt -> Qid .
-	
-	op head : List{X} -> X$Elt .
 	
 	var E : X$Elt .
 	var L : List{X} .
@@ -20,17 +16,24 @@ fmod SEQENCE{X :: TRIV} is
 	eq [] L = L .
 	eq L [] = L .
 
----	unused
----	eq head([]) = [] .
----	eq head(E L) = E .
----	eq head(E) = E .
+	op head : List{X} -> X$Elt .
+	eq head([]) = [] .
+	eq head(E L) = E .
+	eq head(E) = E .
 	
-	op containsName : List{X} Qid -> Bool .
+	op tail : List{X} -> List{X} .
+	eq tail([]) = [] .
+	eq tail(E L) = L .
+	eq tail(E) = [] .
 	
+	op containsName : List{X} Qid -> Bool .	
 	eq containsName([], Q) = false .
-	eq containsName(E, Q) = name(E) == Q .
-	ceq containsName(E L, Q) = true if name(E) == Q .
-	eq containsName(E L, Q) = containsName(L, Q) [owise].
+	eq containsName(L, Q) = name(head(L)) == Q or containsName(tail(L), Q) .
+	
+	op removeByName : List{X} Qid -> List{X} .
+	eq removeByName([], Q) = [] .
+	ceq removeByName(L, Q) = tail(L) if name(head(L)) == Q .
+	eq removeByName(L, Q) = head(L) removeByName(tail(L), Q) [owise] .
 	
 endfm
 	
@@ -195,36 +198,85 @@ fmod DATABASE is
 	pr DATA .
 	pr SEQENCE{Row} .
 	
-	sort Database .
+	sort Database ErrDatabase .
+	subsorts ErrDatabase < Database .
 
 --- Database = < table*, row *>
 --- possible implementations:	
 --- 1. table has a list of rows
 --- 2. there are only rows => table is a set of rows with the same structure => it is imposible to add structural information into database (simple CREATE table will not wokr, there has to be at least one row)
 	op database : List{Table} List{Row} -> Database [ctor] .
-	op tables : Database -> List{Table} .
-	op data : Database -> List{Row} . 
-	
+	op errDatabase : String Database -> ErrDatabase [ctor] .
 	
 	var Tabs : List{Table} .
+	var T : Table .
 	var Rows : List{Row} .
-	
-	eq tables(database(Tabs, Rows)) = Tabs .
-	eq data(database(Tabs, Rows)) = Rows .
-
-
---- DATA DEFINITION LANGUAGE
 	var D : Database .
 	var N : Qid .
 	var PK : PrimaryKey .
 	var Cols : List{Column} .
 	var FKs : List{ForeignKey} .
+	var Fk : ForeignKey .
 
-
---- CREATE TABLE "table_name" ("column 1" "data_type_for_column_1", ... )
-	op CREATE_TABLE : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
-	ceq CREATE_TABLE(D, N, PK, Cols, FKs) = D  if containsName(tables(D), N) .
-	eq CREATE_TABLE(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
+	op tables : Database -> List{Table} .
+	eq tables(database(Tabs, Rows)) = Tabs .
 	
+	op data : Database -> List{Row} . 
+	eq data(database(Tabs, Rows)) = Rows .
 
+	op referencesExist : List{ForeignKey} List{Table} -> Bool .
+	eq referencesExist([], Tabs) = true .
+	eq referencesExist(FKs, []) = false .
+	eq referencesExist(Fk, T) = reference(Fk) == name(T) .
+	eq referencesExist(FKs, Tabs) = containsName(Tabs, reference(head(FKs))) or referencesExist(tail(FKs), Tabs) .
+	
+		
+	op dataExist : Qid List{Row} -> Bool .
+	eq dataExist(N, []) = false .
+	eq dataExist(N, Rows) = (inTable(head(Rows)) == N) or dataExist(N, tail(Rows)) .
+	
+	op isReferenced : Qid List{Table} -> Bool .
+	eq isReferenced(N, []) = false .
+	eq isReferenced(N, Tabs) = references(N, foreignKeys(head(Tabs))) or isReferenced(N, tail(Tabs)) .
+
+--- helpers
+
+--- move to isReferenced ?
+	op references : Qid List{ForeignKey} -> Bool .
+	eq references(N, []) = false .
+	eq references(N, FKs) = reference(head(FKs)) == N or references(N, tail(FKs)) . 
+	
+	
+endfm
+
+fmod DDL is
+	pr DATABASE .
+	
+	var Tabs : List{Table} .
+	var Rows : List{Row} .
+	var D : Database .
+	var N : Qid .
+	var PK : PrimaryKey .
+	var Cols : List{Column} .
+	var FKs : List{ForeignKey} .
+	
+--- addTable -> SQL : CREATE TABLE
+--- all referenced tables have to exist
+	op addTable : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
+	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - name exists", D) if containsName(tables(D), N) .
+	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if not referencesExist(FKs, tables(D)) .
+	eq addTable(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
+
+--- removeTable -> SQL: DROP TABLE	
+--- there is no data in table
+--- the table is not referenced by a FK
+	op removeTable : Database Qid -> Database .
+	ceq removeTable(D, N) = errDatabase("Unable to remove table - table not exists", D)  if not containsName(tables(D), N) .
+	ceq removeTable(D, N) = errDatabase("Unable to remove table - data exists", D)  if dataExist(N, data(D)) .
+	ceq removeTable(D, N) = errDatabase("Unable to remove table - table is referenced by a FK", D)  if isReferenced(N, tables(D)) .
+	eq removeTable(D, N) = database(removeByName(tables(D), N), data(D)) .
+
+--- addColumn -> SQL : ALTER TABLE table_name ADD column_name datatype
+	op addColumn : Database Qid Column -> Database .
+--- removeColumn -> SQL : ALTER TABLE table_name DROP COLUMN column_name
 endfm
