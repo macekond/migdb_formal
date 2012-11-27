@@ -27,8 +27,8 @@ fmod AR is
 	pr AS .
 	pr QID .
 	pr BOOL .
-	pr LIST{Property} .
-	pr LIST{Association} .
+	pr SEQUENCE{Property} .
+	pr SEQUENCE{Association} .
 	
 	op STRING : -> Type [ctor] .
 	
@@ -62,8 +62,8 @@ endfm
 
 fmod APPDATA is
 	pr AR .
-	pr LIST{Qid} .
-	pr LIST{String} .
+	pr SEQUENCE{Qid} .
+	pr SEQUENCE{String} .
 	
 	sorts PropertyValue AssociationValue .
 	
@@ -89,8 +89,8 @@ endv
 
 fmod IN is
 	pr APPDATA .
-	pr LIST{PropertyValue} .
-	pr LIST{AssociationValue} . 
+	pr SEQUENCE{PropertyValue} .
+	pr SEQUENCE{AssociationValue} . 
 	
 	sort Instance .
 
@@ -108,14 +108,15 @@ endv
 
 fmod APP is
 	pr IN .
-	pr LIST{Instance} .
-	pr LIST{Class} .
+	pr SEQUENCE{Instance} .
+	pr SEQUENCE{Class} .
 	
 	sorts Application ErrApplication .
 	subsort ErrApplication < Application .
 
 --- application = < class*, instance* >	
 	op application : List{Class} List{Instance} -> Application [ctor] .
+	op errApplication : String Application -> ErrApplication [ctor] .
 
 	var A : Application .
 	var Classes : List{Class} .
@@ -126,10 +127,11 @@ fmod APP is
 	eq classes(application(Classes, Instances)) = Classes .
 	
 	op instances : Application -> List{Instance} .
-	eq instaces(application(Classes, Instances)) = Instances .
+	eq instances(application(Classes, Instances)) = Instances .
 	
 --- addClass
 	op addClass : Application Class -> Application .
+	ceq addClass(A, C) = errApplication("Unable to add class - the name already exists", A) if containsName(classes(A), name(C)) .
 	eq addClass(A, C) = application(classes(A) C, instances(A)) .
 --- removeClass
 --- addProperty

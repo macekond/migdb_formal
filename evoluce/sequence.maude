@@ -1,4 +1,4 @@
-fmod SEQENCE{X :: TRIV} is
+fmod SEQUENCE{X :: TRIV} is
 	
 	sorts NeList{X} List{X} .
 	subsort X$Elt < NeList{X} < List{X} .
