@@ -89,6 +89,7 @@ endv
 
 fmod IN is
 	pr APPDATA .
+	pr SEQUENCE{Class} .
 	pr SEQUENCE{PropertyValue} .
 	pr SEQUENCE{AssociationValue} . 
 	
@@ -99,6 +100,18 @@ fmod IN is
 	op name : Instance -> Qid .
 	op props : Instance -> List{PropertyValue} .
 	op assocs : Instance -> List{AssociationValue} .
+	
+	var As : List{Association} .
+	var A : Association .
+	var Cls : List{Class} .
+	var C : Class .
+	
+--- HELPERS	
+	op referencesExist : List{Association} List{Class} -> Bool .
+	eq referencesExist([], Cls) = true .
+	eq referencesExist(As, []) = false .
+	eq referencesExist(A, C) = reference(A) == name(C) .
+	eq referencesExist(As, Cls) = containsName(Cls, reference(head(As))) or referencesExist(tail(As), Cls) .
 
 endfm
 
@@ -109,7 +122,7 @@ endv
 fmod APP is
 	pr IN .
 	pr SEQUENCE{Instance} .
-	pr SEQUENCE{Class} .
+	
 	
 	sorts Application ErrApplication .
 	subsort ErrApplication < Application .
@@ -132,6 +145,7 @@ fmod APP is
 --- addClass
 	op addClass : Application Class -> Application .
 	ceq addClass(A, C) = errApplication("Unable to add class - the name already exists", A) if containsName(classes(A), name(C)) .
+	ceq addClass(A, C) = errApplication("Unable to add class - associed classes not exist(s)", A) if not referencesExist(associations(C), classes(A)) .
 	eq addClass(A, C) = application(classes(A) C, instances(A)) .
 --- removeClass
 --- addProperty
