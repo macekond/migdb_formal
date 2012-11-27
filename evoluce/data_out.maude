@@ -267,15 +267,12 @@ fmod DDL is
 	var FKs : List{ForeignKey} .
 	
 --- addTable -> SQL : CREATE TABLE
---- all referenced tables have to exist
 	op addTable : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
 	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - name exists", D) if containsName(tables(D), N) .
 	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if not referencesExist(FKs, tables(D)) .
 	eq addTable(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
 
 --- removeTable -> SQL: DROP TABLE	
---- there is no data in table
---- the table is not referenced by a FK
 	op removeTable : Database Qid -> Database .
 	ceq removeTable(D, N) = errDatabase("Unable to remove table - table not exists", D)  if not containsName(tables(D), N) .
 	ceq removeTable(D, N) = errDatabase("Unable to remove table - data exists", D)  if dataExist(N, data(D)) .
@@ -289,5 +286,5 @@ fmod DDL is
 
 --- removeColumn -> SQL : ALTER TABLE table_name DROP COLUMN column_name
 	op removeColumn : Database Qid Qid -> Database .
-
+	op
 endfm
