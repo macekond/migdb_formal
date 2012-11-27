@@ -279,4 +279,5 @@ fmod DDL is
 --- addColumn -> SQL : ALTER TABLE table_name ADD column_name datatype
 	op addColumn : Database Qid Column -> Database .
 --- removeColumn -> SQL : ALTER TABLE table_name DROP COLUMN column_name
+	op removeColumn : Database Qid Qid -> Database .
 endfm
