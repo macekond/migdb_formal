@@ -135,6 +135,7 @@ fmod APP is
 	var Classes : List{Class} .
 	var Instances : List{Instance} .
 	var C : Class .
+	var Q : Qid . 
 	
 	op classes : Application -> List{Class} .
 	eq classes(application(Classes, Instances)) = Classes .
@@ -147,8 +148,19 @@ fmod APP is
 	ceq addClass(A, C) = errApplication("Unable to add class - the name already exists", A) if containsName(classes(A), name(C)) .
 	ceq addClass(A, C) = errApplication("Unable to add class - associed classes not exist(s)", A) if not referencesExist(associations(C), classes(A)) .
 	eq addClass(A, C) = application(classes(A) C, instances(A)) .
+	
 --- removeClass
+	op removeClass : Aplication Qid -> Application .
+	ceq removeClass(A, Q) = errApplication("Unable to remove class - table not exists", A) if not containsName(classes(A), Q) . 
+	ceq removeClass(A, Q) = errApplication("Unable to remove class - instances exists", A)  if instanceExist(Q, instances(A)) .
+--- should it be isReferencedByInstances?
+	ceq removeClass(A, Q) = errApplication("Unable to remove class - class is referenced by an association", A)  if isReferenced(Q, classes(A)) .
+	
+	eq removeClass(A, Q) = application(removeByName(classes(A), Q), instances(Q)) .
+	
+	
 --- addProperty
+
 --- removeClass	
 	
 endfm

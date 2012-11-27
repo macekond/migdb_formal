@@ -1,9 +1,12 @@
-load ./sequence.maude
+load ../evoluce/sequence.maude
+load ../evoluce/data_out.maude
+
+
 red name(table('N, primaryKey('Id), [], [])) .
-red keyName(table('N, primaryKey('Id), [], [])) .
+red pkName(table('N, primaryKey('Id), [], [])) .
 red pkName(table('N, primaryKey('Id), [], [])) .
 red columns(table('N, primaryKey('Id), [], [])) .
-red foreignkeys(table('N, primaryKey('Id), [], [])) .
+red foreignKeys(table('N, primaryKey('Id), [], [])) .
 red name(column('N, STRING, [])) .
 red type(column('N, STRING, [])) .
 red constraints(column('N, STRING, [])) .
@@ -48,3 +51,8 @@ red referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c),
 
 red referencesExist(foreignKey('b,'b), table('a, primaryKey('c), [], [])) == false .
 red referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c), [], []) table('q, primaryKey('c), [], []), []))) == false .
+
+
+
+red isReferenced('Q, table('a, primaryKey('Id'), [], foreignKey('ref2, 'A) foreignKey('ref, 'Q))) .
+
