@@ -25,10 +25,10 @@ endv
 fmod DIR is
 	pr DIS .
 	pr QID .
-	pr SEQENCE{Table} .
-	pr SEQENCE{Column} .
-	pr SEQENCE{ForeignKey} .
-	pr SEQENCE{Constraint} .
+	pr SEQUENCE{Table} .
+	pr SEQUENCE{Column} .
+	pr SEQUENCE{ForeignKey} .
+	pr SEQUENCE{Constraint} .
 
 --- Constraint = < NOTNULL | UNIQUE >	
 	op NOTNULL : -> Constraint [ctor] .
@@ -128,8 +128,8 @@ endv
 
 fmod DATA is
 	pr PREDATA .
-	pr SEQENCE{FKVal} .
-	pr SEQENCE{ColumnVal} .
+	pr SEQUENCE{FKVal} .
+	pr SEQUENCE{ColumnVal} .
 	
 	sort Data .
 	
@@ -158,7 +158,7 @@ endv
 
 fmod DATABASE is
 	pr DATA .
-	pr SEQENCE{Row} .
+	pr SEQUENCE{Row} .
 	
 	sort Database ErrDatabase .
 	subsorts ErrDatabase < Database .
