@@ -35,6 +35,11 @@ fmod SEQENCE{X :: TRIV} is
 	ceq removeByName(L, Q) = tail(L) if name(head(L)) == Q .
 	eq removeByName(L, Q) = head(L) removeByName(tail(L), Q) [owise] .
 	
+	op getByName : List{X} Qid -> X$Elt .
+	eq getByName([], Q) = [] .
+	ceq getByName(L, Q) = head(L) if name(head(L)) == Q .
+	eq getByName(L, Q) = getByName(tail(L), Q) [owise] .
+	
 endfm
 	
 
@@ -258,6 +263,7 @@ fmod DDL is
 	var N : Qid .
 	var PK : PrimaryKey .
 	var Cols : List{Column} .
+	var C : Column .
 	var FKs : List{ForeignKey} .
 	
 --- addTable -> SQL : CREATE TABLE
@@ -275,5 +281,13 @@ fmod DDL is
 	ceq removeTable(D, N) = errDatabase("Unable to remove table - data exists", D)  if dataExist(N, data(D)) .
 	ceq removeTable(D, N) = errDatabase("Unable to remove table - table is referenced by a FK", D)  if isReferenced(N, tables(D)) .
 	eq removeTable(D, N) = database(removeByName(tables(D), N), data(D)) .
+	
+--- addColumn -> SQL : ALTER TABLE table_name ADD column_name datatype
+	op addColumn : Database Qid Column -> Database .
+	ceq addColumn(D, N, C) = errDatabase("Unable to add column - table not exists", D) if not containsName(tables(D), N) .
+	ceq addColumn(D, N, C) = errDatabase("Unable to add column - column name already exists", D) if containsName(columns(getByName(tables(D), N)), name(C)) .
+
+--- removeColumn -> SQL : ALTER TABLE table_name DROP COLUMN column_name
+	op removeColumn : Database Qid Qid -> Database .
 
 endfm
