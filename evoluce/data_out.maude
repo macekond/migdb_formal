@@ -1,3 +1,5 @@
+load ./sequence.maude
+
 fmod DIS is
 		
 	sorts  Table PrimaryKey ForeignKey Column Constraint Schema Type .
