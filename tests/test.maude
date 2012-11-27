@@ -1,4 +1,4 @@
-load /Users/macekond/Projects/migdb_fd_2/experimenty/sequence.maude
+load ./sequence.maude
 red name(table('N, primaryKey('Id), [], [])) .
 red keyName(table('N, primaryKey('Id), [], [])) .
 red pkName(table('N, primaryKey('Id), [], [])) .
