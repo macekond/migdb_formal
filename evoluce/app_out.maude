@@ -110,13 +110,28 @@ fmod APP is
 	pr LIST{Instance} .
 	pr LIST{Class} .
 	
-	sort Application .
+	sorts Application ErrApplication .
+	subsort ErrApplication < Application .
 
---- application = <name, class*, instance* >	
-	op application : Qid List{Class} List{Instance} -> Application [ctor] .
-	op name : Application -> Qid .
-	op classes : Application -> List{Class} .
-	op instances : Application -> List{Instance} .
+--- application = < class*, instance* >	
+	op application : List{Class} List{Instance} -> Application [ctor] .
+
+	var A : Application .
+	var Classes : List{Class} .
+	var Instances : List{Instance} .
+	var C : Class .
 	
+	op classes : Application -> List{Class} .
+	eq classes(application(Classes, Instances)) = Classes .
+	
+	op instances : Application -> List{Instance} .
+	eq instaces(application(Classes, Instances)) = Instances .
+	
+--- addClass
+	op addClass : Application Class -> Application .
+	eq addClass(A, C) = application(classes(A) C, instances(A)) .
+--- removeClass
+--- addProperty
+--- removeClass	
 	
 endfm
