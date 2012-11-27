@@ -258,9 +258,10 @@ fmod DDL is
 	pr DATABASE .
 	
 	var Tabs : List{Table} .
+	var T : Table .
 	var Rows : List{Row} .
 	var D : Database .
-	var N : Qid .
+	var N Q : Qid .
 	var PK : PrimaryKey .
 	var Cols : List{Column} .
 	var C : Column .
@@ -286,5 +287,14 @@ fmod DDL is
 
 --- removeColumn -> SQL : ALTER TABLE table_name DROP COLUMN column_name
 	op removeColumn : Database Qid Qid -> Database .
-	op
+	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove column - table not exists", D) if not containsName(tables(D), N) .
+	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove column - column name not exists", D) if not containsName(columns(getByName(tables(D), N)), Q) .
+	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove colum - data exists", D)  if dataExist(N, data(D)) .
+	eq removeColumn(D, N, Q) = database(removeByName(tables(D), N) remColumn(getByName(tables(D), N), Q) , data(D)) .
+	
+--- HELPERS	
+--- remColumn
+	op remColumn : Table Qid -> Table .
+	eq remColumn(T, Q) = table(name(T), primaryKey(pkName(T)), removeByName(columns(T), Q), foreignKeys(T)) .
+
 endfm
