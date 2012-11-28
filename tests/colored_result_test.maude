@@ -1,0 +1,7 @@
+load ./colored_result.maude
+
+set print format on .
+red BAD .
+red good .
+red test(true) .
+red test(false) .

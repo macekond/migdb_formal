@@ -1,0 +1,62 @@
+load ../evoluce/app_out.maude
+load ../evoluce/data_out.maude
+load ./colored_result.maude
+
+fmod TESTSUITE is
+	pr COLORING .
+	pr DDL .
+endfm
+
+
+red test(name(table('N, primaryKey('Id), [], [])) == 'N) .
+red test(pkName(table('N, primaryKey('Id), [], [])) == 'Id) .
+red test(columns(table('N, primaryKey('Id), [], [])) == [] ) .
+red test(foreignKeys(table('N, primaryKey('Id), [], [])) == [] ) .
+
+red test(name(column('N, STRING, [])) == 'N) .
+red test(type(column('N, STRING, [])) == STRING ) .
+red test(constraints(column('N, STRING, [])) == [] ) .
+
+red test(name(foreignKey('n, 'm)) == 'n) .
+red test(reference(foreignKey('n, 'm)) == 'm) .
+
+red test(columnName(col('N "val")) == 'N) .
+red test(value(col('N "val")) == "val") .
+red test(value(pk(6)) == 6) .
+red test(name(fk('n 8)) == 'n) .
+red test(value(fk('n 8)) == 8) .
+red test(inTable(row('x, pk(8), [], [])) == 'x) .
+red test(keyValue(row('x, pk(8), [], [])) == 8) .
+red test(columns(row('x, pk(8), [], [])) == [] ) .
+red test(fkeys(row('x, pk(8), [], [])) == [] ) .
+red test(tables(database([], [])) == [] ).
+red test(data(database([], [])) == [] ).
+
+--- name collision
+red test(addTable(database(table('person, primaryKey('id), [], []), []), 'person, primaryKey('id), [], []) == errDatabase("Unable to add table - name exists", database(table('person, primaryKey('id), [], []), [])) ) .
+--- OK
+red test(addTable(database(table('person, primaryKey('id), [], []), []), 'perso, primaryKey('id), [], foreignKey('a,'person)) == database(table('person, primaryKey('id), [], []) table('perso, primaryKey('id), [], foreignKey('a, 'person)), []) .
+--- OK
+red test(addTable(database(table('person, primaryKey('id), [], []), []), 'perso, primaryKey('id), [], []) == database(table('person, primaryKey('id), [], []) table('perso, primaryKey('id), [], []), [])) .
+
+--- reference does not exist
+red test(addTable(database(table('person, primaryKey('id), [], []), []), 'perso, primaryKey('id), [], foreignKey('a,'pers)) == ErrDatabase("Unable to add table - reference(s) not exist(s)", database(table('person, primaryKey('id), [], []), [])).
+
+
+red test(referencesExist(foreignKey('a, 'b), []) == false) .
+red test(referencesExist([], []) == false) . 
+red test(referencesExist([], table('a, primaryKey('c), [], [])) == true) .
+red test(referencesExist(foreignKey('b,'b), table('a, primaryKey('c), [], [])) == false) .
+red test(referencesExist(foreignKey('b,'a), table('d, primaryKey('c), [], []) table('q, primaryKey('c), [], [])) == false ).
+red test(referencesExist(foreignKey('b,'a), table('d, primaryKey('c), [], []) table('a, primaryKey('c), [], [])) == true ).
+
+red test(referencesExist([], tables(database([], []))) == false) .
+red test(referencesExist(foreignKey('a, 'b), tables(database([], []))) == false ).
+red test(referencesExist([], tables(database(table('a, primaryKey('c), [], []), []))) == true ).
+red test(referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c), [], []) table('a, primaryKey('c), [], []), []))) == true ).
+
+
+red test(referencesExist(foreignKey('b,'b), table('a, primaryKey('c), [], [])) == false ).
+red test(referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c), [], []) table('q, primaryKey('c), [], []), []))) == false ).
+red test(isReferenced('Q, table('a, primaryKey('Id'), [], foreignKey('ref2, 'A) foreignKey('ref, 'Q))) == true ) .
+
