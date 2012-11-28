@@ -51,7 +51,7 @@ fmod AR is
 --- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound 
 	op association : Qid Qid Bool Bool Bound Bound -> Association [ctor] .
 	op name : Association -> Qid .
-	op reference : Association -> Qid .
+	op referenceA : Association -> Qid .
 	op ordered : Association -> Bool .
 	op unique : Association -> Bool .
 	op upperBound : Association -> Bound .
@@ -96,23 +96,44 @@ fmod IN is
 	sort Instance .
 
 --- instance = < name, property*, association* >	
-	op instance : Qid List{PropertyValue} List{AssociationValue} -> Instance [ctor] .
-	op name : Instance -> Qid .
-	op props : Instance -> List{PropertyValue} .
-	op assocs : Instance -> List{AssociationValue} .
-	
+	op instance : Qid Qid List{PropertyValue} List{AssociationValue} -> Instance [ctor] .
+
 	var As : List{Association} .
 	var A : Association .
 	var Cls : List{Class} .
 	var C : Class .
+	var Q N : Qid .
+	var PVs : List{PropertyValue} .
+	var AVs : List{AssociationValue} .
 	
+
+	op name : Instance -> Qid .
+	eq name(instance(Q, N, PVs, AVs)) = Q .
+	
+	op ofClass : Instance -> Qid .
+	eq ofClass(instance(Q, N, PVs, AVs)) = N .
+	
+	op props : Instance -> List{PropertyValue} .
+	eq props(instance(Q, N, PVs, AVs)) = PVs .
+	
+	op assocs : Instance -> List{AssociationValue} .
+	eq assocs(instance(Q, N, PVs, AVs)) = AVs .
+
 --- HELPERS	
 	op referencesExist : List{Association} List{Class} -> Bool .
 	eq referencesExist([], Cls) = true .
 	eq referencesExist(As, []) = false .
-	eq referencesExist(A, C) = reference(A) == name(C) .
-	eq referencesExist(As, Cls) = containsName(Cls, reference(head(As))) or referencesExist(tail(As), Cls) .
+	eq referencesExist(A, C) = referenceA(A) == name(C) .
+	eq referencesExist(As, Cls) = containsName(Cls, referenceA(head(As))) or referencesExist(tail(As), Cls) .
 
+	op isAssociated : List{Class} Qid -> Bool .
+	eq isAssociated([], Q) = false .
+	eq isAssociated(Cls, Q) = associate(associations(Cls), Q) or isAssociated(tail(Cls), Q) . 
+	
+	op associate : List{Association} Qid -> Bool .
+	eq associate([], Q) = false .
+	eq associate(As, Q) = referenceA(head(As)) == Q or associate(tail(As), Q) . 
+	
 endfm
 
 view Instance from TRIV to IN is
@@ -150,17 +171,22 @@ fmod APP is
 	eq addClass(A, C) = application(classes(A) C, instances(A)) .
 	
 --- removeClass
-	op removeClass : Aplication Qid -> Application .
+	op removeClass : Application Qid -> Application .
 	ceq removeClass(A, Q) = errApplication("Unable to remove class - table not exists", A) if not containsName(classes(A), Q) . 
-	ceq removeClass(A, Q) = errApplication("Unable to remove class - instances exists", A)  if instanceExist(Q, instances(A)) .
+	ceq removeClass(A, Q) = errApplication("Unable to remove class - instances exists", A)  if instancesExist(instances(A), Q) .
 --- should it be isReferencedByInstances?
-	ceq removeClass(A, Q) = errApplication("Unable to remove class - class is referenced by an association", A)  if isReferenced(Q, classes(A)) .
-	
-	eq removeClass(A, Q) = application(removeByName(classes(A), Q), instances(Q)) .
+	ceq removeClass(A, Q) = errApplication("Unable to remove class - class is referenced by an association", A)  if isAssociated(classes(A), Q) .
+	eq removeClass(A, Q) = application(removeByName(classes(A), Q), instances(A)) .
 	
 	
 --- addProperty
 
---- removeClass	
+--- removeProperty	
+
+--- HELPERS
+	op instancesExist : List{Instance} Qid -> Bool .
+	eq instancesExist([], Q) = false .
+	eq instancesExist(Instances, Q) = (ofClass(head(Instances)) == Q) or instancesExist(tail(Instances), Q) .
+	
 	
 endfm
