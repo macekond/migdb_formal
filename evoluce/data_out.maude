@@ -187,7 +187,7 @@ fmod DATABASE is
 	eq data(database(Tabs, Rows)) = Rows .
 
 	op referencesExist : List{ForeignKey} List{Table} -> Bool .
-	eq referencesExist([], Tabs) = true .
+	eq referencesExist([], Tabs) = false .
 	eq referencesExist(FKs, []) = false .
 	eq referencesExist(Fk, T) = reference(Fk) == name(T) .
 	eq referencesExist(FKs, Tabs) = containsName(Tabs, reference(head(FKs))) or referencesExist(tail(FKs), Tabs) .
@@ -227,7 +227,7 @@ fmod DDL is
 --- addTable -> SQL : CREATE TABLE
 	op addTable : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
 	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - name exists", D) if containsName(tables(D), N) .
-	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if not referencesExist(FKs, tables(D)) .
+	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if FKs =/= [] and not referencesExist(FKs, tables(D)) .
 	eq addTable(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
 
 --- removeTable -> SQL: DROP TABLE	

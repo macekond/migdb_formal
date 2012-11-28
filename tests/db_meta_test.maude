@@ -45,14 +45,14 @@ red test(addTable(database(table('person, primaryKey('id), [], []), []), 'perso,
 
 red test(referencesExist(foreignKey('a, 'b), []) == false) .
 red test(referencesExist([], []) == false) . 
-red test(referencesExist([], table('a, primaryKey('c), [], [])) == true) .
+red test(referencesExist([], table('a, primaryKey('c), [], [])) == false) .
 red test(referencesExist(foreignKey('b,'b), table('a, primaryKey('c), [], [])) == false) .
 red test(referencesExist(foreignKey('b,'a), table('d, primaryKey('c), [], []) table('q, primaryKey('c), [], [])) == false ) .
 red test(referencesExist(foreignKey('b,'a), table('d, primaryKey('c), [], []) table('a, primaryKey('c), [], [])) == true ) .
 
 red test(referencesExist([], tables(database([], []))) == false) .
 red test(referencesExist(foreignKey('a, 'b), tables(database([], []))) == false ) .
-red test(referencesExist([], tables(database(table('a, primaryKey('c), [], []), []))) == true )  .
+red test(referencesExist([], tables(database(table('a, primaryKey('c), [], []), []))) == false )  .
 red test(referencesExist(foreignKey('b,'a), tables(database(table('d, primaryKey('c), [], []) table('a, primaryKey('c), [], []), []))) == true ) .
 
 
