@@ -1,0 +1,52 @@
+load ./app_out.maude
+load ./data_out.maude
+
+fmod ORM is
+	pr DDL .
+	pr APP .
+	
+	var C : Class .
+	var T : Table .
+	var Props : List{Property} .
+	var Prop : Property .
+
+
+	op orm : App-Type -> Db-Type .
+	eq orm(APP-STRING) = DB-STRING .
+
+	
+---	op orm : Class -> Table .
+---	eq orm(C) = table(name(C), primaryKey('Id), orm(properties(C)), orm(associations(C))) . 
+
+	op ormList : List{Property} -> List{Column} .
+	eq ormList([]) = ([]).List{Column} .
+	eq ormList(Props) = orm(head(Props)) ormList(tail(Props)) .
+
+	op orm : Property -> Column .
+	ceq orm(Prop) = column(name(Prop), orm(type(Prop)), NOTNULL UNIQUE) if mandatory(Prop) and unique(Prop) .
+	ceq orm(Prop) = column(name(Prop), orm(type(Prop)), NOTNULL) if mandatory(Prop) .
+	ceq orm(Prop) = column(name(Prop), orm(type(Prop)), UNIQUE) if unique(Prop) .
+	eq orm(Prop) = column(name(Prop), orm(type(Prop)), []) [owise] .
+
+
+---	op orm : List{Association} -> List{ForeignKey} .
+
+
+endfm
+
+
+fmod ORMSYSTEM is
+	pr ORM .
+	
+	sort OrmSystem .
+	
+	op system : Application Database -> OrmSystem [ctor] .
+	
+	var A : Application .
+	var D : Database .
+	var C : Class .
+	
+---	op addClass : Class OrmSystem -> OrmSystem .
+---	eq addClass(C, system(A, D)) = system(addClass(C, A), addTable(orm(C), D)) .
+	
+endfm

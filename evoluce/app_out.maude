@@ -2,7 +2,7 @@ load ./sequence.maude
 
 fmod AS is
 	sort Bound .	
-	sorts Class Association Property Type .
+	sorts Class Association Property PrimitiveCollection App-Type .
 	
 ---NAT and "*"?	
 	op |* : -> Bound [ctor] .	
@@ -19,6 +19,10 @@ view Property from TRIV to AS is
 	sort Elt to Property .
 endv
 
+view PrimitiveCollection from TRIV to AS is
+	sort Elt to PrimitiveCollection .
+endv
+
 view Class from TRIV to AS is
 	sort Elt to Class .
 endv
@@ -29,24 +33,53 @@ fmod AR is
 	pr BOOL .
 	pr SEQUENCE{Property} .
 	pr SEQUENCE{Association} .
+	pr SEQUENCE{PrimitiveCollection} .
 	
-	op STRING : -> Type [ctor] .
+	op APP-STRING : -> App-Type [ctor] .
+	
+	var Q : Qid . 
+	var Props : List{Property} .
+	var Collects : List{PrimitiveCollection} .
+	var Assocs : List{Association} .
+	var S : String .
+	var T : App-Type .
+	var B1 B2 : Bool .
+	
+	
 	
 --- Class = < label, property*, association* >
-	op class : Qid List{Property} List{Association} -> Class [ctor] .
+	op class : Qid List{Property} List{PrimitiveCollection} List{Association} -> Class [ctor] .
 	op name : Class -> Qid .
+	eq name(class(Q, Props, Collects, Assocs)) = Q .
 	op properties : Class -> List{Property} .
+	eq properties(class(Q, Props, Collects, Assocs)) = Props .
+	op collections : Class -> List{PrimitiveCollection} .
+	eq collections(class(Q, Props, Collects, Assocs)) = Collects .
 	op associations : Class -> List{Association} .
+	eq associations(class(Q, Props, Collects, Assocs)) = Assocs .
 	
---- Property = < label, type, defaultValue, ordered, unique, upperBound, lowerBound >
-	op property : Qid Type String Bool Bool Bound Bound -> Property [ctor] .
+--- Property = < label, type, defaultValue, mandatory, unique >
+	op property : Qid App-Type String Bool Bool -> Property [ctor] .
 	op name : Property -> Qid . 
-	op type : Property -> Type .
+	eq name(property(Q, T, S, B1, B2)) = Q .
+	op type : Property -> App-Type .
+	eq type(property(Q, T, S, B1, B2)) = T .
 	op defaultValue : Property -> String .
-	op ordered : Property -> Bool .
+	eq defaultValue(property(Q, T, S, B1, B2)) = S .
+	op mandatory : Property -> Bool .
+	eq mandatory(property(Q, T, S, B1, B2)) = B1 .
 	op unique : Property -> Bool .
-	op upperBound : Property -> Bound .
-	op lowwerBound : Property -> Bound . 
+	eq unique(property(Q, T, S, B1, B2)) = B2 .
+
+--- PrimitiveCollection = < label, type, defaultValue, ordered, unique, upperBound, lowerBound >
+    op multiProperty : Qid App-Type String Bool Bool Bound Bound -> PrimitiveCollection [ctor] .
+	op name : PrimitiveCollection -> Qid . 
+	op type : PrimitiveCollection -> App-Type .
+	op defaultValue : PrimitiveCollection -> String .
+	op ordered : PrimitiveCollection -> Bool .
+	op unique : PrimitiveCollection -> Bool .
+	op upperBound : PrimitiveCollection -> Bound .
+	op lowwerBound : PrimitiveCollection -> Bound . 
 	
 --- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound 
 	op association : Qid Qid Bool Bool Bound Bound -> Association [ctor] .

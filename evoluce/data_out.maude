@@ -2,7 +2,7 @@ load ./sequence.maude
 
 fmod DIS is
 		
-	sorts  Table PrimaryKey ForeignKey Column Constraint Schema Type .
+	sorts  Table PrimaryKey ForeignKey Column Constraint Schema Db-Type .
 	
 endfm
 
@@ -34,8 +34,8 @@ fmod DIR is
 	op NOTNULL : -> Constraint [ctor] .
 	op UNIQUE : -> Constraint [ctor] .
 
---- Type = < STRING >				
-	op STRING : -> Type [ctor] .
+--- Db-Type = < DB-STRING >				
+	op DB-STRING : -> Db-Type [ctor] .
 	
 --- Table = < name, PK, column*, foreignKey* >	
 	op table : Qid PrimaryKey List{Column} List{ForeignKey} -> Table [ctor].
@@ -45,9 +45,9 @@ fmod DIR is
 	op foreignKeys : Table -> List{ForeignKey} . 
 	
 --- Column = < name, type, constraint* >	
-	op column : Qid Type List{Constraint} -> Column [ctor] .
+	op column : Qid Db-Type List{Constraint} -> Column [ctor] .
 	op name : Column -> Qid .
-	op type : Column -> Type .
+	op type : Column -> Db-Type .
 	op constraints : Column -> List{Constraint} .
 
 --- ForeignKey = < name, referencedTableName >	
@@ -66,7 +66,7 @@ fmod DIR is
 	var PK : PrimaryKey .
 	var Cols : List{Column} .
 	var FKs : List{ForeignKey} .
-	var T : Type .
+	var T : Db-Type .
 	var Cons : List{Constraint} .
 	
 	eq name(primaryKey(N)) = N .		

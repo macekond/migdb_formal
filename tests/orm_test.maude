@@ -1,0 +1,20 @@
+load ../evoluce/evolution.maude
+load ./colored_result.maude
+
+fmod TESTSUITE is
+	pr COLORING .
+	pr ORM .
+endfm
+
+--- Property to Column Tests
+red test(orm(property('surname, APP-STRING, "value", false, false)) == column('surname, DB-STRING, [])) .
+red test(orm(property('surname, APP-STRING, "value", false, true)) == column('surname, DB-STRING, UNIQUE)) . 
+red test(orm(property('surname, APP-STRING, "value", true, false)) == column('surname, DB-STRING, NOTNULL)) .
+red test(orm(property('surname, APP-STRING, "value", true, true)) == column('surname, DB-STRING, NOTNULL UNIQUE)) .
+
+--- List{Property} tp List{Column} Tests
+red test(ormList([]) == []) .
+red test(ormList(property('surname, APP-STRING, "value", false, false)) == column('surname, DB-STRING, [])) .
+red test(ormList(property('surname, APP-STRING, "value", false, false) property('firstName, APP-STRING, "value", true, true)) == column('surname, DB-STRING, []) column('firstName, DB-STRING, NOTNULL UNIQUE)) .
+
+

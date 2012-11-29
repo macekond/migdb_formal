@@ -4,7 +4,6 @@ fmod COLORING is
     op BAD : -> Result [format (r! o)] .
     op good : -> Result [format (g! o)] .
 
-  
 	var B : Bool .
 	
 	op test : Bool  -> Result .
