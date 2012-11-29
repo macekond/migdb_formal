@@ -7,14 +7,24 @@ fmod TESTSUITE is
 endfm
 
 --- Property to Column Tests
-red test(orm(property('surname, APP-STRING, "value", false, false)) == column('surname, DB-STRING, [])) .
-red test(orm(property('surname, APP-STRING, "value", false, true)) == column('surname, DB-STRING, UNIQUE)) . 
-red test(orm(property('surname, APP-STRING, "value", true, false)) == column('surname, DB-STRING, NOTNULL)) .
-red test(orm(property('surname, APP-STRING, "value", true, true)) == column('surname, DB-STRING, NOTNULL UNIQUE)) .
+red test(prop2col(property('surname, APP-STRING, "value", false, false)) == column('surname, DB-STRING, [])) .
+red test(prop2col(property('surname, APP-STRING, "value", false, true)) == column('surname, DB-STRING, UNIQUE)) . 
+red test(prop2col(property('surname, APP-STRING, "value", true, false)) == column('surname, DB-STRING, NOTNULL)) .
+red test(prop2col(property('surname, APP-STRING, "value", true, true)) == column('surname, DB-STRING, NOTNULL UNIQUE)) .
 
 --- List{Property} tp List{Column} Tests
-red test(ormList([]) == []) .
-red test(ormList(property('surname, APP-STRING, "value", false, false)) == column('surname, DB-STRING, [])) .
-red test(ormList(property('surname, APP-STRING, "value", false, false) property('firstName, APP-STRING, "value", true, true)) == column('surname, DB-STRING, []) column('firstName, DB-STRING, NOTNULL UNIQUE)) .
+red test(props2cols([]) == []) .
+red test(props2cols(property('surname, APP-STRING, "value", false, false)) == column('surname, DB-STRING, [])) .
+red test(props2cols(property('surname, APP-STRING, "value", false, false) property('firstName, APP-STRING, "value", true, true)) == column('surname, DB-STRING, []) column('firstName, DB-STRING, NOTNULL UNIQUE)) .
+
+--- Collection to Table Tests
+red test(collection2table('className, primitiveCollection('strings, APP-STRING, "value", true)) == table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('className, 'className, NOTNULL))) .
+red test(collections2tables('className, primitiveCollection('strings, APP-STRING, "value", true) primitiveCollection('stringos, APP-STRING, "value", true)) == table('strings, primaryKey('Id), column('value, DB-STRING,
+    []), foreignKey('className, 'className, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('className,'className, NOTNULL))) .
+
+--- Collection to Tables Tests
 
 
+
+--- < label, type, defaultValue, ordered, unique, upperBound, mandatory >
+---red test(collection2table('className, primitiveCollection('strings, APP-STRING, "value", true, true, |*, true)) == ) .

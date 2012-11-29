@@ -43,11 +43,11 @@ fmod AR is
 	var Assocs : List{Association} .
 	var S : String .
 	var T : App-Type .
-	var B1 B2 : Bool .
+	var B1 B2 B3 : Bool .
+	var Bo : Bound .
 	
 	
-	
---- Class = < label, property*, association* >
+--- Class = < label, property*, primitiveCollection*, association* >
 	op class : Qid List{Property} List{PrimitiveCollection} List{Association} -> Class [ctor] .
 	op name : Class -> Qid .
 	eq name(class(Q, Props, Collects, Assocs)) = Q .
@@ -71,15 +71,25 @@ fmod AR is
 	op unique : Property -> Bool .
 	eq unique(property(Q, T, S, B1, B2)) = B2 .
 
---- PrimitiveCollection = < label, type, defaultValue, ordered, unique, upperBound, lowerBound >
-    op multiProperty : Qid App-Type String Bool Bool Bound Bound -> PrimitiveCollection [ctor] .
+--- PrimitiveCollection = < label, type, defaultValue, ordered, unique, upperBound, mandatory >
+--- reduced to < label, type, defaultValue, mandatory > 
+--- ordered wil cause another column with ordering information,
+--- unique, mandatory and upperBound will lead to trigger or some application control
+    op primitiveCollection : Qid App-Type String Bool -> PrimitiveCollection [ctor] .
 	op name : PrimitiveCollection -> Qid . 
+	eq name(primitiveCollection(Q, T, S, B1)) = Q .
 	op type : PrimitiveCollection -> App-Type .
+	eq type(primitiveCollection(Q, T, S, B1)) = T .
 	op defaultValue : PrimitiveCollection -> String .
-	op ordered : PrimitiveCollection -> Bool .
-	op unique : PrimitiveCollection -> Bool .
-	op upperBound : PrimitiveCollection -> Bound .
-	op lowwerBound : PrimitiveCollection -> Bound . 
+	eq defaultValue(primitiveCollection(Q, T, S, B1)) = S .
+---	op ordered : PrimitiveCollection -> Bool .
+---	eq ordered(primitiveCollection(Q, T, S, B1, B2, Bo, B3)) = B1 .
+---	op unique : PrimitiveCollection -> Bool .
+---	eq unique(primitiveCollection(Q, T, S, B1, B2, Bo, B3)) = B2 .
+---	op upperBound : PrimitiveCollection -> Bound .
+---	eq upperBound(primitiveCollection(Q, T, S, B1, B2, Bo, B3)) = Bo .
+	op mandatory : PrimitiveCollection -> Bool . 
+	eq mandatory(primitiveCollection(Q, T, S, B1)) = B1 .
 	
 --- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound 
 	op association : Qid Qid Bool Bool Bound Bound -> Association [ctor] .

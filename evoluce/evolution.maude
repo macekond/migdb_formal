@@ -9,27 +9,37 @@ fmod ORM is
 	var T : Table .
 	var Props : List{Property} .
 	var Prop : Property .
+	var PrimColls : List{PrimitiveCollection} .
+	var PrimColl : PrimitiveCollection .
+	var Q : Qid . 
 
 
-	op orm : App-Type -> Db-Type .
-	eq orm(APP-STRING) = DB-STRING .
+	op type2type : App-Type -> Db-Type .
+	eq type2type(APP-STRING) = DB-STRING .
 
 	
----	op orm : Class -> Table .
----	eq orm(C) = table(name(C), primaryKey('Id), orm(properties(C)), orm(associations(C))) . 
+---	op prop2col : Class -> List{Table} .
+---	eq prop2col(C) = collections2tables(name(C), collections(C)) table(name(C), primaryKey('Id), props2cols(properties(C)), prop2col(associations(C))) . 
 
-	op ormList : List{Property} -> List{Column} .
-	eq ormList([]) = ([]).List{Column} .
-	eq ormList(Props) = orm(head(Props)) ormList(tail(Props)) .
+	op props2cols : List{Property} -> List{Column} .
+	eq props2cols([]) = ([]).List{Column} .
+	eq props2cols(Props) = prop2col(head(Props)) props2cols(tail(Props)) .
 
-	op orm : Property -> Column .
-	ceq orm(Prop) = column(name(Prop), orm(type(Prop)), NOTNULL UNIQUE) if mandatory(Prop) and unique(Prop) .
-	ceq orm(Prop) = column(name(Prop), orm(type(Prop)), NOTNULL) if mandatory(Prop) .
-	ceq orm(Prop) = column(name(Prop), orm(type(Prop)), UNIQUE) if unique(Prop) .
-	eq orm(Prop) = column(name(Prop), orm(type(Prop)), []) [owise] .
+	op collections2tables : Qid List{PrimitiveCollection} -> List{Table} .
+	eq collections2tables(Q, []) = ([]).List{Table} .
+	eq collections2tables(Q, PrimColls) = collection2table(Q, head(PrimColls)) collections2tables(Q, tail(PrimColls)) .
+	
+	op collection2table : Qid PrimitiveCollection -> Table . 
+	eq collection2table(Q, PrimColl) = table(name(PrimColl), primaryKey('Id), column('value, type2type(type(PrimColl)), [] ), foreignKey(Q, Q, NOTNULL)) .
+
+	op prop2col : Property -> Column .
+	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL UNIQUE) if mandatory(Prop) and unique(Prop) .
+	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL) if mandatory(Prop) .
+	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), UNIQUE) if unique(Prop) .
+	eq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), []) [owise] .
 
 
----	op orm : List{Association} -> List{ForeignKey} .
+---	op prop2col : List{Association} -> List{ForeignKey} .
 
 
 endfm
@@ -47,6 +57,6 @@ fmod ORMSYSTEM is
 	var C : Class .
 	
 ---	op addClass : Class OrmSystem -> OrmSystem .
----	eq addClass(C, system(A, D)) = system(addClass(C, A), addTable(orm(C), D)) .
+---	eq addClass(C, system(A, D)) = system(addClass(C, A), addTable(prop2col(C), D)) .
 	
 endfm

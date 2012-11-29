@@ -50,9 +50,9 @@ fmod DIR is
 	op type : Column -> Db-Type .
 	op constraints : Column -> List{Constraint} .
 
---- ForeignKey = < name, referencedTableName >	
+--- ForeignKey = < name, referencedTableName, constraint* >	
 --- At the moment it is possible to reference an ID column
-	op foreignKey : Qid Qid -> ForeignKey [ctor] . --- Constraints on FK?
+	op foreignKey : Qid Qid List{Constraint} -> ForeignKey [ctor] . --- Constraints on FK?
 	op name : ForeignKey -> Qid .
 	op reference : ForeignKey -> Qid .
 	
@@ -80,8 +80,8 @@ fmod DIR is
 	eq type(column(N, T, Cons)) = T .
 	eq constraints(column(N, T, Cons)) = Cons .
 	
-	eq name(foreignKey(N, M)) = N .
-	eq reference(foreignKey(N, M)) = M .
+	eq name(foreignKey(N, M, Cons)) = N .
+	eq reference(foreignKey(N, M, Cons)) = M .
 
 endfm
 
