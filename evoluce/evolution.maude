@@ -7,7 +7,9 @@ fmod ORM is
 	
 	var C : Class .
 	var T : Table .
+	var D : Database .
 	var Props : List{Property} .
+	var Assoc : List{Association} .
 	var Prop : Property .
 	var PrimColls : List{PrimitiveCollection} .
 	var PrimColl : PrimitiveCollection .
@@ -17,9 +19,13 @@ fmod ORM is
 	op type2type : App-Type -> Db-Type .
 	eq type2type(APP-STRING) = DB-STRING .
 
-	
----	op prop2col : Class -> List{Table} .
----	eq prop2col(C) = collections2tables(name(C), collections(C)) table(name(C), primaryKey('Id), props2cols(properties(C)), prop2col(associations(C))) . 
+---	op class2tables : Class -> List{Table} .
+---	eq class2tables(C) = collections2tables(name(C), collections(C)) table(name(C), primaryKey('Id), props2cols(properties(C)), prop2col(associations(C))) . 
+
+	op class2table : Class -> Table .
+	---TODO: associations
+	--- PK is always generated
+	eq class2table(C) = table(name(C), primaryKey('Id), props2cols(properties(C)), []) .
 
 	op props2cols : List{Property} -> List{Column} .
 	eq props2cols([]) = ([]).List{Column} .
@@ -37,9 +43,16 @@ fmod ORM is
 	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL) if mandatory(Prop) .
 	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), UNIQUE) if unique(Prop) .
 	eq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), []) [owise] .
-
-
----	op prop2col : List{Association} -> List{ForeignKey} .
+	
+	
+--- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound >
+	op associations2db : Qid List{Association} Database -> Database .
+	eq associations2db(Q, [], D) = D .
+	eq associations2db(Q, Assoc, D) = associations2db(Q, tail(Assoc), association2db(Q, head(Assoc), D)) .
+	
+	op association2db : Qid Association Database -> Database .
+	ceq association2db(Q, Assoc, D) = addFK(foreignKey(name(Assoc), Q, NOTNULL), Q, D) if startCardinality(Assoc) < 2 .
+	eq association2db(Q, Assoc, D) = addTable(table(name(Assoc), primaryKey('Id'), [], foreignKey(Q, Q, NOTNULL) foreignKey(referenceA(Assoc), referenceA(Assoc), NOTNULL)), D) [owise] .
 
 
 endfm
@@ -53,10 +66,19 @@ fmod ORMSYSTEM is
 	op system : Application Database -> OrmSystem [ctor] .
 	
 	var A : Application .
+	var EA : ErrApplication .
 	var D : Database .
+	var ED : ErrDatabase .
 	var C : Class .
 	
----	op addClass : Class OrmSystem -> OrmSystem .
----	eq addClass(C, system(A, D)) = system(addClass(C, A), addTable(prop2col(C), D)) .
+	op addClass : Class OrmSystem -> OrmSystem .
+	eq addClass(C, system(EA, D)) = system(EA, D) .
+	eq addClass(C, system(A, ED)) = system(A, ED) .
+	eq addClass(C, system(A, D)) = system(addClass(C, A), addClass2Db(C, D)) .
+	
+--- Limitation: if there is a collection with the same name as already existing table the evolution fails => rename a collection table
+	op addClass2Db : Class Database -> Database .
+	eq addClass2Db(C, ED) =  ED .
+	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTables(collections2tables(name(C), collections(C)), addTable(class2table(C), D))) .
 	
 endfm

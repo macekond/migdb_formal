@@ -37,7 +37,7 @@ fmod AR is
 	
 	op APP-STRING : -> App-Type [ctor] .
 	
-	var Q : Qid . 
+	var Q N : Qid . 
 	var Props : List{Property} .
 	var Collects : List{PrimitiveCollection} .
 	var Assocs : List{Association} .
@@ -45,6 +45,7 @@ fmod AR is
 	var T : App-Type .
 	var B1 B2 B3 : Bool .
 	var Bo : Bound .
+	var C1 C2 : NzNat .
 	
 	
 --- Class = < label, property*, primitiveCollection*, association* >
@@ -91,14 +92,20 @@ fmod AR is
 	op mandatory : PrimitiveCollection -> Bool . 
 	eq mandatory(primitiveCollection(Q, T, S, B1)) = B1 .
 	
---- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound 
-	op association : Qid Qid Bool Bool Bound Bound -> Association [ctor] .
+--- Association = < label, referencedClass, startCardinality, endCardinality >
+	op association : Qid Qid NzNat NzNat -> Association [ctor] .
 	op name : Association -> Qid .
+	eq name(association(Q, N, C1, C2)) = Q .
 	op referenceA : Association -> Qid .
-	op ordered : Association -> Bool .
-	op unique : Association -> Bool .
-	op upperBound : Association -> Bound .
-	op lowwerBound : Association -> Bound .
+	eq referenceA(association(Q, N, C1, C2)) = N .
+	op startCardinality : Association -> NzNat .
+	eq startCardinality(association(Q, N, C1, C2)) = C1 .
+	op endCardinality : Association -> NzNat .
+	eq endCardinality(association(Q, N, C1, C2)) = C2 .
+---	op ordered : Association -> Bool .
+---	op unique : Association -> Bool .
+---	op upperBound : Association -> Bound .
+---	op lowwerBound : Association -> Bound .
 	
 	
 endfm
@@ -208,10 +215,10 @@ fmod APP is
 	eq instances(application(Classes, Instances)) = Instances .
 	
 --- addClass
-	op addClass : Application Class -> Application .
-	ceq addClass(A, C) = errApplication("Unable to add class - the name already exists", A) if containsName(classes(A), name(C)) .
-	ceq addClass(A, C) = errApplication("Unable to add class - associed classes not exist(s)", A) if not referencesExist(associations(C), classes(A)) .
-	eq addClass(A, C) = application(classes(A) C, instances(A)) .
+	op addClass : Class Application -> Application .
+	ceq addClass(C, A) = errApplication("Unable to add class - the name already exists", A) if containsName(classes(A), name(C)) .
+	ceq addClass(C, A) = errApplication("Unable to add class - associed classes not exist(s)", A) if not referencesExist(associations(C), classes(A)) .
+	eq addClass(C, A) = application(classes(A) C, instances(A)) .
 	
 --- removeClass
 	op removeClass : Application Qid -> Application .
@@ -225,6 +232,7 @@ fmod APP is
 --- addProperty
 
 --- removeProperty	
+
 
 --- HELPERS
 	op instancesExist : List{Instance} Qid -> Bool .

@@ -51,7 +51,7 @@ fmod DIR is
 	op constraints : Column -> List{Constraint} .
 
 --- ForeignKey = < name, referencedTableName, constraint* >	
---- At the moment it is possible to reference an ID column
+--- At the moment it is possible to reference an ID column only
 	op foreignKey : Qid Qid List{Constraint} -> ForeignKey [ctor] . --- Constraints on FK?
 	op name : ForeignKey -> Qid .
 	op reference : ForeignKey -> Qid .
@@ -223,12 +223,20 @@ fmod DDL is
 	var Cols : List{Column} .
 	var C : Column .
 	var FKs : List{ForeignKey} .
+	var FK : ForeignKey .
+	var ED : ErrDatabase .
+
+
+	op addTables : List{Table} Database -> Database . 
+	eq addTables(Tabs, ED) = ED .
+	eq addTables([], D) = D .
+	eq addTables(Tabs, D) = addTables(tail(Tabs), addTable(head(Tabs), D))  .
 	
 --- addTable -> SQL : CREATE TABLE
-	op addTable : Database Qid PrimaryKey List{Column} List{ForeignKey} -> Database .
-	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - name exists", D) if containsName(tables(D), N) .
-	ceq addTable(D, N, PK, Cols, FKs) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if FKs =/= [] and not referencesExist(FKs, tables(D)) .
-	eq addTable(D, N, PK, Cols, FKs) = database(tables(D) table(N, PK, Cols, FKs), data(D)) [owise] .
+	op addTable : Table Database -> Database .
+	ceq addTable(T, D) = errDatabase("Unable to add table - name exists", D) if containsName(tables(D), name(T)) .
+	ceq addTable(T, D) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if foreignKeys(T) =/= [] and not referencesExist(foreignKeys(T), tables(D)) .
+	eq addTable(T, D) = database(tables(D) T, data(D)) [owise] .
 
 --- removeTable -> SQL: DROP TABLE	
 	op removeTable : Database Qid -> Database .
@@ -248,6 +256,15 @@ fmod DDL is
 	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove column - column name not exists", D) if not containsName(columns(getByName(tables(D), N)), Q) .
 	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove colum - data exists", D)  if dataExist(N, data(D)) .
 	eq removeColumn(D, N, Q) = database(removeByName(tables(D), N) remColumn(getByName(tables(D), N), Q) , data(D)) .
+	
+--- addFK 
+	op addFK : ForeignKey Qid Database -> Database .
+	eq addFK(FK, Q, D) = database(removeByName(tables(D), Q) addFKtoTable(getByName(tables(D), Q), FK), data(D)) .
+		
+	op addFKtoTable : Table ForeignKey -> Table .
+	eq addFKtoTable(T, FK) = table(name(T), primaryKey(pkName(T)), columns(T), foreignKeys(T) FK ) .
+	---TODO: conditions of operation
+	
 	
 --- HELPERS	
 --- remColumn
