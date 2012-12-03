@@ -234,37 +234,38 @@ fmod DDL is
 	
 --- addTable -> SQL : CREATE TABLE
 	op addTable : Table Database -> Database .
-	ceq addTable(T, D) = errDatabase("Unable to add table - name exists", D) if containsName(tables(D), name(T)) .
-	ceq addTable(T, D) = errDatabase("Unable to add table - reference(s) not exist(s)", D) if foreignKeys(T) =/= [] and not referencesExist(foreignKeys(T), tables(D)) .
+	ceq addTable(T, D) = errDatabase("add table - name exists", D) if containsName(tables(D), name(T)) .
+	ceq addTable(T, D) = errDatabase("add table - reference(s) not exist(s)", D) if foreignKeys(T) =/= [] and not referencesExist(foreignKeys(T), tables(D)) .
 	eq addTable(T, D) = database(tables(D) T, data(D)) [owise] .
 
 --- removeTable -> SQL: DROP TABLE	
 	op removeTable : Database Qid -> Database .
-	ceq removeTable(D, N) = errDatabase("Unable to remove table - table not exists", D)  if not containsName(tables(D), N) .
-	ceq removeTable(D, N) = errDatabase("Unable to remove table - data exists", D)  if dataExist(N, data(D)) .
-	ceq removeTable(D, N) = errDatabase("Unable to remove table - table is referenced by a FK", D)  if isReferenced(N, tables(D)) .
+	ceq removeTable(D, N) = errDatabase("remove table - table not exists", D)  if not containsName(tables(D), N) .
+	ceq removeTable(D, N) = errDatabase("remove table - data exists", D)  if dataExist(N, data(D)) .
+	ceq removeTable(D, N) = errDatabase("remove table - table is referenced by a FK", D)  if isReferenced(N, tables(D)) .
 	eq removeTable(D, N) = database(removeByName(tables(D), N), data(D)) .
 	
 --- addColumn -> SQL : ALTER TABLE table_name ADD column_name datatype
 	op addColumn : Database Qid Column -> Database .
-	ceq addColumn(D, N, C) = errDatabase("Unable to add column - table not exists", D) if not containsName(tables(D), N) .
-	ceq addColumn(D, N, C) = errDatabase("Unable to add column - column name already exists", D) if containsName(columns(getByName(tables(D), N)), name(C)) .
+	ceq addColumn(D, N, C) = errDatabase("add column - table not exists", D) if not containsName(tables(D), N) .
+	ceq addColumn(D, N, C) = errDatabase("add column - column name already exists", D) if containsName(columns(getByName(tables(D), N)), name(C)) .
 
 --- removeColumn -> SQL : ALTER TABLE table_name DROP COLUMN column_name
 	op removeColumn : Database Qid Qid -> Database .
-	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove column - table not exists", D) if not containsName(tables(D), N) .
-	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove column - column name not exists", D) if not containsName(columns(getByName(tables(D), N)), Q) .
-	ceq removeColumn(D, N, Q) = errDatabase("Unable to remove colum - data exists", D)  if dataExist(N, data(D)) .
+	ceq removeColumn(D, N, Q) = errDatabase("remove column - table not exists", D) if not containsName(tables(D), N) .
+	ceq removeColumn(D, N, Q) = errDatabase("remove column - column name not exists", D) if not containsName(columns(getByName(tables(D), N)), Q) .
+	ceq removeColumn(D, N, Q) = errDatabase("remove colum - data exists", D)  if dataExist(N, data(D)) .
 	eq removeColumn(D, N, Q) = database(removeByName(tables(D), N) remColumn(getByName(tables(D), N), Q) , data(D)) .
 	
 --- addFK 
 	op addFK : ForeignKey Qid Database -> Database .
+	ceq addFK(FK, Q, D) = errDatabase("add FK - target table not exists", D) if not contains(tables(D), Q) .
+	ceq addFK(FK, Q, D) = errDatabase("add FK - reference not exists", D) if not contains(tables(D), referenceA(FK)) .
+	ceq addFK(FK, Q, D) = errDatabase("add FK - name collision", D) if containsName(foreignKeys(getByName(tables(D)), Q), name(FK)) .
 	eq addFK(FK, Q, D) = database(removeByName(tables(D), Q) addFKtoTable(getByName(tables(D), Q), FK), data(D)) .
 		
 	op addFKtoTable : Table ForeignKey -> Table .
 	eq addFKtoTable(T, FK) = table(name(T), primaryKey(pkName(T)), columns(T), foreignKeys(T) FK ) .
-	---TODO: conditions of operation
-	
 	
 --- HELPERS	
 --- remColumn
