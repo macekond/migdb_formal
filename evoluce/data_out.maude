@@ -259,9 +259,9 @@ fmod DDL is
 	
 --- addFK 
 	op addFK : ForeignKey Qid Database -> Database .
-	ceq addFK(FK, Q, D) = errDatabase("add FK - target table not exists", D) if not contains(tables(D), Q) .
-	ceq addFK(FK, Q, D) = errDatabase("add FK - reference not exists", D) if not contains(tables(D), referenceA(FK)) .
-	ceq addFK(FK, Q, D) = errDatabase("add FK - name collision", D) if containsName(foreignKeys(getByName(tables(D)), Q), name(FK)) .
+	ceq addFK(FK, Q, D) = errDatabase("add FK - target table not exists", D) if not containsName(tables(D), Q) .
+	ceq addFK(FK, Q, D) = errDatabase("add FK - reference not exists", D) if not containsName(tables(D), reference(FK)) .
+	ceq addFK(FK, Q, D) = errDatabase("add FK - name collision", D) if containsName(foreignKeys(getByName(tables(D), Q)), name(FK)) .
 	eq addFK(FK, Q, D) = database(removeByName(tables(D), Q) addFKtoTable(getByName(tables(D), Q), FK), data(D)) .
 		
 	op addFKtoTable : Table ForeignKey -> Table .

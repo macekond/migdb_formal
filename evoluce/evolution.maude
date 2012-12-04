@@ -8,6 +8,7 @@ fmod ORM is
 	var C : Class .
 	var T : Table .
 	var D : Database .
+	var EDb : ErrDatabase .
 	var Props : List{Property} .
 	var Assoc : List{Association} .
 	var Prop : Property .
@@ -48,11 +49,14 @@ fmod ORM is
 --- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound >
 	op associations2db : Qid List{Association} Database -> Database .
 	eq associations2db(Q, [], D) = D .
+	eq associations2db(Q, Assoc, EDb) = EDb .
 	eq associations2db(Q, Assoc, D) = associations2db(Q, tail(Assoc), association2db(Q, head(Assoc), D)) .
 	
 	op association2db : Qid Association Database -> Database .
-	ceq association2db(Q, Assoc, D) = addFK(foreignKey(name(Assoc), Q, NOTNULL), Q, D) if startCardinality(Assoc) < 2 .
-	eq association2db(Q, Assoc, D) = addTable(table(name(Assoc), primaryKey('Id'), [], foreignKey(Q, Q, NOTNULL) foreignKey(referenceA(Assoc), referenceA(Assoc), NOTNULL)), D) [owise] .
+	--- 1:N
+	ceq association2db(Q, Assoc, D) = addFK(foreignKey(name(Assoc), Q, NOTNULL), referenceA(Assoc), D) if startCardinality(Assoc) < 2 .
+	--- M:N
+	eq association2db(Q, Assoc, D) = addTable(table(name(Assoc), primaryKey('Id'), [], foreignKey(Q, Q, NOTNULL) foreignKey(name(Assoc), name(Assoc), NOTNULL)), D) [owise] .
 
 
 endfm
@@ -79,6 +83,5 @@ fmod ORMSYSTEM is
 --- Limitation: if there is a collection with the same name as already existing table the evolution fails => rename a collection table
 	op addClass2Db : Class Database -> Database .
 	eq addClass2Db(C, ED) =  ED .
-	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTables(collections2tables(name(C), collections(C)), addTable(class2table(C), D))) .
-	
+	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTables(collections2tables(name(C), collections(C)), addTable(class2table(C), D))) .	
 endfm
