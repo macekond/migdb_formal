@@ -61,23 +61,20 @@ fmod APPLICATION-DEFINITIONS  is
 	op associations : Class -> List{Association} .
 	eq associations(class(Q, Props, Collects, Assocs)) = Assocs .
 	
---- Property = < label, type, defaultValue, mandatory, unique >
-	op property : Qid App-Type String Bool Bool -> Property [ctor] .
+--- Property = < label, type, defaultValue, mandatory >
+	op property : Qid App-Type String Bool -> Property [ctor] .
 	
 	op name : Property -> Qid . 
-	eq name(property(Q, T, S, B1, B2)) = Q .
+	eq name(property(Q, T, S, B1)) = Q .
 	
 	op type : Property -> App-Type .
-	eq type(property(Q, T, S, B1, B2)) = T .
+	eq type(property(Q, T, S, B1)) = T .
 	
 	op defaultValue : Property -> String .
-	eq defaultValue(property(Q, T, S, B1, B2)) = S .
+	eq defaultValue(property(Q, T, S, B1)) = S .
 	
 	op mandatory : Property -> Bool .
-	eq mandatory(property(Q, T, S, B1, B2)) = B1 .
-	---TODO Does it make sense?
-	op unique : Property -> Bool .
-	eq unique(property(Q, T, S, B1, B2)) = B2 .
+	eq mandatory(property(Q, T, S, B1)) = B1 .
 
 --- PrimitiveCollection = < label, type, defaultValue, mandatory >
     op primitiveCollection : Qid App-Type String Bool -> PrimitiveCollection [ctor] .
