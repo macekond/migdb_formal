@@ -21,28 +21,28 @@ fmod ORM is
 	eq type2type(APP-STRING) = DB-STRING .
 
 ---	op class2tables : Class -> List{Table} .
----	eq class2tables(C) = collections2tables(name(C), collections(C)) table(name(C), primaryKey('Id), props2cols(properties(C)), prop2col(associations(C))) . 
+---	eq class2tables(C) = collections2tables(name(C), collections(C)) table(name(C), primaryKey('Id), props2cols(singleProperty(C)), prop2col(associations(C))) . 
 
 	op class2table : Class -> Table .
 	---TODO: associations
 	--- PK is always generated
-	eq class2table(C) = table(name(C), primaryKey('Id), props2cols(properties(C)), []) .
+	eq class2table(C) = table(name(C), primaryKey('Id), props2cols(singleProperty(C)), []) .
 
 	op props2cols : List{Property} -> List{Column} .
 	eq props2cols([]) = ([]).List{Column} .
 	eq props2cols(Props) = prop2col(head(Props)) props2cols(tail(Props)) .
 
-	op collections2tables : Qid List{PrimitiveCollection} -> List{Table} .
+	op collections2tables : Qid List{Property} -> List{Table} .
 	eq collections2tables(Q, []) = ([]).List{Table} .
-	eq collections2tables(Q, PrimColls) = collection2table(Q, head(PrimColls)) collections2tables(Q, tail(PrimColls)) .
+	eq collections2tables(Q, Props) = collection2table(Q, head(Props)) collections2tables(Q, tail(Props)) .
 	
-	op collection2table : Qid PrimitiveCollection -> Table . 
-	eq collection2table(Q, PrimColl) = table(name(PrimColl), primaryKey('Id), column('value, type2type(type(PrimColl)), [] ), foreignKey(Q, Q, NOTNULL)) .
+	op collection2table : Qid Property -> Table . 
+	eq collection2table(Q, Prop) = table(name(Prop), primaryKey('Id), column('value, type2type(type(Prop)), [] ), foreignKey(Q, Q, NOTNULL)) .
 
 	op prop2col : Property -> Column .
 	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL) if cardinality(Prop) == 1 .
-	eq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), []) [owise] .
-	
+	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), []) if cardinality(Prop) == 0 .
+	eq prop2col(Prop) = [] [owise] .
 	
 --- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound >
 	op associations2db : Qid List{Association} Database -> Database .

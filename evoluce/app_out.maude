@@ -53,16 +53,29 @@ fmod APPLICATION-DEFINITIONS  is
 	op name : Class -> Qid .
 	eq name(class(Q, Props, Collects, Assocs)) = Q .
 	
-	op properties : Class -> List{Property} .
-	eq properties(class(Q, Props, Collects, Assocs)) = Props .
+	op singleProperty : Class -> List{Property} .
+	eq singleProperty(class(Q, Props, Collects, Assocs)) = ssingleProperty(Props) .
 	
-	op collections : Class -> List{PrimitiveCollection} .
-	eq collections(class(Q, Props, Collects, Assocs)) = Collects .
+	op ssingleProperty : List{Property} -> List{Property} .
+	eq ssingleProperty([]) = [] .
+	ceq ssingleProperty(Props) = head(Props) ssingleProperty(tail(Props)) if cardinality(head(Props)) < 2 .
+	eq ssingleProperty(Props) = [] ssingleProperty(tail(Props)) [owise] .
 	
+	op collections : Class -> List{Property} .
+	eq collections(class(Q, Props, Collects, Assocs)) = collectionss(Props) .
+	
+	op collectionss : List{Property} -> List{Property} .
+	eq collectionss([]) = [] .
+	ceq collectionss(Props) = head(Props) collectionss(tail(Props)) if cardinality(head(Props)) > 1 .
+	eq collectionss(Props) = [] collectionss(tail(Props)) [owise] .
+		
 	op associations : Class -> List{Association} .
 	eq associations(class(Q, Props, Collects, Assocs)) = Assocs .
 	
 --- Property = < label, type, defaultValue, cardinality >
+	--- cardinality = 0 => not mandatory
+	--- cardinality = 1 => mandatory (not null)
+	--- cardinality > 1 => collection
 	op property : Qid App-Type String Nat -> Property [ctor] .
 	
 	op name : Property -> Qid . 
@@ -77,20 +90,20 @@ fmod APPLICATION-DEFINITIONS  is
 	op cardinality : Property -> Nat .
 	eq cardinality(property(Q, T, S, C1)) = C1 .
 
---- PrimitiveCollection = < label, type, defaultValue, mandatory >
-    op primitiveCollection : Qid App-Type String Bool -> PrimitiveCollection [ctor] .
+--- PrimitiveCollection = < label, type, defaultValue, cardinality >
+    op primitiveCollection : Qid App-Type String Nat -> PrimitiveCollection [ctor] .
 
 	op name : PrimitiveCollection -> Qid . 
-	eq name(primitiveCollection(Q, T, S, B1)) = Q .
+	eq name(primitiveCollection(Q, T, S, C1)) = Q .
 
 	op type : PrimitiveCollection -> App-Type .
-	eq type(primitiveCollection(Q, T, S, B1)) = T .
+	eq type(primitiveCollection(Q, T, S, C1)) = T .
 
 	op defaultValue : PrimitiveCollection -> String .
-	eq defaultValue(primitiveCollection(Q, T, S, B1)) = S .
-
-	op mandatory : PrimitiveCollection -> Bool . 
-	eq mandatory(primitiveCollection(Q, T, S, B1)) = B1 .
+	eq defaultValue(primitiveCollection(Q, T, S, C1)) = S .
+	
+	op cardinality : PrimitiveCollection -> Nat .
+	eq cardinality(primitiveCollection(Q, T, S, C1)) = C1 .
 	
 --- Association = < label, referencedClass, startCardinality, endCardinality >
 	op association : Qid Qid Nat Nat -> Association [ctor] .
