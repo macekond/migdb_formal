@@ -1,4 +1,5 @@
 --- TODO merge property a primitive collection
+--- TODO create NzNat + 0 sort for cardinalities
 load ./sequence.maude
 
 fmod APPLICATION-SORTS is
@@ -43,7 +44,7 @@ fmod APPLICATION-DEFINITIONS  is
 	var S : String .
 	var T : App-Type .
 	var B1 B2 B3 : Bool .
-	var C1 C2 : NzNat .
+	var C1 C2 : Nat .
 	
 	
 --- Class = < label, property*, primitiveCollection*, association* >
@@ -61,20 +62,20 @@ fmod APPLICATION-DEFINITIONS  is
 	op associations : Class -> List{Association} .
 	eq associations(class(Q, Props, Collects, Assocs)) = Assocs .
 	
---- Property = < label, type, defaultValue, mandatory >
-	op property : Qid App-Type String Bool -> Property [ctor] .
+--- Property = < label, type, defaultValue, cardinality >
+	op property : Qid App-Type String Nat -> Property [ctor] .
 	
 	op name : Property -> Qid . 
-	eq name(property(Q, T, S, B1)) = Q .
+	eq name(property(Q, T, S, C1)) = Q .
 	
 	op type : Property -> App-Type .
-	eq type(property(Q, T, S, B1)) = T .
+	eq type(property(Q, T, S, C1)) = T .
 	
 	op defaultValue : Property -> String .
-	eq defaultValue(property(Q, T, S, B1)) = S .
-	
-	op mandatory : Property -> Bool .
-	eq mandatory(property(Q, T, S, B1)) = B1 .
+	eq defaultValue(property(Q, T, S, C1)) = S .
+		
+	op cardinality : Property -> Nat .
+	eq cardinality(property(Q, T, S, C1)) = C1 .
 
 --- PrimitiveCollection = < label, type, defaultValue, mandatory >
     op primitiveCollection : Qid App-Type String Bool -> PrimitiveCollection [ctor] .
@@ -92,7 +93,7 @@ fmod APPLICATION-DEFINITIONS  is
 	eq mandatory(primitiveCollection(Q, T, S, B1)) = B1 .
 	
 --- Association = < label, referencedClass, startCardinality, endCardinality >
-	op association : Qid Qid NzNat NzNat -> Association [ctor] .
+	op association : Qid Qid Nat Nat -> Association [ctor] .
 	op name : Association -> Qid .
 	eq name(association(Q, N, C1, C2)) = Q .
 	op referenceA : Association -> Qid .

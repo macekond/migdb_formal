@@ -7,14 +7,14 @@ fmod TESTSUITE is
 endfm
 
 --- Property to Column Tests
-red test(prop2col(property('surname, APP-STRING, "value", false)) == column('surname, DB-STRING, [])) .
-red test(prop2col(property('surname, APP-STRING, "value", true)) == column('surname, DB-STRING, NOTNULL)) .
+red test(prop2col(property('surname, APP-STRING, "value", 0)) == column('surname, DB-STRING, [])) .
+red test(prop2col(property('surname, APP-STRING, "value", 1)) == column('surname, DB-STRING, NOTNULL)) .
 
 
 --- List{Property} tp List{Column} Tests
 red test(props2cols([]) == []) .
-red test(props2cols(property('surname, APP-STRING, "value", false)) == column('surname, DB-STRING, [])) .
-red test(props2cols(property('surname, APP-STRING, "value", false) property('firstName, APP-STRING, "value", true)) == column('surname, DB-STRING, []) column('firstName, DB-STRING, NOTNULL)) .
+red test(props2cols(property('surname, APP-STRING, "value", 0)) == column('surname, DB-STRING, [])) .
+red test(props2cols(property('surname, APP-STRING, "value", 0) property('firstName, APP-STRING, "value", 1)) == column('surname, DB-STRING, []) column('firstName, DB-STRING, NOTNULL)) .
 
 --- Collection to Table Tests
 red test(collection2table('className, primitiveCollection('strings, APP-STRING, "value", true)) == table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('className, 'className, NOTNULL))) .

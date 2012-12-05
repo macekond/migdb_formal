@@ -40,7 +40,7 @@ fmod ORM is
 	eq collection2table(Q, PrimColl) = table(name(PrimColl), primaryKey('Id), column('value, type2type(type(PrimColl)), [] ), foreignKey(Q, Q, NOTNULL)) .
 
 	op prop2col : Property -> Column .
-	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL) if mandatory(Prop) .
+	ceq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL) if cardinality(Prop) == 1 .
 	eq prop2col(Prop) = column(name(Prop), type2type(type(Prop)), []) [owise] .
 	
 	

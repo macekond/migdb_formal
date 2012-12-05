@@ -28,12 +28,12 @@ The structure of the application is define by five concepts:
 
 \begin{verbatim}
 Class = <label, property*, primitiveCollection*, association*>
-Property = <label, App-Type, defaultValue, mandatory>
+Property = <label, App-Type, defaultValue, cardinality>
 PrimitiveCollection = <label, App-Type, defaultValue, mandatory>
 Association = <label, referencedClass, startCardinality, 
               endCardinality>
 App-Type = APP-STRING 
-mandatory = Bool
+cardinality = NzNat
 referencesClass = label
 startCardinality = NzNat
 endCardinality = NzNat
