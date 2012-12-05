@@ -1,0 +1,48 @@
+\documentclass[11pt]{article}
+\usepackage{amssymb}
+
+\begin{document}
+
+\section{Application model}
+The application is a set of instances which cooperates together. Each instance is defined according to a class, it means the class defines the structure, relationships of the instance\footnote{we use notation $instance \lhd class$ to describe the fact instance is defined according a class}.
+
+The application model consists of model of classes -structural model and of instances - data model. The whole application is described as:
+
+\begin{verbatim}
+Application = < Class*, Instance*>
+\end{verbatim}
+The application is considered to be consistent if all instances are created according a class existing in the application. 
+
+$\forall i \in instances(Application), \exists c \in classes(Application): i \lhd c $
+
+
+\subsection{Application structure}
+The structure of the application is define by five concepts:
+\begin{itemize}
+	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and PrimitiveCollection and a class can be associated to other classes in the application.  
+	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value
+	\item PrimitiveCollection : the PrimitiveCollection sort represents any collection (set, bag, etc.) of primitive types connected to a class. The collection has its default value and it can be mandatory.
+	\item Association : the association represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
+	\item App-Type : represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
+\end{itemize}
+
+\begin{verbatim}
+Class = <label, property*, primitiveCollection*, association*>
+Property = <label, App-Type, defaultValue, mandatory, unique>
+PrimitiveCollection = <label, App-Type, defaultValue, mandatory>
+Association = <label, referencedClass, startCardinality, 
+              endCardinality>
+App-Type = APP-STRING 
+unique = Bool
+mandatory = Bool
+referencesClass = label
+startCardinality = NzNat
+endCardinality = NzNat
+Bool = true | false
+NzNat = [0 - 9]*
+\end{verbatim}
+
+
+
+
+\end{document}
