@@ -1,39 +1,38 @@
+--- TODO merge property a primitive collection
 load ./sequence.maude
 
-fmod AS is
-	sort Bound .	
-	sorts Class Association Property PrimitiveCollection App-Type .
-	
----NAT and "*"?	
-	op |* : -> Bound [ctor] .	
-	op |0 :	-> Bound [ctor] .
-	op |1 : -> Bound [ctor] .
-	
+fmod APPLICATION-SORTS is
+	--- Structural sorts
+	sorts Class Association Property PrimitiveCollection App-Type .	
+	--- Instance sorts
+	sorts PropertyValue AssociationValue Instance .
 endfm
 
-view Association from TRIV to AS is
+view Association from TRIV to APPLICATION-SORTS is
 	sort Elt to Association .
 endv 
 
-view Property from TRIV to AS is
+view Property from TRIV to APPLICATION-SORTS is
 	sort Elt to Property .
 endv
 
-view PrimitiveCollection from TRIV to AS is
+view PrimitiveCollection from TRIV to APPLICATION-SORTS is
 	sort Elt to PrimitiveCollection .
 endv
 
-view Class from TRIV to AS is
+view Class from TRIV to APPLICATION-SORTS is
 	sort Elt to Class .
 endv
 
-fmod AR is
-	pr AS .
+fmod APPLICATION-DEFINITIONS  is
+	pr APPLICATION-SORTS .
 	pr QID .
 	pr BOOL .
 	pr SEQUENCE{Property} .
 	pr SEQUENCE{Association} .
 	pr SEQUENCE{PrimitiveCollection} .
+	pr SEQUENCE{Qid} .
+	pr SEQUENCE{String} .
 	
 	op APP-STRING : -> App-Type [ctor] .
 	
@@ -44,51 +43,54 @@ fmod AR is
 	var S : String .
 	var T : App-Type .
 	var B1 B2 B3 : Bool .
-	var Bo : Bound .
 	var C1 C2 : NzNat .
 	
 	
 --- Class = < label, property*, primitiveCollection*, association* >
 	op class : Qid List{Property} List{PrimitiveCollection} List{Association} -> Class [ctor] .
+	
 	op name : Class -> Qid .
 	eq name(class(Q, Props, Collects, Assocs)) = Q .
+	
 	op properties : Class -> List{Property} .
 	eq properties(class(Q, Props, Collects, Assocs)) = Props .
+	
 	op collections : Class -> List{PrimitiveCollection} .
 	eq collections(class(Q, Props, Collects, Assocs)) = Collects .
+	
 	op associations : Class -> List{Association} .
 	eq associations(class(Q, Props, Collects, Assocs)) = Assocs .
 	
 --- Property = < label, type, defaultValue, mandatory, unique >
 	op property : Qid App-Type String Bool Bool -> Property [ctor] .
+	
 	op name : Property -> Qid . 
 	eq name(property(Q, T, S, B1, B2)) = Q .
+	
 	op type : Property -> App-Type .
 	eq type(property(Q, T, S, B1, B2)) = T .
+	
 	op defaultValue : Property -> String .
 	eq defaultValue(property(Q, T, S, B1, B2)) = S .
+	
 	op mandatory : Property -> Bool .
 	eq mandatory(property(Q, T, S, B1, B2)) = B1 .
+	---TODO Does it make sense?
 	op unique : Property -> Bool .
 	eq unique(property(Q, T, S, B1, B2)) = B2 .
 
---- PrimitiveCollection = < label, type, defaultValue, ordered, unique, upperBound, mandatory >
---- reduced to < label, type, defaultValue, mandatory > 
---- ordered wil cause another column with ordering information,
---- unique, mandatory and upperBound will lead to trigger or some application control
+--- PrimitiveCollection = < label, type, defaultValue, mandatory >
     op primitiveCollection : Qid App-Type String Bool -> PrimitiveCollection [ctor] .
+
 	op name : PrimitiveCollection -> Qid . 
 	eq name(primitiveCollection(Q, T, S, B1)) = Q .
+
 	op type : PrimitiveCollection -> App-Type .
 	eq type(primitiveCollection(Q, T, S, B1)) = T .
+
 	op defaultValue : PrimitiveCollection -> String .
 	eq defaultValue(primitiveCollection(Q, T, S, B1)) = S .
----	op ordered : PrimitiveCollection -> Bool .
----	eq ordered(primitiveCollection(Q, T, S, B1, B2, Bo, B3)) = B1 .
----	op unique : PrimitiveCollection -> Bool .
----	eq unique(primitiveCollection(Q, T, S, B1, B2, Bo, B3)) = B2 .
----	op upperBound : PrimitiveCollection -> Bound .
----	eq upperBound(primitiveCollection(Q, T, S, B1, B2, Bo, B3)) = Bo .
+
 	op mandatory : PrimitiveCollection -> Bool . 
 	eq mandatory(primitiveCollection(Q, T, S, B1)) = B1 .
 	
@@ -102,21 +104,8 @@ fmod AR is
 	eq startCardinality(association(Q, N, C1, C2)) = C1 .
 	op endCardinality : Association -> NzNat .
 	eq endCardinality(association(Q, N, C1, C2)) = C2 .
----	op ordered : Association -> Bool .
----	op unique : Association -> Bool .
----	op upperBound : Association -> Bound .
----	op lowwerBound : Association -> Bound .
 	
-	
-endfm
-
-fmod APPDATA is
-	pr AR .
-	pr SEQUENCE{Qid} .
-	pr SEQUENCE{String} .
-	
-	sorts PropertyValue AssociationValue .
-	
+--- SORTS ENABLING STORING DATA IN INSTANCES 	
 --- propVal = < propertyName, values >	
 	op propVal : Qid List{String} -> PropertyValue [ctor] .
 	op reference : PropertyValue -> Qid .
@@ -127,24 +116,23 @@ fmod APPDATA is
 	op reference : AssociationValue -> Qid .
 	op val : AssociationValue -> List{Qid} .
 	
+	
 endfm
 
-view PropertyValue from TRIV to APPDATA is
+view PropertyValue from TRIV to APPLICATION-DEFINITIONS   is
 	sort Elt to PropertyValue .
 endv
 
-view AssociationValue from TRIV to APPDATA is
+view AssociationValue from TRIV to APPLICATION-DEFINITIONS   is
 	sort Elt to AssociationValue .
 endv
 
 fmod IN is
-	pr APPDATA .
+	pr APPLICATION-DEFINITIONS  .
 	pr SEQUENCE{Class} .
 	pr SEQUENCE{PropertyValue} .
 	pr SEQUENCE{AssociationValue} . 
 	
-	sort Instance .
-
 --- instance = < name, property*, association* >	
 	op instance : Qid Qid List{PropertyValue} List{AssociationValue} -> Instance [ctor] .
 
@@ -190,10 +178,9 @@ view Instance from TRIV to IN is
 	sort Elt to Instance .
 endv
 
-fmod APP is
+fmod APPLICATION is
 	pr IN .
 	pr SEQUENCE{Instance} .
-	
 	
 	sorts Application ErrApplication .
 	subsort ErrApplication < Application .

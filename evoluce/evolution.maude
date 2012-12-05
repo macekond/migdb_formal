@@ -3,7 +3,7 @@ load ./data_out.maude
 
 fmod ORM is
 	pr DDL .
-	pr APP .
+	pr APPLICATION .
 	
 	var C : Class .
 	var T : Table .
