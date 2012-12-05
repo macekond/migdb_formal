@@ -12,8 +12,6 @@ fmod ORM is
 	var Props : List{Property} .
 	var Assoc : List{Association} .
 	var Prop : Property .
-	var PrimColls : List{PrimitiveCollection} .
-	var PrimColl : PrimitiveCollection .
 	var Q : Qid . 
 
 
@@ -21,12 +19,12 @@ fmod ORM is
 	eq type2type(APP-STRING) = DB-STRING .
 
 ---	op class2tables : Class -> List{Table} .
----	eq class2tables(C) = collections2tables(name(C), collections(C)) table(name(C), primaryKey('Id), props2cols(singleProperty(C)), prop2col(associations(C))) . 
+---	eq class2tables(C) = collections2tables(name(C), collectionPropertyList(C)) table(name(C), primaryKey('Id), props2cols(singleProperty(C)), prop2col(associations(C))) . 
 
 	op class2table : Class -> Table .
 	---TODO: associations
 	--- PK is always generated
-	eq class2table(C) = table(name(C), primaryKey('Id), props2cols(singleProperty(C)), []) .
+	eq class2table(C) = table(name(C), primaryKey('Id), props2cols(singlePropertyList(C)), []) .
 
 	op props2cols : List{Property} -> List{Column} .
 	eq props2cols([]) = ([]).List{Column} .
@@ -81,5 +79,5 @@ fmod ORMSYSTEM is
 --- Limitation: if there is a collection with the same name as already existing table the evolution fails => rename a collection table
 	op addClass2Db : Class Database -> Database .
 	eq addClass2Db(C, ED) =  ED .
-	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTables(collections2tables(name(C), collections(C)), addTable(class2table(C), D))) .	
+	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTables(collections2tables(name(C), collectionPropertyList(C)), addTable(class2table(C), D))) .	
 endfm
