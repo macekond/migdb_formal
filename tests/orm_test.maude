@@ -27,9 +27,9 @@ red test(collections2tables('Q, primitiveCollection('strings, APP-STRING, "value
 red test(collections2tables('Q, primitiveCollection('strings, APP-STRING, "value", true) primitiveCollection('stringos, APP-STRING, "value", true)) == table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL))) .
 
 --- AddTables
-red test(addTables(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == errDatabase("Unable to add table - reference(s) not exist(s)", database([], []))) .
+red test(addTables(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == errDatabase("add table - reference(s) not exist(s)", database([], []))) .
 red test(addTables(table('Q, primaryKey('Id), column('value, DB-STRING, []), []) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == database(table('Q, primaryKey('Id), column('value, DB-STRING, []), []) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), [])) .
-red test(addTables(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('Q, primaryKey('Id), column('value, DB-STRING, []), []), database([],[])) == errDatabase("Unable to add table - reference(s) not exist(s)", database([], []))) .
+red test(addTables(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('Q, primaryKey('Id), column('value, DB-STRING, []), []), database([],[])) == errDatabase("add table - reference(s) not exist(s)", database([], []))) .
 
 --- < label, type, defaultValue, ordered, unique, upperBound, mandatory >
 ---red test(collection2table('className, primitiveCollection('strings, APP-STRING, "value", true, true, |*, true)) == ) .

@@ -33,14 +33,14 @@ red test(tables(database([], [])) == [] ).
 red test(data(database([], [])) == [] ).
 
 --- name collision
-red test(addTable(table('person, primaryKey('id), [], []), database(table('person, primaryKey('id), [], []), [])) == errDatabase("Unable to add table - name exists", database(table('person, primaryKey('id), [], []), [])) ) .
+red test(addTable(table('person, primaryKey('id), [], []), database(table('person, primaryKey('id), [], []), [])) == errDatabase("add table - name exists", database(table('person, primaryKey('id), [], []), [])) ) .
 --- OK
 red test(addTable(table('perso, primaryKey('id), [], foreignKey('a,'person, [])), database(table('person, primaryKey('id), [], []), [])) == database(table('person, primaryKey('id), [], []) table('perso, primaryKey('id), [], foreignKey('a, 'person, [])), [])) .
 --- OK
 red test(addTable(table('perso, primaryKey('id), [], []), database(table('person, primaryKey('id), [], []), [])) == database(table('person, primaryKey('id), [], []) table('perso, primaryKey('id), [], []), [])) .
 
 --- reference does not exist
-red test(addTable(table('perso, primaryKey('id), [], foreignKey('a,'pers, [])), database(table('person, primaryKey('id), [], []), [])) == errDatabase("Unable to add table - reference(s) not exist(s)", database(table('person, primaryKey('id), [], []), []))) .
+red test(addTable(table('perso, primaryKey('id), [], foreignKey('a,'pers, [])), database(table('person, primaryKey('id), [], []), [])) == errDatabase("add table - reference(s) not exist(s)", database(table('person, primaryKey('id), [], []), []))) .
 
 
 red test(referencesExist(foreignKey('a, 'b, []), []) == false) .
