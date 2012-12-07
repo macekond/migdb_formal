@@ -48,6 +48,7 @@ There are defined functions for object-relational mapping used in the model. The
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
 \begin{verbatim}
 op type2type : App-Type -> Db-Type .
+
 eq type2type(APP-STRING) = DB-STRING .
 \end{verbatim}
 
@@ -56,6 +57,7 @@ We assume the primary key column is created automatically by database, therefore
 
 \begin{verbatim}
 op class2table : Class -> Table .
+
 eq class2table(C) = table(name(C), primaryKey('Id), 
                     props2cols(singlePropertyList(C)), []) .
 \end{verbatim}
@@ -63,12 +65,40 @@ eq class2table(C) = table(name(C), primaryKey('Id),
 \subsection{Mapping of Properties}
 There are two types of properties - the first type called single properties has cardinality 0 or 1, the second one (called collections) has cardinality greater than 1. Each type has its own rules of mapping.
 
-\subsubsection{Mapping of Single Properties}
+\subsubsection{Mapping of Single Property}
+Each single property is mapped to a column, when the cardinality is equal to 1 the NOTNULL constraint is added to a column. 
 \begin{verbatim}
 op props2cols : List{Property} -> List{Column} .
-	eq props2cols([]) = ([]).List{Column} .
-	eq props2cols(Props) = prop2col(head(Props)) props2cols(tail(Props)) .
+op props2cols : Property -> Column .
+
+eq props2cols([]) = ([]).List{Column} .
+ceq props2cols(Prop) = [] if cardinality(Prop) > 2 .
+ceq props2cols(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL)
+    if cardinality(Prop) == 1 .
+ceq props2cols(Prop) = column(name(Prop), type2type(type(Prop)), []) 
+   if cardinality(Prop) == 0 .
+eq props2cols(Props) = props2cols(head(Props)) props2cols(tail(Props)) .
 \end{verbatim}
+A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping function for collections.
+
+\subsubsection{Mapping of Collections}
+A property collection is mapped into a table which contains a foreign key. The key references the table representing the owning class.
+\begin{verbatim}
+op collections2tables : Qid List{Property} -> List{Table} .
+op collections2tables : Qid Property -> Table . 
+
+eq collections2tables(Q, []) = ([]).List{Table} .
+eq collections2tables(Q, Prop) = table(name(Prop), primaryKey('Id), 
+   column('value, type2type(type(Prop)), [] ), foreignKey(Q, Q, NOTNULL)) .
+eq collections2tables(Q, Props) = collections2tables(Q, head(Props)) 
+   collections2tables(Q, tail(Props)) .
+\end{verbatim}
+
+\subsection{Mapping of Associations}
+\begin{verbatim}
+
+\end{verbatim}
+
 
 
 	

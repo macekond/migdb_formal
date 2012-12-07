@@ -14,7 +14,6 @@ fmod ORM is
 	var Prop : Property .
 	var Q : Qid . 
 
-
 	op type2type : App-Type -> Db-Type .
 	eq type2type(APP-STRING) = DB-STRING .
 
@@ -40,9 +39,6 @@ fmod ORM is
 	eq collections2tables(Q, Prop) = table(name(Prop), primaryKey('Id), column('value, type2type(type(Prop)), [] ), foreignKey(Q, Q, NOTNULL)) .
 	eq collections2tables(Q, Props) = collections2tables(Q, head(Props)) collections2tables(Q, tail(Props)) .
 	
-
-	
---- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound >
 	op associations2db : Qid List{Association} Database -> Database .
 	eq associations2db(Q, [], D) = D .
 	eq associations2db(Q, Assoc, EDb) = EDb .
