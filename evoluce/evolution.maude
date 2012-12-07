@@ -35,12 +35,11 @@ fmod ORM is
 	eq props2cols(Props) = props2cols(head(Props)) props2cols(tail(Props)) .
 	
 	op collections2tables : Qid List{Property} -> List{Table} .
+	op collections2tables : Qid Property -> Table . 
 	eq collections2tables(Q, []) = ([]).List{Table} .
-	eq collections2tables(Q, Props) = collection2table(Q, head(Props)) collections2tables(Q, tail(Props)) .
+	eq collections2tables(Q, Prop) = table(name(Prop), primaryKey('Id), column('value, type2type(type(Prop)), [] ), foreignKey(Q, Q, NOTNULL)) .
+	eq collections2tables(Q, Props) = collections2tables(Q, head(Props)) collections2tables(Q, tail(Props)) .
 	
-	op collection2table : Qid Property -> Table . 
-	eq collection2table(Q, Prop) = table(name(Prop), primaryKey('Id), column('value, type2type(type(Prop)), [] ), foreignKey(Q, Q, NOTNULL)) .
-
 
 	
 --- Association = < label, referencedClass, ordered, unique, upperBound, lowerBound >

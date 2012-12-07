@@ -17,7 +17,7 @@ red test(props2cols(property('surname, APP-STRING, "value", 0)) == column('surna
 red test(props2cols(property('surname, APP-STRING, "value", 0) property('firstName, APP-STRING, "value", 1)) == column('surname, DB-STRING, []) column('firstName, DB-STRING, NOTNULL)) .
 
 --- Collection to Table Tests
-red test(collection2table('className, property('strings, APP-STRING, "value", 2)) == table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('className, 'className, NOTNULL))) .
+red test(collections2tables('className, property('strings, APP-STRING, "value", 2)) == table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('className, 'className, NOTNULL))) .
 red test(collections2tables('className, property('strings, APP-STRING, "value", 4) property('stringos, APP-STRING, "value", 6)) == table('strings, primaryKey('Id), column('value, DB-STRING,
     []), foreignKey('className, 'className, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('className,'className, NOTNULL))) .
 
