@@ -6,6 +6,9 @@ fmod APPLICATION-SORTS is
 	sorts Class Association Property App-Type .	
 	--- Instance sorts
 	sorts PropertyValue AssociationValue Instance .
+	--- Application and Error Aplication
+	sorts Application ErrApplication .
+	subsort ErrApplication < Application .
 endfm
 
 view Association from TRIV to APPLICATION-SORTS is
@@ -20,10 +23,10 @@ view Class from TRIV to APPLICATION-SORTS is
 	sort Elt to Class .
 endv
 
-fmod APPLICATION-DEFINITIONS  is
-	pr APPLICATION-SORTS .
+fmod APPLICATION-STRUCTURE  is
 	pr QID .
 	pr BOOL .
+	pr APPLICATION-SORTS .
 	pr SEQUENCE{Property} .
 	pr SEQUENCE{Association} .
 	pr SEQUENCE{Qid} .
@@ -96,7 +99,7 @@ fmod APPLICATION-DEFINITIONS  is
 	op endCardinality : Association -> NzNat .
 	eq endCardinality(association(Q, N, C1, C2)) = C2 .
 	
---- SORTS ENABLING STORING DATA IN INSTANCES 	
+--- SORTS ENABLING STORING DATA INSTANACEINSTANCES 	
 --- propVal = < propertyName, values >	
 	op propVal : Qid List{String} -> PropertyValue [ctor] .
 	op reference : PropertyValue -> Qid .
@@ -107,19 +110,18 @@ fmod APPLICATION-DEFINITIONS  is
 	op reference : AssociationValue -> Qid .
 	op val : AssociationValue -> List{Qid} .
 	
-	
 endfm
 
-view PropertyValue from TRIV to APPLICATION-DEFINITIONS   is
+view PropertyValue from TRIV to APPLICATION-STRUCTURE   is
 	sort Elt to PropertyValue .
 endv
 
-view AssociationValue from TRIV to APPLICATION-DEFINITIONS   is
+view AssociationValue from TRIV to APPLICATION-STRUCTURE   is
 	sort Elt to AssociationValue .
 endv
 
-fmod IN is
-	pr APPLICATION-DEFINITIONS  .
+fmod INSTANACE is
+	pr APPLICATION-STRUCTURE  .
 	pr SEQUENCE{Class} .
 	pr SEQUENCE{PropertyValue} .
 	pr SEQUENCE{AssociationValue} . 
@@ -165,16 +167,13 @@ fmod IN is
 	
 endfm
 
-view Instance from TRIV to IN is
+view Instance from TRIV to INSTANACE is
 	sort Elt to Instance .
 endv
 
 fmod APPLICATION is
-	pr IN .
+	pr INSTANACE .
 	pr SEQUENCE{Instance} .
-	
-	sorts Application ErrApplication .
-	subsort ErrApplication < Application .
 
 --- application = < class*, instance* >	
 	op application : List{Class} List{Instance} -> Application [ctor] .

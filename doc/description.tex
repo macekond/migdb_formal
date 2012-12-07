@@ -45,6 +45,18 @@ The relational database consists of database schema which defines the structure 
 op database : List{Table} List{Row} -> Database [ctor] .
 \end{verbatim}
 
+\subsection{Database Schema Model}
+The database schema model is defined by following concepts:
+\begin{itemize}
+	\item Table : table represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
+	\item Column : columns define possible data values and types which can be part of a table record.
+	\item Foreign key :
+	\item Primary key :
+	\item Db-Type : represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DB-STRING.
+	\item Constraint : there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+\end{itemize}
+
+	
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,34 +1,39 @@
 load ./sequence.maude
 
-fmod DIS is
-		
+fmod DATABASE-SORTS is
+	--- Structural sorts	
 	sorts  Table PrimaryKey ForeignKey Column Constraint Schema Db-Type .
-	
+	--- Data sorts
+	sort Data ColumnVal PKVal FKVal .
+	--- Database and Error Database
+	sort Database ErrDatabase .
+	subsorts ErrDatabase < Database .
 endfm
 
-view Table from TRIV to DIS is
+view Table from TRIV to DATABASE-SORTS is
 	sort Elt to Table .
 endv
 
-view Column from TRIV to DIS is
+view Column from TRIV to DATABASE-SORTS is
 	sort Elt to Column .
 endv
 
-view Constraint from TRIV to DIS is
+view Constraint from TRIV to DATABASE-SORTS is
 	sort Elt to Constraint .
 endv
 
-view ForeignKey from TRIV to DIS is
+view ForeignKey from TRIV to DATABASE-SORTS is
 	sort Elt to ForeignKey .
 endv
 
-fmod DIR is
-	pr DIS .
+fmod DATABASE-STRUCTURE is
+	pr DATABASE-SORTS .
 	pr QID .
 	pr SEQUENCE{Table} .
 	pr SEQUENCE{Column} .
 	pr SEQUENCE{ForeignKey} .
 	pr SEQUENCE{Constraint} .
+	pr NAT .
 
 --- Constraint = < NOTNULL | UNIQUE >	
 	op NOTNULL : -> Constraint [ctor] .
@@ -83,39 +88,34 @@ fmod DIR is
 	eq name(foreignKey(N, M, Cons)) = N .
 	eq reference(foreignKey(N, M, Cons)) = M .
 
-endfm
-
-fmod PREDATA is
-	pr DIR .
-	pr NAT .
 		
-	sort ColumnVal PKVal FKVal .
 
---- ColumnValue = < columnName, value >	
-	op col(_ _) : Qid String -> ColumnVal [ctor] .
-	op columnName : ColumnVal -> Qid .
-	op value : ColumnVal -> String . 
 
---- PrimaryKeyValue = < value > 	
-	op pk(_) : NzNat -> PKVal [ctor] .
-	op value : PKVal -> NzNat .
+	--- ColumnValue = < columnName, value >	
+		op col(_ _) : Qid String -> ColumnVal [ctor] .
+		op columnName : ColumnVal -> Qid .
+		op value : ColumnVal -> String . 
 
---- ForeignKey = < foreignKeyName, value >	
-	op fk(_ _) : Qid NzNat -> FKVal [ctor] . 
-	op name : FKVal -> Qid .
-	op value : FKVal -> NzNat . 
-	
-	var N : Qid .
-	var S :	String . 
-	var P : NzNat .
-	
-	eq columnName(col(N S)) = N .
-	eq value(col(N S)) = S .	
-	
-	eq value(pk(P)) = P .
-	
-	eq name(fk(N P)) = N .
-	eq value(fk(N P)) = P .
+	--- PrimaryKeyValue = < value > 	
+		op pk(_) : NzNat -> PKVal [ctor] .
+		op value : PKVal -> NzNat .
+
+	--- ForeignKey = < foreignKeyName, value >	
+		op fk(_ _) : Qid NzNat -> FKVal [ctor] . 
+		op name : FKVal -> Qid .
+		op value : FKVal -> NzNat . 
+
+		var N : Qid .
+		var S :	String . 
+		var P : NzNat .
+
+		eq columnName(col(N S)) = N .
+		eq value(col(N S)) = S .	
+
+		eq value(pk(P)) = P .
+
+		eq name(fk(N P)) = N .
+		eq value(fk(N P)) = P .
 endfm
 
 view ColumnVal from TRIV to PREDATA is
@@ -127,11 +127,9 @@ view FKVal from TRIV to PREDATA is
 endv
 
 fmod DATA is
-	pr PREDATA .
+	pr DATABASE-STRUCTURE .
 	pr SEQUENCE{FKVal} .
 	pr SEQUENCE{ColumnVal} .
-	
-	sort Data .
 	
 --- Row = < tableName, pkValue, columnValue*, foreignKeyValue* >	
 	op row : Qid PKVal List{ColumnVal} List{FKVal} -> Data [ctor] .
@@ -160,8 +158,7 @@ fmod DATABASE is
 	pr DATA .
 	pr SEQUENCE{Row} .
 	
-	sort Database ErrDatabase .
-	subsorts ErrDatabase < Database .
+
 
 --- Database = < table*, row *>
 --- possible implementations:	
