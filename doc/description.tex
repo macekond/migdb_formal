@@ -19,17 +19,15 @@ $\forall i \in instances(Application), \exists c \in classes(Application): i \lh
 \subsection{Application structure}
 The structure of the application is define by five concepts:
 \begin{itemize}
-	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and PrimitiveCollection and a class can be associated to other classes in the application.  
+	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application.  
 	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value
-	\item PrimitiveCollection : the PrimitiveCollection sort represents any collection (set, bag, etc.) of primitive types connected to a class. The collection has its default value and it can be mandatory.
 	\item Association : the association represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
 	\item App-Type : represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
 \end{itemize}
 
 \begin{verbatim}
-Class = <label, property*, primitiveCollection*, association*>
+Class = <label, property*, association*>
 Property = <label, App-Type, defaultValue, cardinality>
-PrimitiveCollection = <label, App-Type, defaultValue, mandatory>
 Association = <label, referencedClass, startCardinality, 
               endCardinality>
 App-Type = APP-STRING 
@@ -41,6 +39,39 @@ Bool = true | false
 NzNat = [0 - 9]*
 \end{verbatim}
 
+\newpage
+\appendix
+\section{Object-Relational Mapping}
+There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition.
+
+\subsection{Mapping of Types}
+The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
+\begin{verbatim}
+op type2type : App-Type -> Db-Type .
+eq type2type(APP-STRING) = DB-STRING .
+\end{verbatim}
+
+\subsection{Class Mapping}
+We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
+
+\begin{verbatim}
+op class2table : Class -> Table .
+eq class2table(C) = table(name(C), primaryKey('Id), 
+                    props2cols(singlePropertyList(C)), []) .
+\end{verbatim}
+
+\subsection{Mapping of Properties}
+There are two types of properties - the first type called single properties has cardinality 0 or 1, the second one (called collections) has cardinality greater than 1. Each type has its own rules of mapping.
+
+\subsubsection{Mapping of Single Properties}
+\begin{verbatim}
+op props2cols : List{Property} -> List{Column} .
+	eq props2cols([]) = ([]).List{Column} .
+	eq props2cols(Props) = prop2col(head(Props)) props2cols(tail(Props)) .
+\end{verbatim}
+
+
+	
 
 
 

@@ -1,4 +1,3 @@
---- TODO merge property a primitive collection
 --- TODO create NzNat + 0 sort for cardinalities
 load ./sequence.maude
 
