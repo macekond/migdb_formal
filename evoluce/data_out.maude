@@ -73,6 +73,9 @@ fmod DATABASE-STRUCTURE is
 	var FKs : List{ForeignKey} .
 	var T : Db-Type .
 	var Cons : List{Constraint} .
+	var P : NzNat .
+	var S : String .
+	
 	
 	eq name(primaryKey(N)) = N .		
 	
@@ -105,10 +108,7 @@ fmod DATABASE-STRUCTURE is
 		op name : FKVal -> Qid .
 		op value : FKVal -> NzNat . 
 
-		var N : Qid .
-		var S :	String . 
-		var P : NzNat .
-
+	
 		eq columnName(col(N S)) = N .
 		eq value(col(N S)) = S .	
 
@@ -118,11 +118,11 @@ fmod DATABASE-STRUCTURE is
 		eq value(fk(N P)) = P .
 endfm
 
-view ColumnVal from TRIV to PREDATA is
+view ColumnVal from TRIV to DATABASE-STRUCTURE  is
 	sort Elt to ColumnVal .
 endv
 
-view FKVal from TRIV to PREDATA is
+view FKVal from TRIV to DATABASE-STRUCTURE  is
 	sort Elt to FKVal .
 endv
 
