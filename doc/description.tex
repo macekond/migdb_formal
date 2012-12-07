@@ -9,7 +9,7 @@ The application is a set of instances which cooperates together. Each instance i
 The application model consists of model of classes -structural model and of instances - data model. The whole application is described as:
 
 \begin{verbatim}
-Application = < Class*, Instance*>
+op application : List{Class} List{Instance} -> Application [ctor] .
 \end{verbatim}
 The application is considered to be consistent if all instances are created according a class existing in the application. 
 
@@ -39,6 +39,15 @@ Bool = true | false
 NzNat = [0 - 9]*
 \end{verbatim}
 
+\section{Database model}
+The relational database consists of database schema which defines the structure of the database and data. The database is a pair od sets:
+\begin{verbatim}
+op database : List{Table} List{Row} -> Database [ctor] .
+\end{verbatim}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \appendix
 \section{Object-Relational Mapping}
@@ -95,8 +104,21 @@ eq collections2tables(Q, Props) = collections2tables(Q, head(Props))
 \end{verbatim}
 
 \subsection{Mapping of Associations}
+A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N . 
 \begin{verbatim}
-
+op associations2db : Qid List{Association} Database -> Database .
+op associations2db : Qid Association Database -> Database .
+	
+eq associations2db(Q, [], D) = D .
+eq associations2db(Q, Assoc, EDb) = EDb .
+ceq associations2db(Q, Assoc, D) = addFK(foreignKey(name(Assoc), Q, NOTNULL), 
+	   referenceA(Assoc), D) if startCardinality(Assoc) < 2 . 
+eq associations2db(Q, Assoc, D) = addTable(table(name(Assoc), 
+   primaryKey('Id'), [], 
+   foreignKey(Q, Q, NOTNULL) 
+   foreignKey(name(Assoc), name(Assoc), NOTNULL)), D) .
+	eq associations2db(Q, Assoc, D) = associations2db(Q, tail(Assoc), 
+   associations2db(Q, head(Assoc), D)) .
 \end{verbatim}
 
 
