@@ -7,8 +7,8 @@ fmod TESTSUITE is
 endfm
 
 --- Property to Column Tests
-red test(prop2col(property('surname, APP-STRING, "value", 0)) == column('surname, DB-STRING, [])) .
-red test(prop2col(property('surname, APP-STRING, "value", 1)) == column('surname, DB-STRING, NOTNULL)) .
+red test(props2cols(property('surname, APP-STRING, "value", 0)) == column('surname, DB-STRING, [])) .
+red test(props2cols(property('surname, APP-STRING, "value", 1)) == column('surname, DB-STRING, NOTNULL)) .
 
 
 --- List{Property} tp List{Column} Tests
