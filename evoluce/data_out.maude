@@ -221,7 +221,7 @@ fmod DDL is
 	var FK : ForeignKey .
 	var ED : ErrDatabase .
 
-
+--- addTable -> SQL : CREATE TABLE
 	op addTable : List{Table} Database -> Database . 
 	op addTable : Table Database -> Database .
 	eq addTable(Tabs, ED) = ED .
@@ -231,12 +231,6 @@ fmod DDL is
 	eq addTable(T, D) = database(tables(D) T, data(D)) .
 	eq addTable(Tabs, D) = addTable(tail(Tabs), addTable(head(Tabs), D))  .
 	
---- addTable -> SQL : CREATE TABLE
-
----	ceq addTable(T, D) = errDatabase("add table - name exists", D) if containsName(tables(D), name(T)) .
----	ceq addTable(T, D) = errDatabase("add table - reference(s) not exist(s)", D) if foreignKeys(T) =/= [] and not referencesExist(foreignKeys(T), tables(D)) .
----	eq addTable(T, D) = database(tables(D) T, data(D)) [owise] .
-
 --- removeTable -> SQL: DROP TABLE	
 	op removeTable : Database Qid -> Database .
 	ceq removeTable(D, N) = errDatabase("remove table - table not exists", D)  if not containsName(tables(D), N) .
