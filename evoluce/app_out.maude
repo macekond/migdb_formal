@@ -195,7 +195,7 @@ fmod APPLICATION is
 	op addClass : Class Application -> Application .
 	ceq addClass(C, A) = errApplication("add class - the name already exists", A) if containsName(classes(A), name(C)) .
 	ceq addClass(C, A) = errApplication("add class - associed classes not exist(s)", A) if not referencesExist(associations(C), classes(A)) .
-	eq addClass(C, A) = application(classes(A) C, instances(A)) .
+	eq addClass(C, A) = application(classes(A) C, instances(A)) [owise] .
 	
 --- removeClass
 	op removeClass : Application Qid -> Application .

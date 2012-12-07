@@ -1,28 +1,28 @@
-fmod DIS is
+fmod DATABASE-SORTS is
 	pr STRING .
 	
 	sorts  Row PrimaryKey ForeignKey Column Constraint Schema Type .
 		
 endfm
 
-view Row from TRIV to DIS is
+view Row from TRIV to DATABASE-SORTS is
 	sort Elt to Row .
 endv
 
-view Column from TRIV to DIS is
+view Column from TRIV to DATABASE-SORTS is
 	sort Elt to Column .
 endv
 
-view Constraint from TRIV to DIS is
+view Constraint from TRIV to DATABASE-SORTS is
 	sort Elt to Constraint .
 endv
 
-view ForeignKey from TRIV to DIS is
+view ForeignKey from TRIV to DATABASE-SORTS is
 	sort Elt to ForeignKey .
 endv
 
-fmod DIR is
-	pr DIS .
+fmod DATABASE-STRUCTURE is
+	pr DATABASE-SORTS .
 	pr QID .
 	pr LIST{Row} .
 	pr LIST{Column} .
@@ -42,7 +42,7 @@ endfm
 
 
 fmod DATABASE is
-	pr DIR .
+	pr DATABASE-STRUCTURE .
 	
 	sort Database .
 	

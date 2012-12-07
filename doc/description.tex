@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage{amssymb}
+%\usepackage{semantic}
 
 \begin{document}
 
@@ -17,19 +18,33 @@ $\forall i \in instances(Application), \exists c \in classes(Application): i \lh
 
 
 \subsection{Application structure}
-The structure of the application is define by five concepts:
+The structure of the application is defined by five concepts. Each concept is described and its constructor is introduced.
+
 \begin{itemize}
 	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application.  
-	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value
+	\begin{verbatim}
+op class : Qid List{Property} List{Association} -> Class [ctor] .
+\end{verbatim}
+	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
+	\begin{verbatim}
+op property : Qid App-Type String Nat -> Property [ctor] .
+\end{verbatim}
 	\item Association : the association represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
+	\begin{verbatim}
+op association : Qid Qid Nat Nat -> Association [ctor] .
+\end{verbatim}
 	\item App-Type : represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
+	\begin{verbatim}
+op APP-STRING : -> App-Type [ctor] .
+	\end{verbatim}
 \end{itemize}
-
+An summary of application model:
 \begin{verbatim}
 Class = <label, property*, association*>
 Property = <label, App-Type, defaultValue, cardinality>
 Association = <label, referencedClass, startCardinality, 
               endCardinality>
+              
 App-Type = APP-STRING 
 cardinality = NzNat
 referencesClass = label
@@ -38,6 +53,17 @@ endCardinality = NzNat
 Bool = true | false
 NzNat = [0 - 9]*
 \end{verbatim}
+
+\subsection{Application Structure evolution}
+\subsubsection{Add Class}
+\begin{verbatim}
+op addClass : Class Application -> Application .
+ceq addClass(C, A) = errApplication("inconsistent", A) 
+   if containsName(classes(A), name(C))  
+   or not referencesExist(associations(C), classes(A)) .
+eq addClass(C, A) = application(classes(A) C, instances(A)) .
+\end{verbatim}
+
 
 \section{Database model}
 The relational database consists of database schema which defines the structure of the database and data. The database is a pair od sets:
@@ -48,22 +74,82 @@ op database : List{Table} List{Row} -> Database [ctor] .
 \subsection{Database Schema Model}
 The database schema model is defined by following concepts:
 \begin{itemize}
-	\item Table : table represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
+	\item Table: table represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
+	\begin{verbatim}
+op table : Qid PrimaryKey List{Column} List{ForeignKey} -> Table [ctor].
+	\end{verbatim}
 	\item Column : columns define possible data values and types which can be part of a table record.
-	\item Foreign key :
-	\item Primary key :
-	\item Db-Type : represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DB-STRING.
-	\item Constraint : there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+	\begin{verbatim}
+op column : Qid Db-Type List{Constraint} -> Column [ctor] .
+	\end{verbatim}
+
+	\item Foreign key:
+	\begin{verbatim}
+op foreignKey : Qid Qid List{Constraint} -> ForeignKey [ctor] .
+	\end{verbatim}
+
+	\item Primary key:
+	\begin{verbatim}
+op primaryKey : Qid -> PrimaryKey [ctor] . 	
+	\end{verbatim}
+
+	\item Db-Type: represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DB-STRING.
+	\begin{verbatim}
+op DB-STRING : -> Db-Type [ctor] .
+	\end{verbatim}
+
+	\item Constraint: there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+	\begin{verbatim}
+op NOTNULL : -> Constraint [ctor] .
+op UNIQUE : -> Constraint [ctor] .
+	\end{verbatim}
 \end{itemize}
+A summary of database model:
+\begin{verbatim}
+Table = < name, PK, column*, foreignKey* >	
+Column = < name, type, constraint* >
+PrimaryKey = name
+ForeignKey = < name, referencedTableName, constraint* >
+Constraint = NOTNULL | UNIQUE 
+Db-Type = DB-STRING
+\end{verbatim}
 
-	
 
+\section{Data Evolution in ORM System}
+The Object-Relational system consist of an application and a database. The system has to be in consistent state. The extended object-relational mapping helps to assure consistency of the system.
+\begin{verbatim}
+op system : Application Database -> OrmSystem [ctor] .
+\end{verbatim}
+%TODO define consistency
+Each eORM function applied on an ORM system produces a new generation of the system. If the new generation is consistent it can be used and evolved, otherwise the system cannot be evolved.
+
+\subsection{Creating Evolution}
+Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
+
+\subsubsection{Add Class}
+The function addClass adds new class into an application and its equivalent into database. 
+\begin{verbatim}
+op addClass : Class OrmSystem -> OrmSystem .
+eq addClass(C, system(A, D)) = system(addClass(C, A), 
+   addClass2Db(C, D)) .
+
+op addClass2Db : Class Database -> Database .
+eq addClass2Db(C, D) = associations2db(name(C), 
+   associations(C), addTables(collections2tables(name(C), 
+   collectionPropertyList(C)), addTable(class2table(C), D))) .
+\end{verbatim}
+
+There is limitation connected with the implementation of platform. If there is a collection with the same name already existing table the evolution fails => rename a collection table
+
+\subsection{Removing Evolution}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \newpage
 \appendix
 \section{Object-Relational Mapping}
-There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition.
+There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
 
 \subsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
