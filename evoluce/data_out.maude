@@ -158,8 +158,6 @@ fmod DATABASE is
 	pr DATA .
 	pr SEQUENCE{Row} .
 	
-
-
 --- Database = < table*, row *>
 --- possible implementations:	
 --- 1. table has a list of rows
@@ -224,16 +222,20 @@ fmod DDL is
 	var ED : ErrDatabase .
 
 
-	op addTables : List{Table} Database -> Database . 
-	eq addTables(Tabs, ED) = ED .
-	eq addTables([], D) = D .
-	eq addTables(Tabs, D) = addTables(tail(Tabs), addTable(head(Tabs), D))  .
-	
---- addTable -> SQL : CREATE TABLE
+	op addTable : List{Table} Database -> Database . 
 	op addTable : Table Database -> Database .
+	eq addTable(Tabs, ED) = ED .
+	eq addTable([], D) = D .
 	ceq addTable(T, D) = errDatabase("add table - name exists", D) if containsName(tables(D), name(T)) .
 	ceq addTable(T, D) = errDatabase("add table - reference(s) not exist(s)", D) if foreignKeys(T) =/= [] and not referencesExist(foreignKeys(T), tables(D)) .
-	eq addTable(T, D) = database(tables(D) T, data(D)) [owise] .
+	eq addTable(T, D) = database(tables(D) T, data(D)) .
+	eq addTable(Tabs, D) = addTable(tail(Tabs), addTable(head(Tabs), D))  .
+	
+--- addTable -> SQL : CREATE TABLE
+
+---	ceq addTable(T, D) = errDatabase("add table - name exists", D) if containsName(tables(D), name(T)) .
+---	ceq addTable(T, D) = errDatabase("add table - reference(s) not exist(s)", D) if foreignKeys(T) =/= [] and not referencesExist(foreignKeys(T), tables(D)) .
+---	eq addTable(T, D) = database(tables(D) T, data(D)) [owise] .
 
 --- removeTable -> SQL: DROP TABLE	
 	op removeTable : Database Qid -> Database .

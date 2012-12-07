@@ -1,6 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage{amssymb}
-%\usepackage{semantic}
+\usepackage{semantic}
 
 \begin{document}
 
@@ -54,8 +54,15 @@ Bool = true | false
 NzNat = [0 - 9]*
 \end{verbatim}
 
-\subsection{Application Structure evolution}
+\subsection{Application Structure Evolution}
+The evolution of the application persistent layer is called refactoring. In this section we provide an overview of refactorings allowed in our ORM system.
+
 \subsubsection{Add Class}
+$
+\inference[AddClass(C, A)=]{\forall c \in classes(A) : c.name != C.name}
+{application(classes(A) \cup C, instances(A))}
+$
+
 \begin{verbatim}
 op addClass : Class Application -> Application .
 ceq addClass(C, A) = errApplication("inconsistent", A) 
@@ -63,6 +70,7 @@ ceq addClass(C, A) = errApplication("inconsistent", A)
    or not referencesExist(associations(C), classes(A)) .
 eq addClass(C, A) = application(classes(A) C, instances(A)) .
 \end{verbatim}
+
 
 
 \section{Database model}
@@ -139,7 +147,7 @@ eq addClass2Db(C, D) = associations2db(name(C),
    collectionPropertyList(C)), addTable(class2table(C), D))) .
 \end{verbatim}
 
-There is limitation connected with the implementation of platform. If there is a collection with the same name already existing table the evolution fails => rename a collection table
+There is limitation connected with the implementation of platform. If there is a collection with the same name already existing table the evolution fails.
 
 \subsection{Removing Evolution}
 

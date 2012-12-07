@@ -3,7 +3,7 @@ load ./colored_result.maude
 
 fmod TESTSUITE is
 	pr COLORING .
-	pr ORMSYSTEM .
+	pr ORM-SYSTEM .
 endfm
 
 --- ADDCLASS : Class OrmSystem -> OrmSystem .

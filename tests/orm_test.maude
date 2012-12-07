@@ -3,7 +3,7 @@ load ./colored_result.maude
 
 fmod TESTSUITE is
 	pr COLORING .
-	pr ORMSYSTEM .
+	pr ORM-SYSTEM .
 endfm
 
 --- Property to Column Tests
@@ -26,6 +26,6 @@ red test(collections2tables('Q, property('strings, APP-STRING, "value", 2)) == t
 red test(collections2tables('Q, property('strings, APP-STRING, "value", 10) property('stringos, APP-STRING, "value", 2)) == table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL))) .
 
 --- AddTables
-red test(addTables(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == errDatabase("add table - reference(s) not exist(s)", database([], []))) .
-red test(addTables(table('Q, primaryKey('Id), column('value, DB-STRING, []), []) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == database(table('Q, primaryKey('Id), column('value, DB-STRING, []), []) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), [])) .
-red test(addTables(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('Q, primaryKey('Id), column('value, DB-STRING, []), []), database([],[])) == errDatabase("add table - reference(s) not exist(s)", database([], []))) .
+red test(addTable(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == errDatabase("add table - reference(s) not exist(s)", database([], []))) .
+red test(addTable(table('Q, primaryKey('Id), column('value, DB-STRING, []), []) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), database([],[])) == database(table('Q, primaryKey('Id), column('value, DB-STRING, []), []) table('stringos, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)), [])) .
+red test(addTable(table('strings, primaryKey('Id), column('value, DB-STRING, []), foreignKey('Q, 'Q, NOTNULL)) table('Q, primaryKey('Id), column('value, DB-STRING, []), []), database([],[])) == errDatabase("add table - reference(s) not exist(s)", database([], []))) .

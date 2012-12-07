@@ -21,5 +21,5 @@ fmod ORM-SYSTEM is
 --- Limitation: if there is a collection with the same name as already existing table the evolution fails => rename a collection table
 	op addClass2Db : Class Database -> Database .
 	eq addClass2Db(C, ED) =  ED .
-	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTables(collections2tables(name(C), collectionPropertyList(C)), addTable(class2table(C), D))) .	
+	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTable(collections2tables(name(C), collectionPropertyList(C)), addTable(class2table(C), D))) .	
 endfm
