@@ -122,6 +122,24 @@ Constraint = NOTNULL | UNIQUE
 Db-Type = DB-STRING
 \end{verbatim}
 
+\subsection{Database Schema Evolution}
+\subsubsection{AddTable}
+
+$
+\inference[AddTable(T, D)=]{\forall t \in tables(D) : t.name != T.name\\
+	\forall f \in T.foreignKeys, \exists t in T.tables : f.reference == t.name
+}{database(T \cup tables(D), data(D))}
+$
+
+\begin{verbatim}
+op addTable : Table Database -> Database .
+ceq addTable(T, D) = errDatabase("inconsistent", D) 
+   if containsName(tables(D), name(T)) 
+   or (foreignKeys(T) =/= [] 
+   and not referencesExist(foreignKeys(T), tables(D))) .
+eq addTable(T, D) = database(tables(D) T, data(D)) .
+\end{verbatim}
+
 
 \section{Data Evolution in ORM System}
 The Object-Relational system consist of an application and a database. The system has to be in consistent state. The extended object-relational mapping helps to assure consistency of the system.
