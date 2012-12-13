@@ -16,10 +16,19 @@ fmod ORM-SYSTEM is
 	op addClass : Class OrmSystem -> OrmSystem .
 	eq addClass(C, system(EA, D)) = system(EA, D) .
 	eq addClass(C, system(A, ED)) = system(A, ED) .
-	eq addClass(C, system(A, D)) = system(addClass(C, A), addClass2Db(C, D)) .
+	eq addClass(C, system(A, D)) = system(addClass(C, A), eORMAddClass(C, D)) .
+	
+	op removeClass : Qid OrmSystem -> OrmSystem .
+	eq removeClass(Q, system(EA, D)) = system(EA, D) .
+	eq removeClass(Q, system(A, ED)) = system(A, ED) .
+	eq removeClass(Q, system(A, D)) = system(removeClass(Q, A), eORMRemoveClass(Q, D)) .
 	
 --- Limitation: if there is a collection with the same name as already existing table the evolution fails => rename a collection table
-	op addClass2Db : Class Database -> Database .
-	eq addClass2Db(C, ED) =  ED .
-	eq addClass2Db(C, D) = associations2db(name(C), associations(C), addTable(collections2tables(name(C), collectionPropertyList(C)), addTable(class2table(C), D))) .	
+	op eORMAddClass : Class Database -> Database .
+	eq eORMAddClass(C, ED) =  ED .
+	eq eORMAddClass(C, D) = associations2db(name(C), associations(C), addTable(collections2tables(name(C), collectionPropertyList(C)), addTable(class2table(C), D))) .	
+	
+	op eORMRemoveClass : Q Database -> Database .
+	eq eORMRemoveClass(Q, ED) =  ED .
+	eq eORMRemoveClass(Q, D) = removeTable(Q, D) .
 endfm

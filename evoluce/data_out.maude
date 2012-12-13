@@ -232,11 +232,11 @@ fmod DDL is
 	eq addTable(Tabs, D) = addTable(tail(Tabs), addTable(head(Tabs), D))  .
 	
 --- removeTable -> SQL: DROP TABLE	
-	op removeTable : Database Qid -> Database .
-	ceq removeTable(D, N) = errDatabase("remove table - table not exists", D)  if not containsName(tables(D), N) .
-	ceq removeTable(D, N) = errDatabase("remove table - data exists", D)  if dataExist(N, data(D)) .
-	ceq removeTable(D, N) = errDatabase("remove table - table is referenced by a FK", D)  if isReferenced(N, tables(D)) .
-	eq removeTable(D, N) = database(removeByName(tables(D), N), data(D)) .
+	op removeTable : Qid Database -> Database .
+	ceq removeTable(N, D) = errDatabase("remove table - table not exists", D)  if not containsName(tables(D), N) .
+	ceq removeTable(N, D) = errDatabase("remove table - data exists", D)  if dataExist(N, data(D)) .
+	ceq removeTable(N, D) = errDatabase("remove table - table is referenced by a FK", D)  if isReferenced(N, tables(D)) .
+	eq removeTable(N, D) = database(removeByName(tables(D), N), data(D)) .
 	
 --- addColumn -> SQL : ALTER TABLE table_name ADD column_name datatype
 	op addColumn : Database Qid Column -> Database .
