@@ -105,7 +105,10 @@ $
 AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \not \exist q \in properties(p) : name(q) \neq name(p)}{
  properties(c) \cup p }
 $
-
+$$AddAssociation : Label \times Association \times Application \rightarrow Application $$
+$
+AddAssociation(l, s, a) = \inference{\not \exists f \in associations(a) : name(f) = name(s) \\ \wedge \exists c in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(a) \cup s}
+$
 
 \subsubsection{Application Deconstruction}
 $$RemoveClass: Label \times Application \rightarrow Application $$
@@ -261,8 +264,12 @@ $
 $
 \rho_{addProperty}(l, p, d) = 
 \inference{\exists t \in tables(d) : name(t) = l}{\rho(p,d)} 
-
 $
+\subsection{Add Association}
+$
+\rho_{AddAssociation}(l, a, d) = \inference{\exists t_1, t_2 \in tables(d) : name(t_1) = l \\ \wedge name(t_2) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_1) : name(f) = name(a) }{\rho(a,d)}
+$
+
 
 \subsection{Deconstruction of a System}
 \subsubsection{Remove Class}
