@@ -81,19 +81,29 @@ $$
 
 \subsection{Application Evolution}
 \label{sec:appEvolution}
+
+The evolution is defined as a set of operations which change structure of an application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
+
+$$
+operation = \inference{conditions$ $of$ $feasibility}{impact$ $on$ $application$ $structure}
+$$
+If the conditions of feasibility are not met, the operation cannot impact the application structure.
+%TODO monade
+
+
 \subsubsection{Application Creation}
 $$AddClass: Class \times Application \rightarrow Application $$
 
 $
 AddClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
-{application(classes(a) \cup c, instances(a))}
+{classes(a) \cup c}
 $
 
 $$AddProperty : Label \times Property \times Application \rightarrow Application $$
 
 $
 AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \not \exist q \in properties(p) : name(q) \neq name(p)}{
-application(classes(a)) \wedge properties(c) \cup p }
+ properties(c) \cup p }
 $
 
 
@@ -101,13 +111,13 @@ $
 $$RemoveClass: Label \times Application \rightarrow Application $$
 $
 RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
-\wedge not$ $instantiated(c) = \{ \} \wedge not$ $associated(c)}{applicattion(classes(a) \setminus c, instances(a)) }
+\wedge not$ $instantiated(c) = \{ \} \wedge not$ $associated(c)}{classes(a) \setminus c }
 $
 
 $$RemoveProperty: Label \times Label \times Application \rightarrow Application $$
 
 $
-RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{}
+RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }
 $
 
 %%%%%%%%%%%%%%%%%%%
@@ -187,7 +197,7 @@ Each single property is mapped to a column, when the cardinality is equal to 1 t
 %TODO split \rho function?
 
 $
-\rho : Property, Database \rightarrow Column 
+\rho : Property \times Database \rightarrow Column 
 $
 
 $\rho(p, d) = \begin{cases}
@@ -243,17 +253,15 @@ $
 	\forall a \in \rho(associations(c)) : reference(a) \in tables(d) 
 }{ %TODO podmínky?
 \begin{gathered}
-database(tables(d) \cup \rho(c) \cup \rho(properties(c)) \\ \cup \rho(associations(c)), instances(d))
+tables(d) \cup \rho(c) \cup \rho(properties(c)) \cup \rho(associations(c))
 \end{gathered}
 }
 $
 \subsubsection{Add Property}
 $
-\rho_{addProperty}(l, p, d) =  \begin{cases}
-\inference{\exists t \in tables(d) : name(t) = l \\ \wedge (cardinality(p) = 0 \vee cardinality(p) = 1)}{database(tables(d) \wedge columns(t) \cup \rho(p), instances(d))} 
-\\ \\
-\inference{\exists t \in tables(d) : name(t) = l \\ \wedge cardinality(p) > 1}{database(tables(d) \cup \rho(p), instances(d))}  
-  \end{cases}
+\rho_{addProperty}(l, p, d) = 
+\inference{\exists t \in tables(d) : name(t) = l}{\rho(p,d)} 
+
 $
 
 \subsection{Deconstruction of a System}
@@ -261,9 +269,14 @@ $
 $
 \rho_{removeClass}(c,d) = \inference{\rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) \neq \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{tables(d) \setminus \rho(c)}
 $
+%TODO remove by label
 
 \subsubsection{Remove Property}
-
+$
+\rho_{removeProperty}(l_c, l_p, d) = \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p }{
+columns(t) \setminus c
+}
+$
 
 
 	
