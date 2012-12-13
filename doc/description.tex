@@ -26,25 +26,18 @@ All approaches can be used and all of them have their pros and cons. We decide t
 The figure shows all important components of the domain. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are four dynamic components (they define transformations between components and transition between system states): an object-relational mapping is a transformation between application and database schema, then are two components for evolution of application and of database. (To simplify the model we will consider the database schema and data are evolved by one component). Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
  
 
-There is a description of each component following. The description defines set of models of static components and dynamic components are defined as functions.
-%TODO: prerequisities - lables (if they are unique it is not necessary to check the name)
+There is a description of each component following. The description defines set of models of static components and dynamic components are defined as functions. There are several common parts of the model we can define in advance. The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
+
 %%%%%%%%%%%%%%%%%%%
 
 \section{Application Component}
-The application component represent an application created using object oriented language. It means the application is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure, relationships of the instance. We use notation $instance \lhd class$ to describe the fact instance is defined according a class.
+The application component represent an application created using object oriented language. It means the application is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. 
+The application component model consists of  classes defining the structure of application:
+ 
+$$
+Application = (Class*)
+$$
 
-The application model consists of model of classes - structural model and of instances - data model. The whole application is described as:
-
-$$
-Application = (Class*, Instance*)
-$$
-%TODO: are instances necessary on this level?
-
-The application is considered to be consistent if all instances are created according a class existing in the application. 
-$$
-\forall i \in instances(Application), \exists c \in classes(Application): i \lhd c 
-$$
-%TODO define consistency
 
 
 \subsection{Application Structure Definition}
@@ -161,7 +154,6 @@ $$
 \section{Object-Relational Mapping}
 There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
 
-%TODO exist \rho to execute mapping and \rho' (?) just returning a name of mapped object
 
 \subsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
