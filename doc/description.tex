@@ -1,249 +1,276 @@
 \documentclass[11pt]{article}
 \usepackage{amssymb}
+\usepackage{amsmath}
 \usepackage{semantic}
+\usepackage{listings}
+\usepackage{url}
 
 \begin{document}
+\tableofcontents
 
-\section{Application model}
-The application is a set of instances which cooperates together. Each instance is defined according to a class, it means the class defines the structure, relationships of the instance\footnote{we use notation $instance \lhd class$ to describe the fact instance is defined according a class}.
+\newpage
+\section{Evolution of ORM System}
+The ORM system consist of application and database. The application and database has to be in consistent state according to a concrete ORM algorithm, otherwise the application cannot work properly. It means that during the evolution we have to respect a concrete ORM to produce consistent result.
+$$
+OrmSystem = (Application, Database)
+$$
+%TODO define consistency
 
-The application model consists of model of classes -structural model and of instances - data model. The whole application is described as:
+There are several way how the evolution of ORM system can be implemented. The way when the application is evolved, database scheme re-genareted by an ORM framework and data migrated manually is the most common nowadays. The goal of our project is to minimize the manual work in the process of data evolution. We have following options:
+\begin{itemize}
+	\item Backward round-trip engineering can be used. It means the application and database is evolved and then the difference in structure is used to define data migration. This approach is inappropriate for situations where there is stored data as a change in database schema can be connected with more possible changes of data. Hence an additional information from user will be needed to migrate data correctly.
+    \item Forward engineering can be used in two ways. First approach evolves application, re-generate a database schema and generate a data migration according to definition of application evolution. Second approach uses the definition of application evolution as a source for evolution of database schema and data migration. In contrast this approach preserves the original database - it only alters its structure, whereas the first approach creates a new database.
+\end{itemize}
+All approaches can be used and all of them have their pros and cons. We decide to use forward engineering approach as it is a natural way of evolution. Next we decide to generate both migrations (for database schema and data) from definition of application evolution. This allows us to keep history of all layers and to verify the evolution on multiple levels. The algorithm is illustrated in Figure \ref{fig:algorithm}.
 
-\begin{verbatim}
-op application : List{Class} List{Instance} -> Application [ctor] .
-\end{verbatim}
+The figure shows all important components of the domain. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are four dynamic components (they define transformations between components and transition between system states): an object-relational mapping is a transformation between application and database schema, then are two components for evolution of application and of database. (To simplify the model we will consider the database schema and data are evolved by one component). Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
+ 
+
+There is a description of each component following. The description defines set of models of static components and dynamic components are defined as functions.
+%TODO: prerequisities - lables (if they are unique it is not necessary to check the name)
+%%%%%%%%%%%%%%%%%%%
+
+\section{Application Component}
+The application component represent an application created using object oriented language. It means the application is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure, relationships of the instance. We use notation $instance \lhd class$ to describe the fact instance is defined according a class.
+
+The application model consists of model of classes - structural model and of instances - data model. The whole application is described as:
+
+$$
+Application = (Class*, Instance*)
+$$
+%TODO: are instances necessary on this level?
+
 The application is considered to be consistent if all instances are created according a class existing in the application. 
+$$
+\forall i \in instances(Application), \exists c \in classes(Application): i \lhd c 
+$$
+%TODO define consistency
 
-$\forall i \in instances(Application), \exists c \in classes(Application): i \lhd c $
 
-
-\subsection{Application structure}
+\subsection{Application Structure Definition}
 The structure of the application is defined by five concepts. Each concept is described and its constructor is introduced.
 
 \begin{itemize}
 	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application.  
-	\begin{verbatim}
-op class : Qid List{Property} List{Association} -> Class [ctor] .
-\end{verbatim}
+$$
+Class = (label, Property*, Association*)
+$$
 	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
-	\begin{verbatim}
-op property : Qid App-Type String Nat -> Property [ctor] .
-\end{verbatim}
+$$
+Property = (label, App-Type, DefaultValue, Cardinality)
+$$
+%TODO owning class
 	\item Association : the association represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
-	\begin{verbatim}
-op association : Qid Qid Nat Nat -> Association [ctor] .
-\end{verbatim}
+$$
+Association = (label, classRef, startCardinality, endCardinality)
+$$
 	\item App-Type : represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
-	\begin{verbatim}
-op APP-STRING : -> App-Type [ctor] .
-	\end{verbatim}
+$$
+App-Type = APPSTRING
+$$
 \end{itemize}
 An summary of application model:
-\begin{verbatim}
-Class = <label, property*, association*>
-Property = <label, App-Type, defaultValue, cardinality>
-Association = <label, referencedClass, startCardinality, 
-              endCardinality>
-              
-App-Type = APP-STRING 
+$$
 cardinality = NzNat
+$$
+$$
 referencesClass = label
+$$
+$$
 startCardinality = NzNat
+$$
+$$
 endCardinality = NzNat
-Bool = true | false
+$$
+$$
 NzNat = [0 - 9]*
-\end{verbatim}
+$$
 
-\subsection{Application Structure Evolution}
-The evolution of the application persistent layer is called refactoring. In this section we provide an overview of refactorings allowed in our ORM system.
+\subsection{Application Evolution}
+\label{sec:appEvolution}
+\subsubsection{Application Creation}
+$$AddClass: Class \times Application \rightarrow Application $$
 
-\subsubsection{Add Class}
 $
-\inference[AddClass(C, A)=]{\forall c \in classes(A) : c.name != C.name}
-{application(classes(A) \cup C, instances(A))}
+AddClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
+{application(classes(a) \cup c, instances(a))}
 $
 
-\begin{verbatim}
-op addClass : Class Application -> Application .
-ceq addClass(C, A) = errApplication("inconsistent", A) 
-   if containsName(classes(A), name(C))  
-   or not referencesExist(associations(C), classes(A)) .
-eq addClass(C, A) = application(classes(A) C, instances(A)) .
-\end{verbatim}
+$$AddProperty : Label \times Property \times Application \rightarrow Application $$
+
+$
+AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \not \exist q \in properties(p) : name(q) \neq name(p)}{
+application(classes(a)) \wedge properties(c) \cup p }
+$
 
 
+\subsubsection{Application Deconstruction}
+$$RemoveClass: Label \times Application \rightarrow Application $$
+$
+RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
+\wedge not$ $instantiated(c) = \{ \} \wedge not$ $associated(c)}{applicattion(classes(a) \setminus c, instances(a)) }
+$
+
+$$RemoveProperty: Label \times Label \times Application \rightarrow Application $$
+
+$
+RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{}
+$
+
+%%%%%%%%%%%%%%%%%%%
 
 \section{Database model}
 The relational database consists of database schema which defines the structure of the database and data. The database is a pair od sets:
-\begin{verbatim}
-op database : List{Table} List{Row} -> Database [ctor] .
-\end{verbatim}
+$$
+Database = (table*, data*)
+$$
 
 \subsection{Database Schema Model}
 The database schema model is defined by following concepts:
 \begin{itemize}
 	\item Table: table represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
-	\begin{verbatim}
-op table : Qid PrimaryKey List{Column} List{ForeignKey} -> Table [ctor].
-	\end{verbatim}
+$$
+Table = (label, primaryKey, Column*, ForeignKey*)
+$$
 	\item Column : columns define possible data values and types which can be part of a table record.
-	\begin{verbatim}
-op column : Qid Db-Type List{Constraint} -> Column [ctor] .
-	\end{verbatim}
+$$
+Column = (label, Db-Type, Constraint*)
+$$
 
 	\item Foreign key:
-	\begin{verbatim}
-op foreignKey : Qid Qid List{Constraint} -> ForeignKey [ctor] .
-	\end{verbatim}
+$$
+ForeignKey = (label, tableRef, Constraint*)
+$$
 
 	\item Primary key:
-	\begin{verbatim}
-op primaryKey : Qid -> PrimaryKey [ctor] . 	
-	\end{verbatim}
+$$
+PrimaryKey =  (label) 	
+$$
 
 	\item Db-Type: represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DB-STRING.
-	\begin{verbatim}
-op DB-STRING : -> Db-Type [ctor] .
-	\end{verbatim}
+$$
+Db-Type = DBSTRING
+$$
 
 	\item Constraint: there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
-	\begin{verbatim}
-op NOTNULL : -> Constraint [ctor] .
-op UNIQUE : -> Constraint [ctor] .
-	\end{verbatim}
-\end{itemize}
-A summary of database model:
-\begin{verbatim}
-Table = < name, PK, column*, foreignKey* >	
-Column = < name, type, constraint* >
-PrimaryKey = name
-ForeignKey = < name, referencedTableName, constraint* >
+$$
 Constraint = NOTNULL | UNIQUE 
-Db-Type = DB-STRING
-\end{verbatim}
+$$
+\end{itemize}
 
-\subsection{Database Schema Evolution}
-\subsubsection{AddTable}
-
-$
-\inference[AddTable(T, D)=]{\forall t \in tables(D) : t.name != T.name\\
-	\forall f \in T.foreignKeys, \exists t in T.tables : f.reference == t.name
-}{database(T \cup tables(D), data(D))}
-$
-
-\begin{verbatim}
-op addTable : Table Database -> Database .
-ceq addTable(T, D) = errDatabase("inconsistent", D) 
-   if containsName(tables(D), name(T)) 
-   or (foreignKeys(T) =/= [] 
-   and not referencesExist(foreignKeys(T), tables(D))) .
-eq addTable(T, D) = database(tables(D) T, data(D)) .
-\end{verbatim}
-
-
-\section{Data Evolution in ORM System}
-The Object-Relational system consist of an application and a database. The system has to be in consistent state. The extended object-relational mapping helps to assure consistency of the system.
-\begin{verbatim}
-op system : Application Database -> OrmSystem [ctor] .
-\end{verbatim}
-%TODO define consistency
-Each eORM function applied on an ORM system produces a new generation of the system. If the new generation is consistent it can be used and evolved, otherwise the system cannot be evolved.
-
-\subsection{Creating Evolution}
-Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
-
-\subsubsection{Add Class}
-The function addClass adds new class into an application and its equivalent into database. 
-\begin{verbatim}
-op addClass : Class OrmSystem -> OrmSystem .
-eq addClass(C, system(A, D)) = system(addClass(C, A), 
-   addClass2Db(C, D)) .
-
-op addClass2Db : Class Database -> Database .
-eq addClass2Db(C, D) = associations2db(name(C), 
-   associations(C), addTables(collections2tables(name(C), 
-   collectionPropertyList(C)), addTable(class2table(C), D))) .
-\end{verbatim}
-
-There is limitation connected with the implementation of platform. If there is a collection with the same name already existing table the evolution fails.
-
-\subsection{Removing Evolution}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-\newpage
-\appendix
 \section{Object-Relational Mapping}
 There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
 
+%TODO exist \rho to execute mapping and \rho' (?) just returning a name of mapped object
+
 \subsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
-\begin{verbatim}
-op type2type : App-Type -> Db-Type .
+$$
+\rho : AppType \rightarrow DbType
+$$
 
-eq type2type(APP-STRING) = DB-STRING .
-\end{verbatim}
+$$
+\rho(APPSTRING) = DBSTRING
+$$
 
-\subsection{Class Mapping}
+
+\subsection{Mapping of Classes}
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
-\begin{verbatim}
-op class2table : Class -> Table .
+$$
+\rho : Class \rightarrow Table
+$$
 
-eq class2table(C) = table(name(C), primaryKey('Id), 
-                    props2cols(singlePropertyList(C)), []) .
-\end{verbatim}
+$$
+\rho(c) = table(name(c), primaryKey("Id"), \rho(properties(c), \{ \})
+$$
 
 \subsection{Mapping of Properties}
 There are two types of properties - the first type called single properties has cardinality 0 or 1, the second one (called collections) has cardinality greater than 1. Each type has its own rules of mapping.
 
 \subsubsection{Mapping of Single Property}
-Each single property is mapped to a column, when the cardinality is equal to 1 the NOTNULL constraint is added to a column. 
-\begin{verbatim}
-op props2cols : List{Property} -> List{Column} .
-op props2cols : Property -> Column .
+Each single property is mapped to a column, when the cardinality is equal to 1 the $NOTNULL$ constraint is added to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case for collections. A collection is mapped into a table which contains a foreign key. The key references the table representing the owning class.
 
-eq props2cols([]) = ([]).List{Column} .
-ceq props2cols(Prop) = [] if cardinality(Prop) > 2 .
-ceq props2cols(Prop) = column(name(Prop), type2type(type(Prop)), NOTNULL)
-    if cardinality(Prop) == 1 .
-ceq props2cols(Prop) = column(name(Prop), type2type(type(Prop)), []) 
-   if cardinality(Prop) == 0 .
-eq props2cols(Props) = props2cols(head(Props)) props2cols(tail(Props)) .
-\end{verbatim}
-A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping function for collections.
 
-\subsubsection{Mapping of Collections}
-A property collection is mapped into a table which contains a foreign key. The key references the table representing the owning class.
-\begin{verbatim}
-op collections2tables : Qid List{Property} -> List{Table} .
-op collections2tables : Qid Property -> Table . 
+%TODO split \rho function?
 
-eq collections2tables(Q, []) = ([]).List{Table} .
-eq collections2tables(Q, Prop) = table(name(Prop), primaryKey('Id), 
-   column('value, type2type(type(Prop)), [] ), foreignKey(Q, Q, NOTNULL)) .
-eq collections2tables(Q, Props) = collections2tables(Q, head(Props)) 
-   collections2tables(Q, tail(Props)) .
-\end{verbatim}
+$
+\rho : Property, Database \rightarrow Column 
+$
+
+$\rho(p, d) = \begin{cases}
+ \inference{cardinality(p) = 0 \\ \wedge \rho(owningClass(p) \in classes(d)}{columns(owninngClass(p)) \cup column(name(p), \rho(type(p)), \{ \})} \\ \\
+ 
+ \inference{cardinality(p) = 1 \\ \wedge \rho(owningClass(p) \in classes(d)}{columns(owninngClass(p)) \cup col(name(p), \rho(type(p)), NOTNULL)} \\ \\
+ 
+ \inference{cardinality(p) > 2 \\ \wedge \rho(owningClass(p) \in classes(d)}{\begin{gathered} tables(d) \cup table(name(p), pk("Id"), col("value", DBSTRING), \\ fk(name(p), \rho(owningClass(p))) \end{gathered}}
+ \end{cases}$
+
 
 \subsection{Mapping of Associations}
-A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N . 
-\begin{verbatim}
-op associations2db : Qid List{Association} Database -> Database .
-op associations2db : Qid Association Database -> Database .
-	
-eq associations2db(Q, [], D) = D .
-eq associations2db(Q, Assoc, EDb) = EDb .
-ceq associations2db(Q, Assoc, D) = addFK(foreignKey(name(Assoc), Q, NOTNULL), 
-	   referenceA(Assoc), D) if startCardinality(Assoc) < 2 . 
-eq associations2db(Q, Assoc, D) = addTable(table(name(Assoc), 
-   primaryKey('Id'), [], 
-   foreignKey(Q, Q, NOTNULL) 
-   foreignKey(name(Assoc), name(Assoc), NOTNULL)), D) .
-	eq associations2db(Q, Assoc, D) = associations2db(Q, tail(Assoc), 
-   associations2db(Q, head(Assoc), D)) .
-\end{verbatim}
+A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
+
+$
+\rho(a,d) = \begin{cases}
+ \inference{startCardinality(a) = 0 \\ \wedge \rho(owningClass(p) \in classes(d)  \wedge \rho(reference(a)) \in tables(d)}{foreignKeys(\rho(assoc(a)) \cup foreignKey(name(a), owningClass(a),  \{ \}) } \\ \\
+ 
+ \inference{startCardinality(a) = 1 \\ \wedge \rho(owningClass(p) \in tables(d)  \wedge \rho(reference(a)) \in tables(d)}{\begin{gathered}
+ foreignKeys(\rho(assoc(a)) \cup foreignKey(name(a), \\ owningClass(a),  NOTNULL)
+\end{gathered}
+} \\ \\
+ 
+  \inference{startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)}{
+  \begin{gathered}
+  tables(d) \cup table(name(a), pk("Id"), \{ \}, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
+  \end{gathered}}
+
+  
+ \end{cases}
+$
+
+%TODO FK nemusí mít jméno - odkazuje jen na tabulku a id
+
+\section{Data Evolution in ORM System}
+The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. In general an evolutionary operation $X : OrmSystem \rightarrow OrmSystem $ can be defined as:
+
+$$
+\inference[X(s) = ]{}{system(X(application(s)), \rho_{X}(database(s))) }
+$$
+where the $\rho_X$ is the mapping of the evolution from application to database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
+
+This section defines eORM for each trivial operation evolving application from \ref{sec:appEvolution}, moreover there are described more complex cases of evolution. 
+ 
+
+\subsection{Creating of a System}
+Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
+
+\subsubsection{Add Class}
+
+$
+\rho_{addClass}(c, d) = \inference{\forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
+	\forall a \in \rho(associations(c)) : reference(a) \in tables(d) 
+}{ %TODO podmínky?
+\begin{gathered}
+database(tables(d) \cup \rho(c) \cup \rho(properties(c)) \\ \cup \rho(associations(c)), instances(d))
+\end{gathered}
+}
+$
+\subsubsection{Add Property}
+$
+\rho_{addProperty}(l, p, d) =  \begin{cases}
+\inference{\exists t \in tables(d) : name(t) = l \\ \wedge (cardinality(p) = 0 \vee cardinality(p) = 1)}{database(tables(d) \wedge columns(t) \cup \rho(p), instances(d))} 
+\\ \\
+\inference{\exists t \in tables(d) : name(t) = l \\ \wedge cardinality(p) > 1}{database(tables(d) \cup \rho(p), instances(d))}  
+  \end{cases}
+$
+
+\subsection{Deconstruction of a System}
+\subsubsection{Remove Class}
+$
+\rho_{removeClass}(c,d) = \inference{\rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) \neq \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{tables(d) \setminus \rho(c)}
+$
+
+\subsubsection{Remove Property}
 
 
 
