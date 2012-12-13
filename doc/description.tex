@@ -123,6 +123,12 @@ $
 RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }
 $
 
+$$RemoveAssociation : Label \times Labels \times Application \rightarrow Application $$
+
+$
+RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s}
+$
+
 %%%%%%%%%%%%%%%%%%%
 
 \section{Database model}
