@@ -3,7 +3,7 @@
 \usepackage{amsmath}
 \usepackage{semantic}
 \usepackage{listings}
-\usepackage{url}
+\usepackage{hyperref}
 
 \begin{document}
 \tableofcontents
@@ -37,32 +37,64 @@ The application component model consists of  classes defining the structure of a
 $$
 Application = (Class*)
 $$
+$classes : Application \rightarrow Class*$ \\
+$classes((classes)) = classes$
 
 
 
 \subsection{Application Structure Definition}
-The structure of the application is defined by five concepts. Each concept is described and its constructor is introduced.
+The structure of the application is defined by five concepts. Each concept is defined and a set of manipulating functions is define to manipulate the application model easily.
 
 \begin{itemize}
-	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application.  
-$$
-Class = (label, Property*, Association*)
-$$
+	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
+	 
+$$Class = (label, Property*, Association*)$$
+$name : Class \rightarrow Label$ \\
+$name((lab, props, assocs)) = lab$ \\ \\
+$properties : Class \rightarrow Property*$ \\
+$properties((lab, props, assocs)) = props $\\ \\
+$primitiveProperties : Class \rightarrow Property*$ \\
+$primitiveProperties((lab, props, assocs)) = props \wedge \forall p \in props : cardinality(p) \leq 1 $\\ \\
+$collectionProperties : Class \rightarrow Property*$ \\
+$collectionProperties((lab, props, assocs)) = props \wedge \forall p \in props : cardinality(p) > 1 $\\ \\
+$associations : Class \rightarrow Association*$ \\
+$associations((lab, props, assocs)) = assocs $
+
+
 	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
 $$
-Property = (label, App-Type, DefaultValue, Cardinality)
+Property = (label, AppType, DefaultValue, Cardinality)
 $$
+$name : Property \rightarrow Label$ \\
+$name((lab, t, val, n)) = lab$ \\ \\
+$type : Property \times AppType$ \\
+$type((lab, t, val, n)) = t$ \\ \\
+$cardinality : Property \rightarrow NzNat$ \\
+$cardinality((lab, t, val, n)) = n$ 
+
+
+
+
 %TODO owning class
 	\item Association : the association represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
 $$
 Association = (label, classRef, startCardinality, endCardinality)
 $$
+$name : Association \rightarrow Label$ \\
+$name((lab, ref, n_1, n_2)) = lab$\\ \\
+$reference : Association \rightarrow Label$ \\
+$reference((lab, ref, n_1, n_2)) = ref$\\ \\
+$startCardinality : Association \rightarrow NzNat$ \\
+$startCardinality((lab, ref, n_1, n_2)) = n_1$\\ \\
+$endCardinality : Association \rightarrow NzNat$ \\
+$endCardinality((lab, ref, n_1, n_2)) = n_2$
+
 	\item App-Type : represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
 $$
-App-Type = APPSTRING
+AppType = APPSTRING
 $$
 \end{itemize}
-An summary of application model:
+The types used in application model:
 $$
 cardinality = NzNat
 $$
@@ -79,7 +111,10 @@ $$
 NzNat = [0 - 9]*
 $$
 
-\subsection{Application Evolution}
+
+
+
+\section{Application Evolution}
 \label{sec:appEvolution}
 
 The evolution is defined as a set of operations which change structure of an application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
@@ -91,7 +126,7 @@ If the conditions of feasibility are not met, the operation cannot impact the ap
 %TODO monade
 
 
-\subsubsection{Application Creation}
+\subsection{Application Creation}
 $$AddClass: Class \times Application \rightarrow Application $$
 
 $
@@ -110,7 +145,7 @@ $
 AddAssociation(l, s, a) = \inference{\not \exists f \in associations(a) : name(f) = name(s) \\ \wedge \exists c in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(a) \cup s}
 $
 
-\subsubsection{Application Deconstruction}
+\subsection{Application Deconstruction}
 $$RemoveClass: Label \times Application \rightarrow Application $$
 $
 RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
@@ -197,10 +232,7 @@ $$
 $$
 
 \subsection{Mapping of Properties}
-There are two types of properties - the first type called single properties has cardinality 0 or 1, the second one (called collections) has cardinality greater than 1. Each type has its own rules of mapping.
-
-\subsubsection{Mapping of Single Property}
-Each single property is mapped to a column, when the cardinality is equal to 1 the $NOTNULL$ constraint is added to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case for collections. A collection is mapped into a table which contains a foreign key. The key references the table representing the owning class.
+There are two types of properties - the first type has cardinality 0 or 1 and it is mapped to a column (when the cardinality is equal to 1 the $NOTNULL$ constraint is added to a column). A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case.
 
 
 %TODO split \rho function?
@@ -286,11 +318,11 @@ $
 
 \subsubsection{Remove Property}
 $
-\rho_{removeProperty}(l_c, l_p, d) = \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p }{
+\rho_{removeProperty}(l_c, l_p, d) = \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{
 columns(t) \setminus c
 }
 $
-
+%TODO 1:N M:N
 
 	
 
