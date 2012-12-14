@@ -35,11 +35,14 @@ The application component represent an application created using object oriented
 The application component model consists of  classes defining the structure of application:
  
 $$
-Application = (Class*, Instance*)
+Application = <Class*, Instance*>
 $$
 $classes : Application \rightarrow Class*$ \\
-$classes((classes)) = classes$ \\ \\
-$instantiated : Class \times Application \rightarrow Boolean $
+$classes(<cs, is>) = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
+$instantiated : Class \times Application \rightarrow Boolean $ \\
+\\
+$class : Label \times Application \rightarrow Class  $ \\ 
+$class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a \in Application* $ 
 %TODO: variable types
 
 \subsection{Application Structure Definition}
@@ -128,10 +131,10 @@ If the conditions of feasibility are not met, the operation cannot impact the ap
 
 
 \subsection{Application Creation}
-$$AddClass: Class \times Application \rightarrow Application $$
+$$addClass: Class \times Application \rightarrow Application $$
 
 $
-AddClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
+addClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
 {classes(a) \cup c}
 $
 
@@ -143,7 +146,7 @@ AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wed
 $
 $$AddAssociation : Label \times Association \times Application \rightarrow Application $$
 $
-AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(a) \cup s}
+AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}
 $
 
 \subsection{Application Deconstruction}
@@ -172,6 +175,8 @@ The relational database consists of database schema which defines the structure 
 $$
 Database = (table*, data*)
 $$
+$table : Label \times Database \rightarrow Table $ \\
+$table(l, d) = t, t \in tables(d) \wedge name(t) = l$ \\
 
 \subsection{Database Schema Model}
 The database schema model is defined by following concepts:
@@ -240,8 +245,8 @@ There are defined functions for object-relational mapping used in the model. The
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
 
 \begin{center}
-$ \rho : AppType \rightarrow DbType $ \\
-$ \rho(APPSTRING) = DBSTRING $
+$ \rho_{t} : AppType \rightarrow DbType $ \\
+$ \rho_{t}(APPSTRING) = DBSTRING $
 \end{center}
 
 
@@ -251,8 +256,8 @@ $ \rho(APPSTRING) = DBSTRING $
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
 \begin{center}
-$\rho : Class \rightarrow Table $ \\ 
-$ \rho(c) = table(name(c), primaryKey("Id"), \rho(primitiveProperties(c), \varnothing $\\$ \cup \rho(associations(c)) \cup \rho(collectionProperties)$
+$\rho_{c}: Class \rightarrow Table $ \\ 
+$\rho_{c}(c) = table(name(c), primaryKey("Id"), \rho_{p}(primitiveProperties(c), \varnothing $\\$ \cup \rho_{a}(associations(c)) \cup \rho_{p}(collectionProperties)$
 \end{center}
 
 
@@ -264,15 +269,18 @@ There are two types of properties - the first type has cardinality 0 or 1 and it
 %TODO split \rho function?
 
 $
-\rho : Property \times Database \rightarrow Column 
+\rho_p : Property \times Database \rightarrow Column 
 $
 
-$\rho(p, d) = \begin{cases}
- \inference{cardinality(p) = 0 \\ \wedge \rho(owningClass(p)) \in classes(d)}{columns(\rho(owningClass(p))) \cup column(name(p), \rho(type(p)), \varnothing)} \\ \\
+$\rho_p(p, d) = \begin{cases}
+ \inference{cardinality(p) = 0 \\ \wedge \rho_c(owningClass(p)) \in tables(d)}{\begin{gathered}
+ columns(table(name(owningClass(p)),d) \\ \cup column(name(p), \rho_t(type(p)), \varnothing)
+\end{gathered}
+} \\ \\
  
- \inference{cardinality(p) = 1 \\ \wedge \rho(owningClass(p) \in classes(d)}{columns(\rho(owningClass(p))) \cup column(name(p), \rho(type(p)), NOTNULL)} \\ \\
+ \inference{cardinality(p) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL)} \\ \\
  
- \inference{cardinality(p) > 2 \\ \wedge \rho(owningClass(p) \in classes(d)}{\begin{gathered} table(name(p), primaryKey("Id"), column("value", \rho(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
+ \inference{cardinality(p) > 2 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered} table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
  \end{cases}$
 
 
@@ -280,17 +288,15 @@ $\rho(p, d) = \begin{cases}
 A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
 
 $
-\rho(a,d) = \begin{cases}
- \inference{startCardinality(a) = 0 \\ \wedge \rho(owningClass(p)) \in classes(d)  \wedge \rho(reference(a)) \in tables(d)}{
+\rho_a(a,d) = \begin{cases}
+ \inference{startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{
  \begin{gathered}
- foreignKeys(\rho(reference(a))) \\ \cup foreignKey(name(a), owningClass(a),  \varnothing) 
+ foreignKeys(u) \\ \cup foreignKey(name(a), name(t),  \varnothing) 
  \end{gathered}
  }
-
   \\ \\
- 
- \inference{startCardinality(a) = 1 \\ \wedge \rho(owningClass(p) \in tables(d)  \wedge \rho(reference(a)) \in tables(d)}{\begin{gathered}
-foreignKeys(\rho(reference(a))) \\ \cup  foreignKey(name(a), \\ owningClass(a),  NOTNULL)
+ \inference{startCardinality(a) = 1 \\\\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{\begin{gathered}
+foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL)
 \end{gathered}
 } \\ \\
  
@@ -303,14 +309,14 @@ foreignKeys(\rho(reference(a))) \\ \cup  foreignKey(name(a), \\ owningClass(a), 
  \end{cases}
 $
 
-%TODO FK nemusí mít jméno - odkazuje jen na tabulku a id
+%TODO handle instances
 
 \section{Data Evolution in ORM System}
 The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
 
 This section defines eORM for each trivial operation evolving application from \ref{sec:appEvolution}, moreover there are described more complex cases of evolution. 
  
-
+%TODO jak se postupně vyvíjí systém
 \subsection{Creating of a System}
 Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
 
@@ -318,7 +324,7 @@ Creational operations does not have impact on stored data they change the struct
 
 $
 \rho_{addClass}(c, d) = \inference{\forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
-	\forall a \in \rho(associations(c)) : reference(a) \in tables(d) 
+	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
 }{
 \begin{gathered}
 tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho(associations(c))
@@ -327,12 +333,12 @@ tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho(associati
 $
 \subsubsection{Add Property}
 $
-\rho_{addProperty}(l, p, d) = 
-\inference{\exists t \in tables(d) : name(t) = l}{\rho(p,d)} 
+\rho_{addProperty}(p, d) = 
+\inference{\exists t \in tables(d) : name(t) = name(owningClass(p))}{\rho(p,d)} 
 $
 \subsection{Add Association}
 $
-\rho_{AddAssociation}(l, a, d) = \inference{\exists t_1, t_2 \in tables(d) : name(t_1) = l \\ \wedge name(t_2) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_1) : name(f) = name(a) }{\rho(a,d)}
+\rho_{AddAssociation}(a, d) = \inference{\exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{\rho(a,d)}
 $
 
 
@@ -349,12 +355,18 @@ $
  \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{
 columns(t) \setminus c
 } \\ \\
-  \inference{}{}
+  \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \not \exists c \in columns(t) : name(c) = l_p \\ \wedge \exists u \in tables(d) : name(u) = l_p }{tables(d) \setminus u }
  \end{cases}
- 
 $
-%TODO 1:N M:N
 
+\subsubsection{Remove Association}
+$
+\rho_{removeAssociation}(l_c, l_a, d) = \begin{cases}
+ \inference{\exists t \in tables(d) : name(t) = l_c \wedge }{foreignKeys(\rho(reference(a))) \ }
+ 
+ \inference{}{}
+ \end{cases}
+$
 	
 
 
