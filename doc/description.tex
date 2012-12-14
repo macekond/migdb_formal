@@ -35,12 +35,12 @@ The application component represent an application created using object oriented
 The application component model consists of  classes defining the structure of application:
  
 $$
-Application = (Class*)
+Application = (Class*, Instance*)
 $$
 $classes : Application \rightarrow Class*$ \\
-$classes((classes)) = classes$
-
-
+$classes((classes)) = classes$ \\ \\
+$instantiated : Class \times Application \rightarrow Boolean $
+%TODO: variable types
 
 \subsection{Application Structure Definition}
 The structure of the application is defined by five concepts. Each concept is defined and a set of manipulating functions is define to manipulate the application model easily.
@@ -57,8 +57,9 @@ $primitiveProperties((lab, props, assocs)) = props', \forall p \in props' : card
 $collectionProperties : Class \rightarrow Property*$ \\
 $collectionProperties((lab, props, assocs)) = props', \forall p \in props' : cardinality(p) > 1 $\\ \\
 $associations : Class \rightarrow Association*$ \\
-$associations((lab, props, assocs)) = assocs $
-
+$associations((lab, props, assocs)) = assocs $ \\ \\
+$associated :  Class \times Application \rightarrow Boolean $
+%TODO: variable types
 
 \paragraph{Property} represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
 $$
@@ -72,7 +73,7 @@ $cardinality : Property \rightarrow NzNat$ \\
 $cardinality((lab, t, val, n)) = n$ \\ \\
 $owningClass : Property \times Application \rightarrow Class $ \\
 $owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) $
-
+%TODO: variable types
 
 \paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
 $$
@@ -88,6 +89,7 @@ $endCardinality : Association \rightarrow NzNat$ \\
 $endCardinality((lab, ref, n_1, n_2)) = n_2$ \\ \\
 $owningClass : Association \times Application \rightarrow Class $ \\
 $owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) $
+%TODO: variable types
 
 \paragraph{AppType} represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
 $$
@@ -136,19 +138,19 @@ $
 $$AddProperty : Label \times Property \times Application \rightarrow Application $$
 
 $
-AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \not \exist q \in properties(p) : name(q) \neq name(p)}{
+AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in properties(p) : name(q) \neq name(p)}{
  properties(c) \cup p }
 $
 $$AddAssociation : Label \times Association \times Application \rightarrow Application $$
 $
-AddAssociation(l, s, a) = \inference{\not \exists f \in associations(a) : name(f) = name(s) \\ \wedge \exists c in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(a) \cup s}
+AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(a) \cup s}
 $
 
 \subsection{Application Deconstruction}
 $$RemoveClass: Label \times Application \rightarrow Application $$
 $
 RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
-\wedge not$ $instantiated(c) = \{ \} \wedge not$ $associated(c)}{classes(a) \setminus c }
+\wedge not$ $instantiated(c) = \varnothing \wedge not$ $associated(c)}{classes(a) \setminus c }
 $
 
 $$RemoveProperty: Label \times Label \times Application \rightarrow Application $$
@@ -165,7 +167,7 @@ $
 
 %%%%%%%%%%%%%%%%%%%
 
-\section{Database model}
+\section{Database Component Model}
 The relational database consists of database schema which defines the structure of the database and data. The database is a pair od sets:
 $$
 Database = (table*, data*)
@@ -173,36 +175,62 @@ $$
 
 \subsection{Database Schema Model}
 The database schema model is defined by following concepts:
-\begin{itemize}
-	\item Table: table represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
+\paragraph{Table} represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
 $$
 Table = (label, primaryKey, Column*, ForeignKey*)
 $$
-	\item Column : columns define possible data values and types which can be part of a table record.
-$$
-Column = (label, Db-Type, Constraint*)
-$$
+$name : Table \rightarrow Label $ \\
+$name((lab, pk, cols, fks)) = lab$ \\ \\
+$primaryKey : Table \rightarrow PrimaryKey $ \\
+$primaryKey((lab, pk, cols, fks)) = pk$ \\ \\
+$columns : Table \rightarrow Column* $ \\
+$columns((lab, pk, cols, fks)) = cols$ \\ \\
+$foreignKeys : Table \rightarrow ForeignKey* $ \\
+$foreignKeys((lab, pk, cols, fks)) = fks$ 
 
-	\item Foreign key:
+\paragraph{Column} columns define possible data values and types which can be part of a table record.
+$$
+Column = (label, DbType, DefaultValue, Constraint*)
+$$
+$name : Column \rightarrow Label $ \\
+$name((lab, t, val, cons)) = lab $ \\ \\
+$type : Column \rightarrow DbType $ \\
+$type((lab, t, val, cons)) = t $ \\ \\
+$constraints : Column \rightarrow Constraint* $ \\
+$constraints((lab, t, val, cons)) = cons $ \\ \\
+$owningTable : Column \times Database \rightarrow Table $ \\
+$constraints(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) $
+
+\paragraph{Foreign key}
 $$
 ForeignKey = (label, tableRef, Constraint*)
 $$
+$name : ForeignKey \rightarrow Label $ \\
+$name((lab, tRef, cons)) = lab $ \\ \\
+$reference : ForeignKey \rightarrow Label $ \\
+$reference((lab, tRef, cons)) = tRef $ \\ \\
+$reference : ForeignKey \rightarrow Constraint* $ \\
+$reference((lab, tRef, cons)) = cons $ \\ \\
+$owningTable : ForeignKey \times Database \rightarrow Table $ \\
+$owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d) $
 
-	\item Primary key:
+\paragraph{Primary key}
 $$
 PrimaryKey =  (label) 	
 $$
 
-	\item Db-Type: represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DB-STRING.
+\paragraph{DbType} represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DBSTRING.
 $$
-Db-Type = DBSTRING
+DbType = DBSTRING
 $$
 
-	\item Constraint: there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
-$$
-Constraint = NOTNULL | UNIQUE 
-$$
-\end{itemize}
+\paragraph{Constraint} there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+
+\begin{center}
+$Constraint = NOTNULL$ $|$ $UNIQUE $
+\end{center}
+
+
 
 \section{Object-Relational Mapping}
 There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
@@ -210,25 +238,24 @@ There are defined functions for object-relational mapping used in the model. The
 
 \subsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
-$$
-\rho : AppType \rightarrow DbType
-$$
 
-$$
-\rho(APPSTRING) = DBSTRING
-$$
+\begin{center}
+$ \rho : AppType \rightarrow DbType $ \\
+$ \rho(APPSTRING) = DBSTRING $
+\end{center}
+
+
 
 
 \subsection{Mapping of Classes}
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
-$$
-\rho : Class \rightarrow Table
-$$
+\begin{center}
+$\rho : Class \rightarrow Table $ \\ 
+$ \rho(c) = table(name(c), primaryKey("Id"), \rho(primitiveProperties(c), \varnothing $\\$ \cup \rho(associations(c)) \cup \rho(collectionProperties)$
+\end{center}
 
-$$
-\rho(c) = table(name(c), primaryKey("Id"), \rho(properties(c), \{ \})
-$$
+
 
 \subsection{Mapping of Properties}
 There are two types of properties - the first type has cardinality 0 or 1 and it is mapped to a column (when the cardinality is equal to 1 the $NOTNULL$ constraint is added to a column). A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case.
@@ -241,11 +268,11 @@ $
 $
 
 $\rho(p, d) = \begin{cases}
- \inference{cardinality(p) = 0 \\ \wedge \rho(owningClass(p) \in classes(d)}{columns(owninngClass(p)) \cup column(name(p), \rho(type(p)), \{ \})} \\ \\
+ \inference{cardinality(p) = 0 \\ \wedge \rho(owningClass(p)) \in classes(d)}{columns(\rho(owningClass(p))) \cup column(name(p), \rho(type(p)), \varnothing)} \\ \\
  
- \inference{cardinality(p) = 1 \\ \wedge \rho(owningClass(p) \in classes(d)}{columns(owninngClass(p)) \cup col(name(p), \rho(type(p)), NOTNULL)} \\ \\
+ \inference{cardinality(p) = 1 \\ \wedge \rho(owningClass(p) \in classes(d)}{columns(\rho(owningClass(p))) \cup column(name(p), \rho(type(p)), NOTNULL)} \\ \\
  
- \inference{cardinality(p) > 2 \\ \wedge \rho(owningClass(p) \in classes(d)}{\begin{gathered} tables(d) \cup table(name(p), pk("Id"), col("value", DBSTRING), \\ fk(name(p), \rho(owningClass(p))) \end{gathered}}
+ \inference{cardinality(p) > 2 \\ \wedge \rho(owningClass(p) \in classes(d)}{\begin{gathered} table(name(p), primaryKey("Id"), column("value", \rho(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
  \end{cases}$
 
 
@@ -254,16 +281,22 @@ A association is mapped into database as a foreign key in table representing ass
 
 $
 \rho(a,d) = \begin{cases}
- \inference{startCardinality(a) = 0 \\ \wedge \rho(owningClass(p) \in classes(d)  \wedge \rho(reference(a)) \in tables(d)}{foreignKeys(\rho(assoc(a)) \cup foreignKey(name(a), owningClass(a),  \{ \}) } \\ \\
+ \inference{startCardinality(a) = 0 \\ \wedge \rho(owningClass(p)) \in classes(d)  \wedge \rho(reference(a)) \in tables(d)}{
+ \begin{gathered}
+ foreignKeys(\rho(reference(a))) \\ \cup foreignKey(name(a), owningClass(a),  \varnothing) 
+ \end{gathered}
+ }
+
+  \\ \\
  
  \inference{startCardinality(a) = 1 \\ \wedge \rho(owningClass(p) \in tables(d)  \wedge \rho(reference(a)) \in tables(d)}{\begin{gathered}
- foreignKeys(\rho(assoc(a)) \cup foreignKey(name(a), \\ owningClass(a),  NOTNULL)
+foreignKeys(\rho(reference(a))) \\ \cup  foreignKey(name(a), \\ owningClass(a),  NOTNULL)
 \end{gathered}
 } \\ \\
  
   \inference{startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)}{
   \begin{gathered}
-  tables(d) \cup table(name(a), pk("Id"), \{ \}, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
+ table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   \end{gathered}}
 
   
@@ -273,12 +306,7 @@ $
 %TODO FK nemusí mít jméno - odkazuje jen na tabulku a id
 
 \section{Data Evolution in ORM System}
-The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. In general an evolutionary operation $X : OrmSystem \rightarrow OrmSystem $ can be defined as:
-
-$$
-\inference[X(s) = ]{}{system(X(application(s)), \rho_{X}(database(s))) }
-$$
-where the $\rho_X$ is the mapping of the evolution from application to database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
+The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
 
 This section defines eORM for each trivial operation evolving application from \ref{sec:appEvolution}, moreover there are described more complex cases of evolution. 
  
@@ -291,9 +319,9 @@ Creational operations does not have impact on stored data they change the struct
 $
 \rho_{addClass}(c, d) = \inference{\forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
 	\forall a \in \rho(associations(c)) : reference(a) \in tables(d) 
-}{ %TODO podmínky?
+}{
 \begin{gathered}
-tables(d) \cup \rho(c) \cup \rho(properties(c)) \cup \rho(associations(c))
+tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho(associations(c))
 \end{gathered}
 }
 $
@@ -311,15 +339,19 @@ $
 \subsection{Deconstruction of a System}
 \subsubsection{Remove Class}
 $
-\rho_{removeClass}(c,d) = \inference{\rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) \neq \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{tables(d) \setminus \rho(c)}
+\rho_{removeClass}(c,d) = \inference{\rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{tables(d) \setminus \rho(c)}
 $
 %TODO remove by label
 
 \subsubsection{Remove Property}
 $
-\rho_{removeProperty}(l_c, l_p, d) = \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{
+\rho_{removeProperty}(l_c, l_p, d) = \begin{cases}
+ \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{
 columns(t) \setminus c
-}
+} \\ \\
+  \inference{}{}
+ \end{cases}
+ 
 $
 %TODO 1:N M:N
 
