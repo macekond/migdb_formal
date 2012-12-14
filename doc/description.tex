@@ -257,7 +257,7 @@ We assume the primary key column is created automatically by database, therefore
 
 \begin{center}
 $\rho_{c}: Class \rightarrow Table $ \\ 
-$\rho_{c}(c) = table(name(c), primaryKey("Id"), \rho_{p}(primitiveProperties(c), \varnothing $\\$ \cup \rho_{a}(associations(c)) \cup \rho_{p}(collectionProperties)$
+$\rho_{c}(c,d) = d \vdash table(name(c), primaryKey("Id"), \rho_{p}(primitiveProperties(c), \varnothing $\\$ \cup \rho_{a}(associations(c)) \cup \rho_{p}(collectionProperties)$
 \end{center}
 
 
@@ -273,14 +273,14 @@ $
 $
 
 $\rho_p(p, d) = \begin{cases}
- \inference{cardinality(p) = 0 \\ \wedge \rho_c(owningClass(p)) \in tables(d)}{\begin{gathered}
+ \inference{d \vdash cardinality(p) = 0 \\ \wedge \rho_c(owningClass(p)) \in tables(d)}{\begin{gathered} d \vdash 
  columns(table(name(owningClass(p)),d) \\ \cup column(name(p), \rho_t(type(p)), \varnothing)
 \end{gathered}
 } \\ \\
  
- \inference{cardinality(p) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL)} \\ \\
+ \inference{d \vdash cardinality(p) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL)} \\ \\
  
- \inference{cardinality(p) > 2 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered} table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
+ \inference{d \vdash cardinality(p) > 2 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
  \end{cases}$
 
 
@@ -289,19 +289,19 @@ A association is mapped into database as a foreign key in table representing ass
 
 $
 \rho_a(a,d) = \begin{cases}
- \inference{startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{
+ \inference{d \vdash startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{d \vdash 
  \begin{gathered}
  foreignKeys(u) \\ \cup foreignKey(name(a), name(t),  \varnothing) 
  \end{gathered}
  }
   \\ \\
- \inference{startCardinality(a) = 1 \\\\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{\begin{gathered}
+ \inference{d \vdash startCardinality(a) = 1 \\\\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{\begin{gathered} d \vdash 
 foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL)
 \end{gathered}
 } \\ \\
  
-  \inference{startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)}{
-  \begin{gathered}
+  \inference{d \vdash  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)}{
+  \begin{gathered} d \vdash 
  table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   \end{gathered}}
 
@@ -323,46 +323,46 @@ Creational operations does not have impact on stored data they change the struct
 \subsubsection{Add Class}
 
 $
-\rho_{addClass}(c, d) = \inference{\forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
+\Phi_{addClass}(c, d) = \inference{d \vdash \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
 	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
 }{
 \begin{gathered}
-tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho(associations(c))
+d \vdash  tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho(associations(c))
 \end{gathered}
 }
 $
 \subsubsection{Add Property}
 $
-\rho_{addProperty}(p, d) = 
-\inference{\exists t \in tables(d) : name(t) = name(owningClass(p))}{\rho(p,d)} 
+\Phi_{addProperty}(p, d) = 
+\inference{d \vdash \exists t \in tables(d) : name(t) = name(owningClass(p))}{d \vdash \rho(p,d)} 
 $
 \subsection{Add Association}
 $
-\rho_{AddAssociation}(a, d) = \inference{\exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{\rho(a,d)}
+\Phi_{AddAssociation}(a, d) = \inference{d \vdash \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{d \vdash \rho(a,d)}
 $
 
 
 \subsection{Deconstruction of a System}
 \subsubsection{Remove Class}
 $
-\rho_{removeClass}(c,d) = \inference{\rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{tables(d) \setminus \rho(c)}
+\Phi_{removeClass}(c,d) = \inference{d \vdash \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{d \vdash tables(d) \setminus \rho(c)}
 $
 %TODO remove by label
 
 \subsubsection{Remove Property}
 $
-\rho_{removeProperty}(l_c, l_p, d) = \begin{cases}
- \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{
+\Phi_{removeProperty}(l_c, l_p, d) = \begin{cases}
+ \inference{d \vdash \exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{d \vdash
 columns(t) \setminus c
 } \\ \\
-  \inference{\exists t \in tables(d) : name(t) = l_c \\ \wedge \not \exists c \in columns(t) : name(c) = l_p \\ \wedge \exists u \in tables(d) : name(u) = l_p }{tables(d) \setminus u }
+  \inference{d \vdash \exists t \in tables(d) : name(t) = l_c \\ \wedge \not \exists c \in columns(t) : name(c) = l_p \\ \wedge \exists u \in tables(d) : name(u) = l_p }{d \vdash tables(d) \setminus u }
  \end{cases}
 $
 
 \subsubsection{Remove Association}
 $
-\rho_{removeAssociation}(l_c, l_a, d) = \begin{cases}
- \inference{\exists t \in tables(d) : name(t) = l_c \wedge }{foreignKeys(\rho(reference(a))) \ }
+\Phi_{removeAssociation}(l_c, l_a, d) = \begin{cases}
+ \inference{d \vdash \exists t \in tables(d) : name(t) = l_c \wedge }{d \vdash foreignKeys(\rho(reference(a))) \ }
  
  \inference{}{}
  \end{cases}
