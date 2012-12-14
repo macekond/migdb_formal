@@ -278,10 +278,16 @@ $\rho_p(p, d) = \begin{cases}
 \end{gathered}
 } \\ \\
  
- \inference{d \vdash cardinality(p) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL)} \\ \\
+ \inference{ d \vdash cardinality(p) = 1 
+ \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
+ \\ \wedge \not instanciated(owningClass(p))
+ }{ d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL)} \\ \\
  
  \inference{d \vdash cardinality(p) > 2 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
  \end{cases}$
+
+The new foreign key can cause inconsistency of the system when added to a table which contains data. This case is not handled by the mapping function above. We have to extend the function definition of a feature that allows the mapping between the data in both tables. The mapping is a function:
+$$f_m : Property \rightarrow Instance \times Instance $$
 
 
 \subsection{Mapping of Associations}
