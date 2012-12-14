@@ -45,8 +45,7 @@ $classes((classes)) = classes$
 \subsection{Application Structure Definition}
 The structure of the application is defined by five concepts. Each concept is defined and a set of manipulating functions is define to manipulate the application model easily.
 
-\begin{itemize}
-	\item Class : Class represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
+\paragraph{Class} represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
 	 
 $$Class = (label, Property*, Association*)$$
 $name : Class \rightarrow Label$ \\
@@ -54,14 +53,14 @@ $name((lab, props, assocs)) = lab$ \\ \\
 $properties : Class \rightarrow Property*$ \\
 $properties((lab, props, assocs)) = props $\\ \\
 $primitiveProperties : Class \rightarrow Property*$ \\
-$primitiveProperties((lab, props, assocs)) = props \wedge \forall p \in props : cardinality(p) \leq 1 $\\ \\
+$primitiveProperties((lab, props, assocs)) = props', \forall p \in props' : cardinality(p) \leq 1 $\\ \\
 $collectionProperties : Class \rightarrow Property*$ \\
-$collectionProperties((lab, props, assocs)) = props \wedge \forall p \in props : cardinality(p) > 1 $\\ \\
+$collectionProperties((lab, props, assocs)) = props', \forall p \in props' : cardinality(p) > 1 $\\ \\
 $associations : Class \rightarrow Association*$ \\
 $associations((lab, props, assocs)) = assocs $
 
 
-	\item Property : Property represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
+\paragraph{Property} represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
 $$
 Property = (label, AppType, DefaultValue, Cardinality)
 $$
@@ -70,13 +69,12 @@ $name((lab, t, val, n)) = lab$ \\ \\
 $type : Property \times AppType$ \\
 $type((lab, t, val, n)) = t$ \\ \\
 $cardinality : Property \rightarrow NzNat$ \\
-$cardinality((lab, t, val, n)) = n$ 
+$cardinality((lab, t, val, n)) = n$ \\ \\
+$owningClass : Property \times Application \rightarrow Class $ \\
+$owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) $
 
 
-
-
-%TODO owning class
-	\item Association : the association represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
+\paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
 $$
 Association = (label, classRef, startCardinality, endCardinality)
 $$
@@ -87,13 +85,14 @@ $reference((lab, ref, n_1, n_2)) = ref$\\ \\
 $startCardinality : Association \rightarrow NzNat$ \\
 $startCardinality((lab, ref, n_1, n_2)) = n_1$\\ \\
 $endCardinality : Association \rightarrow NzNat$ \\
-$endCardinality((lab, ref, n_1, n_2)) = n_2$
+$endCardinality((lab, ref, n_1, n_2)) = n_2$ \\ \\
+$owningClass : Association \times Application \rightarrow Class $ \\
+$owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) $
 
-	\item App-Type : represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
+\paragraph{AppType} represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
 $$
 AppType = APPSTRING
 $$
-\end{itemize}
 The types used in application model:
 $$
 cardinality = NzNat
