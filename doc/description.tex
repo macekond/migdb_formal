@@ -4,53 +4,61 @@
 \usepackage{semantic}
 \usepackage{listings}
 \usepackage{hyperref}
+\usepackage{graphicx}
 
 \begin{document}
 \tableofcontents
 
 \newpage
-\section{Evolution of ORM System}
-The ORM system consist of application and database. The application and database has to be in consistent state according to a concrete ORM algorithm, otherwise the application cannot work properly. It means that during the evolution we have to respect a concrete ORM to produce consistent result.
-$$
-OrmSystem = (Application, Database)
-$$
-%TODO define consistency
+\section{ORM System}
+The ORM system represents an application created using object oriented language and relational database. The components of such an application and theirs relations are in Figure \ref{fig:appStructure}. We define the application in our model as:
 
-There are several way how the evolution of ORM system can be implemented. The way when the application is evolved, database scheme re-genareted by an ORM framework and data migrated manually is the most common nowadays. The goal of our project is to minimize the manual work in the process of data evolution. We have following options:
+$$system = < Application, Database, \rho >$$
+$instantiated : Class \times Application \rightarrow Boolean $ \\
+
+The application and database has to be in consistent state according to a concrete ORM algorithm, otherwise the application cannot work properly. It means that during the evolution we have to respect a concrete ORM to produce consistent result too.
+
+\begin{figure}
+\begin{center}
+	\includegraphics[scale=0.3]{./images/system}
+	\caption{The model of one generation of an ORM system consists of application persistent layer and relational database for storing instances.}
+\end{center}
+	\label{fig:appStructure}
+\end{figure}
+
 \begin{itemize}
-	\item Backward round-trip engineering can be used. It means the application and database is evolved and then the difference in structure is used to define data migration. This approach is inappropriate for situations where there is stored data as a change in database schema can be connected with more possible changes of data. Hence an additional information from user will be needed to migrate data correctly.
-    \item Forward engineering can be used in two ways. First approach evolves application, re-generate a database schema and generate a data migration according to definition of application evolution. Second approach uses the definition of application evolution as a source for evolution of database schema and data migration. In contrast this approach preserves the original database - it only alters its structure, whereas the first approach creates a new database.
+	\item \textbf{TODO define consistency}
+	\item \textbf{TODO: $\rho(Application) = Database$ show how database is build from Application}
 \end{itemize}
-All approaches can be used and all of them have their pros and cons. We decide to use forward engineering approach as it is a natural way of evolution. Next we decide to generate both migrations (for database schema and data) from definition of application evolution. This allows us to keep history of all layers and to verify the evolution on multiple levels. The algorithm is illustrated in Figure \ref{fig:algorithm}.
 
-The figure shows all important components of the domain. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are four dynamic components (they define transformations between components and transition between system states): an object-relational mapping is a transformation between application and database schema, then are two components for evolution of application and of database. (To simplify the model we will consider the database schema and data are evolved by one component). Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
- 
+
+All important components of the domain are shown in Figure \ref{fig:appStructure}. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are four dynamic components (they define transformations between components and transition between system states): an object-relational mapping is a transformation between application and database schema, then are two components for evolution of application and of database. (To simplify the model we will consider the database schema and data are evolved by one component). Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
+
 
 There is a description of each component following. The description defines set of models of static components and dynamic components are defined as functions. There are several common parts of the model we can define in advance. The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
 
 %%%%%%%%%%%%%%%%%%%
 
-\section{Application Component}
-The application component represent an application created using object oriented language. It means the application is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. 
-The application component model consists of  classes defining the structure of application:
+
+
+
+\section{Application Model}
+The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model:
  
 $$
-Application = <Class*, Instance*>
+Application = <Class*>
 $$
 $classes : Application \rightarrow Class*$ \\
 $classes(<cs, is>) = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
-$instantiated : Class \times Application \rightarrow Boolean $ \\
-\\
 $class : Label \times Application \rightarrow Class  $ \\ 
-$class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a \in Application* $ 
+$class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a \in Application* $ \\
 %TODO: variable types
 
-\subsection{Application Structure Definition}
-The structure of the application is defined by five concepts. Each concept is defined and a set of manipulating functions is define to manipulate the application model easily.
+The structure consist not only of classes, the structure of the application is defined by five concepts. Each concept is defined and a set of manipulating functions is define to manipulate the application model easily.
 
 \paragraph{Class} represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
 	 
-$$Class = (label, Property*, Association*)$$
+$$Class = < label, Property*, Association* >$$
 $name : Class \rightarrow Label$ \\
 $name((lab, props, assocs)) = lab$ \\ \\
 $properties : Class \rightarrow Property*$ \\
@@ -66,7 +74,7 @@ $associated :  Class \times Application \rightarrow Boolean $
 
 \paragraph{Property} represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
 $$
-Property = (label, AppType, DefaultValue, Cardinality)
+Property = < label, AppType, DefaultValue, Cardinality, Mandatory >
 $$
 $name : Property \rightarrow Label$ \\
 $name((lab, t, val, n)) = lab$ \\ \\
@@ -74,6 +82,8 @@ $type : Property \times AppType$ \\
 $type((lab, t, val, n)) = t$ \\ \\
 $cardinality : Property \rightarrow NzNat$ \\
 $cardinality((lab, t, val, n)) = n$ \\ \\
+$mandatory : Property \rightarrow Boolean $
+$mandatory(<lab, t, val, n, m>) = m $ \\ \\
 $owningClass : Property \times Application \rightarrow Class $ \\
 $owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) $
 %TODO: variable types
@@ -111,69 +121,13 @@ $$
 $$
 endCardinality = NzNat
 $$
-$$
-NzNat = [0 - 9]*
-$$
-
-
-
-
-\section{Application Evolution}
-\label{sec:appEvolution}
-
-The evolution is defined as a set of operations which change structure of an application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
-
-$$
-operation = \inference{conditions$ $of$ $feasibility}{impact$ $on$ $application$ $structure}
-$$
-If the conditions of feasibility are not met, the operation cannot impact the application structure.
-%TODO monade
-
-
-\subsection{Application Creation}
-$$addClass: Class \times Application \rightarrow Application $$
-
-$
-addClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
-{classes(a) \cup c}
-$
-
-$$AddProperty : Label \times Property \times Application \rightarrow Application $$
-
-$
-AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in properties(p) : name(q) \neq name(p)}{
- properties(c) \cup p }
-$
-$$AddAssociation : Label \times Association \times Application \rightarrow Application $$
-$
-AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}
-$
-
-\subsection{Application Deconstruction}
-$$RemoveClass: Label \times Application \rightarrow Application $$
-$
-RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
-\wedge not$ $instantiated(c) = \varnothing \wedge not$ $associated(c)}{classes(a) \setminus c }
-$
-
-$$RemoveProperty: Label \times Label \times Application \rightarrow Application $$
-
-$
-RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }
-$
-
-$$RemoveAssociation : Label \times Labels \times Application \rightarrow Application $$
-
-$
-RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s}
-$
 
 %%%%%%%%%%%%%%%%%%%
 
-\section{Database Component Model}
-The relational database consists of database schema which defines the structure of the database and data. The database is a pair od sets:
+\section{Database Model}
+The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is a pair:
 $$
-Database = (table*, data*)
+Database = <table*, data*>
 $$
 $table : Label \times Database \rightarrow Table $ \\
 $table(l, d) = t, t \in tables(d) \wedge name(t) = l$ \\
@@ -235,7 +189,7 @@ $$
 $Constraint = NOTNULL$ $|$ $UNIQUE $
 \end{center}
 
-
+\subsection{Stored Data Model}
 
 \section{Object-Relational Mapping}
 There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
@@ -263,32 +217,31 @@ $\rho_{c}(c,d) = d \vdash table(name(c), primaryKey("Id"), \rho_{p}(primitivePro
 
 
 \subsection{Mapping of Properties}
-There are two types of properties - the first type has cardinality 0 or 1 and it is mapped to a column (when the cardinality is equal to 1 the $NOTNULL$ constraint is added to a column). A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case.
-
-
-%TODO split \rho function?
+There are two types of properties - the first type has cardinality 1  and it is mapped to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. This constraint affect already stored instances a new mandatory value has to be added to each instance.
 
 $
 \rho_p : Property \times Database \rightarrow Column 
 $
 
 $\rho_p(p, d) = \begin{cases}
- \inference{d \vdash cardinality(p) = 0 \\ \wedge \rho_c(owningClass(p)) \in tables(d)}{\begin{gathered} d \vdash 
- columns(table(name(owningClass(p)),d) \\ \cup column(name(p), \rho_t(type(p)), \varnothing)
-\end{gathered}
-} \\ \\
- 
- \inference{ d \vdash cardinality(p) = 1 
+  \inference{ d \vdash cardinality(p) = 1 \wedge ! mandatory(p)
  \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
  \\ \wedge \not instanciated(owningClass(p))
- }{ d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL)} \\ \\
+ }{ d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), \varnothing )} \\ \\
+
+  \inference{ d \vdash cardinality(p) = 1 \wedge mandatory(p)
+ \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
+ \\ \wedge ! instanciated(owningClass(p))
+ }{ d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL )} 
+\\ \\
  
- \inference{d \vdash cardinality(p) > 2 \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p))) \end{gathered}}
+ \inference{d \vdash cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p)), \varnothing) \end{gathered}}
+\\ \\
+
+ \inference{d \vdash cardinality(p) > 1 \wedge mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge ! instanciated(owningClass(p))}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), NOTNULL), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \end{gathered}}
+\\
  \end{cases}$
-
-The new foreign key can cause inconsistency of the system when added to a table which contains data. This case is not handled by the mapping function above. We have to extend the function definition of a feature that allows the mapping between the data in both tables. The mapping is a function:
-$$f_m : Property \rightarrow Instance \times Instance $$
-
+\textbf{TODO: add value into instances in NOTNULL columns}
 
 \subsection{Mapping of Associations}
 A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
@@ -309,24 +262,99 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL)
   \inference{d \vdash  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)}{
   \begin{gathered} d \vdash 
  table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
-  \end{gathered}}
-
-  
+  \end{gathered}}  
  \end{cases}
 $
 
+The new foreign key can cause inconsistency of the system when added to a table which contains data. This case is not handled by the mapping function above. We have to extend the function definition of a feature that allows the mapping between the data in both tables. The mapping is a function:
+$$f_m : Property \rightarrow Instance \times Instance $$
 %TODO handle instances
+
+
+
 
 \section{Data Evolution in ORM System}
 The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
 
+The state of a system is called generation and transformation from one state to another is called evolution. The state of the system defines a context for each evolution and it determines if the evolution is successful or not. 
+
+\begin{figure}
+\begin{center}
+	\includegraphics[scale=0.4]{./images/evolution}
+	\caption{The evolution of data changes the system on all levels}
+\end{center}
+	\label{fig:evolution}
+\end{figure}
+
 This section defines eORM for each trivial operation evolving application from \ref{sec:appEvolution}, moreover there are described more complex cases of evolution. 
- 
-%TODO jak se postupně vyvíjí systém
-\subsection{Creating of a System}
+
+\begin{itemize}
+	\item \textbf{TODO show how a whole system is evolved}
+	\item \textbf{TODO state monade}
+\end{itemize}
+
+
+\subsection{Evolution of Application}
+\label{sec:appEvolution}
+
+The evolution is defined as a set of operations which change structure of an application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
+
+$$
+operation = \inference{conditions$ $of$ $feasibility}{impact$ $on$ $application$ $structure}
+$$
+If the conditions of feasibility are not met, the operation cannot impact the application structure.
+%TODO monade
+
+
+\subsubsection{Application Creation}
+$$addClass: Class \times Application \rightarrow Application $$
+
+$
+addClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
+{classes(a) \cup c}
+$
+
+$$AddProperty : Label \times Property \times Application \rightarrow Application $$
+
+$
+AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in properties(p) : name(q) \neq name(p)}{
+ properties(c) \cup p }
+$
+$$AddAssociation : Label \times Association \times Application \rightarrow Application $$
+$
+AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}
+$
+
+\subsubsection{Application Deconstruction}
+$$RemoveClass: Label \times Application \rightarrow Application $$
+$
+RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
+\wedge not$ $instantiated(c) = \varnothing \wedge not$ $associated(c)}{classes(a) \setminus c }
+$
+
+$$RemoveProperty: Label \times Label \times Application \rightarrow Application $$
+
+$
+RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }
+$
+
+$$RemoveAssociation : Label \times Labels \times Application \rightarrow Application $$
+
+$
+RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s}
+$
+
+\subsubsection{Application Alternation}
+\paragraph{Rename}
+\paragraph{Change Cardinality}
+\paragraph{Copy Property}
+
+
+\subsection{ORM System Evolution}
 Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
 
-\subsubsection{Add Class}
+\subsubsection{Creation of a System}
+\paragraph{Add Class}
 
 $
 \Phi_{addClass}(c, d) = \inference{d \vdash \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
@@ -337,25 +365,25 @@ d \vdash  tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho
 \end{gathered}
 }
 $
-\subsubsection{Add Property}
+\paragraph{Add Property}
 $
 \Phi_{addProperty}(p, d) = 
 \inference{d \vdash \exists t \in tables(d) : name(t) = name(owningClass(p))}{d \vdash \rho(p,d)} 
 $
-\subsection{Add Association}
+\paragraph{Add Association}
 $
 \Phi_{AddAssociation}(a, d) = \inference{d \vdash \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{d \vdash \rho(a,d)}
 $
 
 
-\subsection{Deconstruction of a System}
-\subsubsection{Remove Class}
+\subsubsection{Deconstruction of a System}
+\paragraph{Remove Class}
 $
 \Phi_{removeClass}(c,d) = \inference{d \vdash \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{d \vdash tables(d) \setminus \rho(c)}
 $
 %TODO remove by label
 
-\subsubsection{Remove Property}
+\paragraph{Remove Property}
 $
 \Phi_{removeProperty}(l_c, l_p, d) = \begin{cases}
  \inference{d \vdash \exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{d \vdash
@@ -365,15 +393,20 @@ columns(t) \setminus c
  \end{cases}
 $
 
-\subsubsection{Remove Association}
+\paragraph{Remove Association}
 $
-\Phi_{removeAssociation}(l_c, l_a, d) = \begin{cases}
- \inference{d \vdash \exists t \in tables(d) : name(t) = l_c \wedge }{d \vdash foreignKeys(\rho(reference(a))) \ }
- 
- \inference{}{}
+\Phi_{removeAssociation}(l_c, l_a, d) = d \vdash \begin{cases}
+ \inference{\exists t \in tables(d) : name(t) = l_c 
+ \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_a 
+ \\ \wedge not containsData(t)}{d \vdash foreignKeys(t) \setminus f }
+ \\ \\
+ \inference{\exists t \in tables(d) : name(t) = l_a 
+ \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_c
+ \\ \wedge not containsData(t)}{d \vdash tables(d) \setminus t}
  \end{cases}
 $
-	
+
+\subsubsection{Altering of a System}	
 
 
 
