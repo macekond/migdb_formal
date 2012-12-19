@@ -402,7 +402,9 @@ $
 
 \subsubsection{Add Association}
 $
-\Phi_{AddAssociation}(a, d) = \inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{ \rho(a,d)}
+\Phi_{AddAssociation}(a, d) = \begin{cases}
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{ \rho(a,d) }
+ \end{cases}
 $
 
 
