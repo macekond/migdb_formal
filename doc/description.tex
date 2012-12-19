@@ -385,11 +385,14 @@ $
 \subsubsection{Add Property}
 $
 \Phi_{addProperty}(p, d) = \begin{cases}
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \wedge (! mandatory(p) \vee ! instantiated(owningClass(p))}{ \rho(p,d)} 
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (! mandatory(p) \vee ! instantiated(owningClass(p))}{ \rho(p,d)} 
 \\ \\ 
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \wedge mandatory(p) \wedge instantiated(owningClass(p)) \wedge cardinality(p) \leq 1}{ \rho(p,d) \wedge \forall r \in data(d), reference(r) = t : pair(r) \cup pair(name(p), defaultValue(p))} 
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
+ \rho(p,d) \wedge \forall r \in data(d), reference(r) = t : pair(r) \\ \cup pair(name(p), defaultValue(p))
+\end{gathered}
+} 
 \\ \\
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \wedge mandatory(p) \wedge instantiated(owningClass(p)) \wedge cardinality(p) \leq 1}{\begin{gathered}
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
  \rho(p,d) \wedge \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), pair("value", defaultValue(p)), \\ pair(name(p), value(primaryKey(r))) 
 \end{gathered}
 } 
