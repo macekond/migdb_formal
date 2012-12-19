@@ -49,7 +49,7 @@ $$
 Application = <Class*>
 $$
 $classes : Application \rightarrow Class*$ \\
-$classes(<cs, is>) = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
+$classes(<cs, is >) = = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
 $class : Label \times Application \rightarrow Class  $ \\ 
 $class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a \in Application* $ \\
 %TODO: variable types
@@ -60,15 +60,15 @@ The structure consist not only of classes, the structure of the application is d
 	 
 $$Class = < label, Property*, Association* >$$
 $name : Class \rightarrow Label$ \\
-$name((lab, props, assocs)) = lab$ \\ \\
+$name(< lab, props, assocs  >) = lab$ \\ \\
 $properties : Class \rightarrow Property*$ \\
-$properties((lab, props, assocs)) = props $\\ \\
+$properties(< lab, props, assocs  >) = props $\\ \\
 $primitiveProperties : Class \rightarrow Property*$ \\
-$primitiveProperties((lab, props, assocs)) = props', \forall p \in props' : cardinality(p) \leq 1 $\\ \\
+$primitiveProperties(< lab, props, assocs  >) = props', \forall p \in props' : cardinality(p) \leq 1 $\\ \\
 $collectionProperties : Class \rightarrow Property*$ \\
-$collectionProperties((lab, props, assocs)) = props', \forall p \in props' : cardinality(p) > 1 $\\ \\
+$collectionProperties(< lab, props, assocs  >) = props', \forall p \in props' : cardinality(p) > 1 $\\ \\
 $associations : Class \rightarrow Association*$ \\
-$associations((lab, props, assocs)) = assocs $ \\ \\
+$associations(< lab, props, assocs  >) = assocs $ \\ \\
 $associated :  Class \times Application \rightarrow Boolean $
 %TODO: variable types
 
@@ -77,13 +77,13 @@ $$
 Property = < label, AppType, DefaultValue, Cardinality, Mandatory >
 $$
 $name : Property \rightarrow Label$ \\
-$name((lab, t, val, n)) = lab$ \\ \\
+$name(< lab, t, val, n  >) = lab$ \\ \\
 $type : Property \times AppType$ \\
-$type((lab, t, val, n)) = t$ \\ \\
+$type(< lab, t, val, n  >) = t$ \\ \\
 $cardinality : Property \rightarrow NzNat$ \\
-$cardinality((lab, t, val, n)) = n$ \\ \\
+$cardinality(< lab, t, val, n  >) = n$ \\ \\
 $mandatory : Property \rightarrow Boolean $
-$mandatory(<lab, t, val, n, m>) = m $ \\ \\
+$mandatory(<lab, t, val, n, m >) = = m $ \\ \\
 $owningClass : Property \times Application \rightarrow Class $ \\
 $owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) $
 %TODO: variable types
@@ -93,13 +93,13 @@ $$
 Association = (label, classRef, startCardinality, endCardinality)
 $$
 $name : Association \rightarrow Label$ \\
-$name((lab, ref, n_1, n_2)) = lab$\\ \\
+$name(< lab, ref, n_1, n_2  >) = lab$\\ \\
 $reference : Association \rightarrow Label$ \\
-$reference((lab, ref, n_1, n_2)) = ref$\\ \\
+$reference(< lab, ref, n_1, n_2  >) = ref$\\ \\
 $startCardinality : Association \rightarrow NzNat$ \\
-$startCardinality((lab, ref, n_1, n_2)) = n_1$\\ \\
+$startCardinality(< lab, ref, n_1, n_2  >) = n_1$\\ \\
 $endCardinality : Association \rightarrow NzNat$ \\
-$endCardinality((lab, ref, n_1, n_2)) = n_2$ \\ \\
+$endCardinality(< lab, ref, n_1, n_2  >) = n_2$ \\ \\
 $owningClass : Association \times Application \rightarrow Class $ \\
 $owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) $
 %TODO: variable types
@@ -127,7 +127,7 @@ $$
 \section{Database Model}
 The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is a pair:
 $$
-Database = <table*, data*>
+Database = <table*, row*>
 $$
 $table : Label \times Database \rightarrow Table $ \\
 $table(l, d) = t, t \in tables(d) \wedge name(t) = l$ \\
@@ -139,24 +139,24 @@ $$
 Table = (label, primaryKey, Column*, ForeignKey*)
 $$
 $name : Table \rightarrow Label $ \\
-$name((lab, pk, cols, fks)) = lab$ \\ \\
+$name(< lab, pk, cols, fks  >) = lab$ \\ \\
 $primaryKey : Table \rightarrow PrimaryKey $ \\
-$primaryKey((lab, pk, cols, fks)) = pk$ \\ \\
+$primaryKey(< lab, pk, cols, fks  >) = pk$ \\ \\
 $columns : Table \rightarrow Column* $ \\
-$columns((lab, pk, cols, fks)) = cols$ \\ \\
+$columns(< lab, pk, cols, fks  >) = cols$ \\ \\
 $foreignKeys : Table \rightarrow ForeignKey* $ \\
-$foreignKeys((lab, pk, cols, fks)) = fks$ 
+$foreignKeys(< lab, pk, cols, fks  >) = fks$ 
 
 \paragraph{Column} columns define possible data values and types which can be part of a table record.
 $$
 Column = (label, DbType, DefaultValue, Constraint*)
 $$
 $name : Column \rightarrow Label $ \\
-$name((lab, t, val, cons)) = lab $ \\ \\
+$name(< lab, t, val, cons  >) = lab $ \\ \\
 $type : Column \rightarrow DbType $ \\
-$type((lab, t, val, cons)) = t $ \\ \\
+$type(< lab, t, val, cons  >) = t $ \\ \\
 $constraints : Column \rightarrow Constraint* $ \\
-$constraints((lab, t, val, cons)) = cons $ \\ \\
+$constraints(< lab, t, val, cons  >) = cons $ \\ \\
 $owningTable : Column \times Database \rightarrow Table $ \\
 $constraints(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) $
 
@@ -165,17 +165,17 @@ $$
 ForeignKey = (label, tableRef, Constraint*)
 $$
 $name : ForeignKey \rightarrow Label $ \\
-$name((lab, tRef, cons)) = lab $ \\ \\
+$name(< lab, tRef, cons  >) = lab $ \\ \\
 $reference : ForeignKey \rightarrow Label $ \\
-$reference((lab, tRef, cons)) = tRef $ \\ \\
+$reference(< lab, tRef, cons  >) = tRef $ \\ \\
 $reference : ForeignKey \rightarrow Constraint* $ \\
-$reference((lab, tRef, cons)) = cons $ \\ \\
+$reference(< lab, tRef, cons  >) = cons $ \\ \\
 $owningTable : ForeignKey \times Database \rightarrow Table $ \\
 $owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d) $
 
 \paragraph{Primary key}
 $$
-PrimaryKey =  (label) 	
+PrimaryKey =  < label > 	
 $$
 
 \paragraph{DbType} represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DBSTRING.
@@ -189,7 +189,17 @@ $$
 $Constraint = NOTNULL$ $|$ $UNIQUE $
 \end{center}
 
-\subsection{Stored Data Model}
+\subsection{Model of Stored Data}
+The representation of stored data in the relational database is based on pairs:
+$$pair = < refColumn, value > | < refFK, value>$$
+
+\textbf{TODO: primary key}
+where the $refColumn$ reference a column or foreign key by its name and $value$ represents concrete value stored in the database. A row in a table is a set of pairs with reference to a concrete table:
+
+$$row = < refTable, pair* >$$
+
+\textbf{TODO: define consistency of rows and schema}
+
 
 \section{Object-Relational Mapping}
 There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
@@ -227,21 +237,28 @@ $\rho_p(p, d) = \begin{cases}
   \inference{ d \vdash cardinality(p) = 1 \wedge ! mandatory(p)
  \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
  \\ \wedge \not instanciated(owningClass(p))
- }{ d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), \varnothing )} \\ \\
+ }{\begin{gathered}
+	 d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), \varnothing )
+\end{gathered}
+ } \\ \\
 
   \inference{ d \vdash cardinality(p) = 1 \wedge mandatory(p)
- \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
- \\ \wedge ! instanciated(owningClass(p))
- }{ d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL )} 
+ \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}
+ 	d \vdash columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL ) \\
+ 	
+ 	
+\end{gathered}
+} 
 \\ \\
  
- \inference{d \vdash cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p)), \varnothing) \end{gathered}}
+ \inference{d \vdash cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p)), \varnothing) \\
+ 
+\end{gathered}}
 \\ \\
 
- \inference{d \vdash cardinality(p) > 1 \wedge mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge ! instanciated(owningClass(p))}{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), NOTNULL), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \end{gathered}}
-\\
+ \inference{d \vdash cardinality(p) > 1 \wedge mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d) }{\begin{gathered}d \vdash  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), NOTNULL), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL)
+	 \end{gathered}}
  \end{cases}$
-\textbf{TODO: add value into instances in NOTNULL columns}
 
 \subsection{Mapping of Associations}
 A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
@@ -254,8 +271,8 @@ $
  \end{gathered}
  }
   \\ \\
- \inference{d \vdash startCardinality(a) = 1 \\\\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{\begin{gathered} d \vdash 
-foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL)
+ \inference{d \vdash startCardinality(a) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{\begin{gathered} d \vdash 
+foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
 \end{gathered}
 } \\ \\
  
@@ -265,6 +282,7 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL)
   \end{gathered}}  
  \end{cases}
 $
+\textbf{TODO: check + add cardinalities/images and split(?), data in NOTNULL}
 
 The new foreign key can cause inconsistency of the system when added to a table which contains data. This case is not handled by the mapping function above. We have to extend the function definition of a feature that allows the mapping between the data in both tables. The mapping is a function:
 $$f_m : Property \rightarrow Instance \times Instance $$
@@ -280,7 +298,7 @@ The state of a system is called generation and transformation from one state to 
 
 \begin{figure}
 \begin{center}
-	\includegraphics[scale=0.4]{./images/evolution}
+	\includegraphics[scale=0.4]{./images/evolution_simple}
 	\caption{The evolution of data changes the system on all levels}
 \end{center}
 	\label{fig:evolution}
@@ -317,8 +335,7 @@ $
 $$AddProperty : Label \times Property \times Application \rightarrow Application $$
 
 $
-AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in properties(p) : name(q) \neq name(p)}{
- properties(c) \cup p }
+AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p }
 $
 $$AddAssociation : Label \times Association \times Application \rightarrow Application $$
 $
@@ -367,9 +384,19 @@ d \vdash  tables(d) \cup \rho(c) \cup \rho(collectionProperties(c)) \\ \cup \rho
 $
 \paragraph{Add Property}
 $
-\Phi_{addProperty}(p, d) = 
-\inference{d \vdash \exists t \in tables(d) : name(t) = name(owningClass(p))}{d \vdash \rho(p,d)} 
+\Phi_{addProperty}(p, d) = \begin{cases}
+\inference{d \vdash \exists t \in tables(d) : name(t) = name(owningClass(p)) \wedge (! mandatory(p) \vee ! instantiated(owningClass(p))}{d \vdash \rho(p,d)} 
+\\ \\ 
+\inference{d \vdash \exists t \in tables(d) : name(t) = name(owningClass(p)) \wedge mandatory(p) \wedge instantiated(owningClass(p)) \wedge cardinality(p) \leq 1}{d \vdash \rho(p,d) \wedge \forall r \in data(d), reference(r) = t : pair(r) \cup pair(name(p), defaultValue(p))} 
+\\ \\
+\inference{d \vdash \exists t \in tables(d) : name(t) = name(owningClass(p)) \wedge mandatory(p) \wedge instantiated(owningClass(p)) \wedge cardinality(p) \leq 1}{\begin{gathered}
+ \rho(p,d) \wedge \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), pair("value", defaultValue(p)), \\ pair(name(p), value(primaryKey(r))) 
+\end{gathered}
+} 
+
+\end{cases}
 $
+
 \paragraph{Add Association}
 $
 \Phi_{AddAssociation}(a, d) = \inference{d \vdash \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{d \vdash \rho(a,d)}
