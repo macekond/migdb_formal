@@ -13,13 +13,18 @@
 \tableofcontents \newpage
 
 \maketitle
+\begin{abstract}
+The evolution of an application is a common issue during software development. The formal description of the evolution operations in context of  software created using an object oriented programming language and a relational database is introduced in this paper. Special attention is given to the data stored in databases (instances) and theirs consistency during evolution process.
+\end{abstract}
+
+\textbf{Keywords:} data evolution, data migration
+
 \section{ORM System}
 The ORM system represents an application created using object oriented language and relational database. The components of such an application and theirs relations are in Figure \ref{fig:appStructure}. We define the application in our model as:
 
 $$system = < Application, Database, \rho >$$
-$instantiated : Class \times Application \rightarrow Boolean $ \\
 
-The application and database has to be in consistent state according to a concrete ORM algorithm, otherwise the application cannot work properly. It means that during the evolution we have to respect a concrete ORM to produce consistent result too.
+The application and database has to be in consistent state according to a concrete ORM algorithm, otherwise the application cannot work properly. It means that during the evolution we have to respect a concrete ORM to produce consistent result.
 
 \begin{figure}
 \begin{center}
@@ -34,18 +39,20 @@ The application and database has to be in consistent state according to a concre
 	\item \textbf{TODO: $\rho(Application) = Database$ show how database is build from Application}
 \end{itemize}
 
+an object-relational mapping is a transformation between application and database schema
 
-All important components of the domain are shown in Figure \ref{fig:appStructure}. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are four dynamic components (they define transformations between components and transition between system states): an object-relational mapping is a transformation between application and database schema, then are two components for evolution of application and of database. (To simplify the model we will consider the database schema and data are evolved by one component). Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
+$instantiated : Class \times Application \rightarrow Boolean $ \\
 
 \section{Data Evolution in ORM System}
-The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
+The data evolution is a change of a state of the ORM system. The change of a state is described via evolution operations on application level, the change than has to be propagated into the rest of the system - database schema and data. The evolution process is in Figure \ref{fig:evolution}. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are two dynamic components (they define transition between system states): component for evolution of application and component for database evolution. To simplify the model we will consider the database schema and data are evolved by one component. Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
 
-The state of a system is called generation and transformation from one state to another is called evolution. The state of the system defines a context for each evolution and it determines if the evolution is successful or not. 
+
+%Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The state of a system is called generation and transformation from one state to another is called evolution. The state of the system defines a context for each evolution and it determines if the evolution is successful or not. The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
 
 \begin{figure}
 \begin{center}
 	\includegraphics[scale=0.4]{./images/evolution_simple}
-	\caption{The evolution of data changes the system on all levels}
+	\caption{The evolution of data changes the system on all levels. The figure shows all the components of the evolution process.}
 \end{center}
 	\label{fig:evolution}
 \end{figure}
@@ -57,7 +64,7 @@ The state of a system is called generation and transformation from one state to 
 \end{itemize}
 
 
-There is a description of each component following. The description defines set of models of static components and dynamic components are defined as functions. There are several common parts of the model we can define in advance. The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
+A description of each component follows. Models of static components and dynamic components are defined, then ORM and eORM is defined. There are several common parts of the model we can define in advance. The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
 
 %%%%%%%%%%%%%%%%%%%
 
@@ -221,10 +228,11 @@ where the $refColumn$ reference a column or foreign key by its name and $value$ 
 $$row = < refTable, pair* >$$
 
 \textbf{TODO: define consistency of rows and schema}
+\textbf{TODO: define operations such as instantiated}
 
 
 \section{Object-Relational Mapping}
-There are defined functions for object-relational mapping used in the model. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution and its propagation from application to database.
+There are defined functions for object-relational mapping used in the model in this section. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution (see Section \ref{sec:eorm}) and its propagation from application to database.
 
 
 \subsection{Mapping of Types}
@@ -235,9 +243,6 @@ $ \rho_{t} : AppType \rightarrow DbType $ \\
 $ \rho_{t}(APPSTRING) = DBSTRING $
 \end{center}
 
-
-
-
 \subsection{Mapping of Classes}
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
@@ -245,8 +250,6 @@ We assume the primary key column is created automatically by database, therefore
 $\rho_{c}: Class \rightarrow Table $ \\ 
 $\rho_{c}(c,d) = tables(d) \cup table(name(c), primaryKey("Id"), \varnothing, \varnothing) $
 \end{center}
-
-
 
 \subsection{Mapping of Properties}
 There are two types of properties - the first type has cardinality 1  and it is mapped to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. This constraint affect already stored instances a new mandatory value has to be added to each instance.
@@ -273,7 +276,7 @@ $\rho_p(p, d) = \begin{cases}
 } 
 \\ \\
  
- \inference{ cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
+ \inference{ cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
  
 \end{gathered}}
 \\ \\
@@ -306,27 +309,19 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
 $
 
 
-The new foreign key can cause inconsistency of the system when added to a table which contains data. This case is not handled by the mapping function above. We have to extend the function definition of a feature that allows the mapping between the data in both tables. The mapping is a function:
-$$f_m : Property \rightarrow Instance \times Instance $$
-%TODO handle instances
-
-
-
-
-
-
 \section{Evolution}
+\label{sec:eorm}
+There are introduced operations for evolution of an application first as they are a source for the evolution of the whole ORM system. The mapping of the application evolution into a database schema and stored data are introduced later in this section too.
+
 \subsection{Evolution of Application}
 \label{sec:appEvolution}
 
-The evolution is defined as a set of operations which change structure of an application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
+The evolution of an application is defined as a set of operations which change a structure of the application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
 
 $$
 operation = \inference{conditions$ $of$ $feasibility}{impact$ $on$ $application$ $structure}
 $$
 If the conditions of feasibility are not met, the operation cannot impact the application structure.
-%TODO monade
-
 
 \subsubsection{Application Creation}
 $$addClass: Class \times Application \rightarrow Application $$
@@ -371,14 +366,13 @@ $
 \paragraph{Copy Property}
 
 
-\subsection{ORM System Evolution}
-Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
+\subsection{Extended Object-Relation Mapping}
+The extended object-relational mapping maps the evolution of the application level into the database schema and stored data. This section introduces the mapping for evolution operations introduced earlier.
 
 \subsubsection{Creation of a System}
-\paragraph{Add Class}
-
+\paragraph{Add Class} The $AddClass$ operation changes the structure of the database schema only.
 $$
-\Phi_{addClass}(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
+\Phi_{AC}(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
 	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
 }{
 \begin{gathered}
@@ -386,9 +380,10 @@ $$
 \end{gathered}
 }
 $$
-\paragraph{Add Property}
+
+\paragraph{Add Property} The function $AddProperty$ on level of database does not change the structure only, but it has an impact on stored data too. This is because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 $$
-\Phi_{addProperty}(p, d) = \begin{cases}
+\Phi_{AP}(p, d) = \begin{cases}
 \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (! mandatory(p) \vee ! instantiated(owningClass(p))}{ \rho(p,d)} 
 \\ \\ 
 \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
@@ -404,9 +399,14 @@ $$
 \end{cases}
 $$
 
-\paragraph{Add Association}
+\paragraph{Add Association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
+$$f_m : Property \rightarrow Instance \times Instance $$
+
+\textbf{TODO: define the features of the $f_m$}
+
+The mapping of the $AddAssociation$ function is defined as:
 $$
-\Phi_{AddAssociation}(a, f_m, d) = \begin{cases}
+\Phi_{AA}(a, f_m, d) = \begin{cases}
 \inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
 \rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), pair(name(a), \\ value(primaryKey(first(r)))) 
 \end{gathered}
@@ -420,17 +420,16 @@ $$
  \end{cases}
 $$
 
-
 \subsubsection{Deconstruction of a System}
 \paragraph{Remove Class}
 $$
-\Phi_{removeClass}(c,d) = \inference{ \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{ tables(d) \setminus \rho(c)}
+\Phi_{RC}(c,d) = \inference{ \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{ tables(d) \setminus \rho(c)}
 $$
 %TODO remove by label
 
 \paragraph{Remove Property}
 $$
-\Phi_{removeProperty}(p, d) = \begin{cases}
+\Phi_{RP}(p, d) = \begin{cases}
  \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \exists c \in columns(t) : name(c) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p)) }{columns(t) \setminus c
 } \\ \\
   \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \not \exists c \in columns(t) : name(c) = name(p) \\ \wedge \exists u \in tables(d) : name(u) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p))}{ tables(d) \setminus u }
@@ -439,7 +438,7 @@ $$
 
 \paragraph{Remove Association}
 $$
-\Phi_{removeAssociation}(a, d) =  \begin{cases}
+\Phi_{RA}(a, d) =  \begin{cases}
  \inference{\exists t \in tables(d) : name(t) = name(owningClass(a))
  \\ \wedge \exists f \in foreignKeys(t) : name(f) = name(a)
  \\ \wedge \forall r \in data(d) : owningTable(r) \neq t}{ foreignKeys(t) \setminus f }
