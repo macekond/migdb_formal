@@ -375,9 +375,9 @@ $
 Creational operations does not have impact on stored data they change the structure of the application and database by adding new objects into model.
 
 \subsubsection{Creation of a System}
-\subsubsection{Add Class}
+\paragraph{Add Class}
 
-$
+$$
 \Phi_{addClass}(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
 	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
 }{
@@ -385,9 +385,9 @@ $
   \rho(c) \wedge \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ \wedge \rho(associations(c))
 \end{gathered}
 }
-$
-\subsubsection{Add Property}
-$
+$$
+\paragraph{Add Property}
+$$
 \Phi_{addProperty}(p, d) = \begin{cases}
 \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (! mandatory(p) \vee ! instantiated(owningClass(p))}{ \rho(p,d)} 
 \\ \\ 
@@ -402,10 +402,10 @@ $
 } 
 
 \end{cases}
-$
+$$
 
-\subsubsection{Add Association}
-$
+\paragraph{Add Association}
+$$
 \Phi_{AddAssociation}(a, f_m, d) = \begin{cases}
 \inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
 \rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), pair(name(a), \\ value(primaryKey(first(r)))) 
@@ -418,38 +418,37 @@ $
  } 
  
  \end{cases}
-$
+$$
 
 
 \subsubsection{Deconstruction of a System}
-\subsubsection{Remove Class}
-$
+\paragraph{Remove Class}
+$$
 \Phi_{removeClass}(c,d) = \inference{ \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{ tables(d) \setminus \rho(c)}
-$
+$$
 %TODO remove by label
 
-\subsubsection{Remove Property}
-$
-\Phi_{removeProperty}(l_c, l_p, d) = \begin{cases}
- \inference{ \exists t \in tables(d) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_p  }{d \vdash
-columns(t) \setminus c
+\paragraph{Remove Property}
+$$
+\Phi_{removeProperty}(p, d) = \begin{cases}
+ \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \exists c \in columns(t) : name(c) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p)) }{columns(t) \setminus c
 } \\ \\
-  \inference{ \exists t \in tables(d) : name(t) = l_c \\ \wedge \not \exists c \in columns(t) : name(c) = l_p \\ \wedge \exists u \in tables(d) : name(u) = l_p }{ tables(d) \setminus u }
+  \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \not \exists c \in columns(t) : name(c) = name(p) \\ \wedge \exists u \in tables(d) : name(u) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p))}{ tables(d) \setminus u }
  \end{cases}
-$
+$$
 
-\subsubsection{Remove Association}
-$
-\Phi_{removeAssociation}(l_c, l_a, d) =  \begin{cases}
- \inference{\exists t \in tables(d) : name(t) = l_c 
- \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_a 
- \\ \wedge not containsData(t)}{ foreignKeys(t) \setminus f }
+\paragraph{Remove Association}
+$$
+\Phi_{removeAssociation}(a, d) =  \begin{cases}
+ \inference{\exists t \in tables(d) : name(t) = name(owningClass(a))
+ \\ \wedge \exists f \in foreignKeys(t) : name(f) = name(a)
+ \\ \wedge \forall r \in data(d) : owningTable(r) \neq t}{ foreignKeys(t) \setminus f }
  \\ \\
- \inference{\exists t \in tables(d) : name(t) = l_a 
- \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_c
- \\ \wedge not containsData(t)}{ tables(d) \setminus t}
+ \inference{\exists t \in tables(d) : name(t) = name(a)
+ \\ \wedge \exists f \in foreignKeys(t) : name(f) = name(owningClass(a))
+ \\ \wedge \forall r \in data(d) : owningTable(r) \neq t}{ tables(d) \setminus t}
  \end{cases}
-$
+$$
 
 \subsubsection{Altering a System}	
 
