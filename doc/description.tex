@@ -6,10 +6,13 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 
-\begin{document}
-\tableofcontents
+\title{Evolution of ORM Systems: Formal Foundations}
+\author{Ondrej Macek}
 
-\newpage
+\begin{document}
+\tableofcontents \newpage
+
+\maketitle
 \section{ORM System}
 The ORM system represents an application created using object oriented language and relational database. The components of such an application and theirs relations are in Figure \ref{fig:appStructure}. We define the application in our model as:
 
@@ -403,8 +406,17 @@ $
 
 \subsubsection{Add Association}
 $
-\Phi_{AddAssociation}(a, d) = \begin{cases}
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) }{ \rho(a,d) }
+\Phi_{AddAssociation}(a, f_m, d) = \begin{cases}
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
+\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), pair(name(a), \\ value(primaryKey(first(r)))) 
+\end{gathered}
+ }
+ \\ \\
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered}
+\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ data(t) \cup row(name(a), pair(name(t_s), \\ value(primaryKey(first(r)))) pair(name(t_t), \\ value(primaryKey(second(r)))))
+\end{gathered}
+ } 
+ 
  \end{cases}
 $
 
@@ -439,7 +451,7 @@ $
  \end{cases}
 $
 
-\subsubsection{Altering of a System}	
+\subsubsection{Altering a System}	
 
 
 
