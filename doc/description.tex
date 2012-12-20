@@ -34,6 +34,25 @@ The application and database has to be in consistent state according to a concre
 
 All important components of the domain are shown in Figure \ref{fig:appStructure}. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are four dynamic components (they define transformations between components and transition between system states): an object-relational mapping is a transformation between application and database schema, then are two components for evolution of application and of database. (To simplify the model we will consider the database schema and data are evolved by one component). Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
 
+\section{Data Evolution in ORM System}
+The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
+
+The state of a system is called generation and transformation from one state to another is called evolution. The state of the system defines a context for each evolution and it determines if the evolution is successful or not. 
+
+\begin{figure}
+\begin{center}
+	\includegraphics[scale=0.4]{./images/evolution_simple}
+	\caption{The evolution of data changes the system on all levels}
+\end{center}
+	\label{fig:evolution}
+\end{figure}
+
+
+\begin{itemize}
+	\item \textbf{TODO show how a whole system is evolved}
+	\item \textbf{TODO state monade}
+\end{itemize}
+
 
 There is a description of each component following. The description defines set of models of static components and dynamic components are defined as functions. There are several common parts of the model we can define in advance. The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
 
@@ -251,7 +270,7 @@ $\rho_p(p, d) = \begin{cases}
 } 
 \\ \\
  
- \inference{ cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p))), \\ foreignKey(name(p), name(owningClass(p)), \varnothing) \\
+ \inference{ cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
  
 \end{gathered}}
 \\ \\
@@ -291,27 +310,9 @@ $$f_m : Property \rightarrow Instance \times Instance $$
 
 
 
-\section{Data Evolution in ORM System}
-The Object-Relational system consist of an application and a database. The system has to be in consistent state, therefore the evolution of application has to be propagated correctly into database. Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
-
-The state of a system is called generation and transformation from one state to another is called evolution. The state of the system defines a context for each evolution and it determines if the evolution is successful or not. 
-
-\begin{figure}
-\begin{center}
-	\includegraphics[scale=0.4]{./images/evolution_simple}
-	\caption{The evolution of data changes the system on all levels}
-\end{center}
-	\label{fig:evolution}
-\end{figure}
-
-This section defines eORM for each trivial operation evolving application from \ref{sec:appEvolution}, moreover there are described more complex cases of evolution. 
-
-\begin{itemize}
-	\item \textbf{TODO show how a whole system is evolved}
-	\item \textbf{TODO state monade}
-\end{itemize}
 
 
+\section{Evolution}
 \subsection{Evolution of Application}
 \label{sec:appEvolution}
 
