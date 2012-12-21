@@ -14,18 +14,24 @@
 
 \maketitle
 \begin{abstract}
-The evolution of an application is a common issue during software development. The formal description of the evolution operations in context of  software created using an object oriented programming language and a relational database is introduced in this paper. Special attention is given to the data stored in databases (instances) and theirs consistency during evolution process.
+The formal definition of the evolution in context of  software created using an object oriented programming language and a relational database is introduced in this paper. Special attention is given to the data stored in databases (instances) and theirs consistency during evolution process.
 \end{abstract}
 
 \textbf{Keywords:} data evolution, data migration
+\section{Introduction}
+The evolution of an application is a common issue during software development. The evolution can occur from many reasons in different parts of application lifecycle. The evolution of a software  created using an object oriented programming language and a relational database is usually processed as code refactoring and database migration is processed as a set of SQL scripts. The code refactoring is supported by many IDEs and the database migration is supported by many frameworks and tools, nevertheless these tools are usually not capable to solve complicated migration cases or preserve stored data. Another disadvantage is the evolution has to be define twice - as a code refactoring and as a database migration.
 
-\section{ORM System}
-The ORM system represents an application created using object oriented language and relational database. The components of such an application and theirs relations are in Figure \ref{fig:appStructure}. We define the application in our model as:
+This paper provides a formal description of an evolutionary framework, which evolves a database including stored data according to a evolution in application. There are defined models representing an application and database in the paper, together with functions which are able to perform an evolution of the whole software.
 
-$$system = < Application, Database, \rho >$$
+The paper is organized as follows: in Section \ref{sec:evolution} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:eorm}.
 
-The application and database has to be in consistent state according to a concrete ORM algorithm, otherwise the application cannot work properly. It means that during the evolution we have to respect a concrete ORM to produce consistent result.
-
+\section{Data Evolution in ORM Software}
+\label{sec:evolution}
+The ORM software consist of an application created using object oriented language and relational database. The application and database are in consistent state according to a concrete ORM function, otherwise the software cannot work properly. An ORM software is illustrated in Figure \ref{fig:appStructure}. The software can be defined as a triple:
+$$software = < Application, Database, \rho >$$
+Models of $Application$ and $Database$ will be introduced in detail in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM function $\rho$ is defined in Section \ref{sec:orm}. The consistent state of application and database is defined as:
+$$\rho(Application) = Database$$
+ 
 \begin{figure}
 \begin{center}
 	\includegraphics[scale=0.3]{./images/system}
@@ -34,20 +40,21 @@ The application and database has to be in consistent state according to a concre
 	\label{fig:appStructure}
 \end{figure}
 
-\begin{itemize}
-	\item \textbf{TODO define consistency}
-	\item \textbf{TODO: $\rho(Application) = Database$ show how database is build from Application}
-\end{itemize}
+The evolution of an software is a transformation of one consistent state to another consistent state: $$\epsilon : system \rightarrow system $$ We will call consistent states of one software \emph{generations} of the software. The evolution is quite easy if we consider only structure of an application and database and ignore instances (stored data). The evolution can be described in such a case as:
+\begin{equation*}
+\epsilon(software(App, Db)) = \{a \rightarrow \epsilon_{App}(App)  | software(a, \rho(a), \rho)\}
+\end{equation*}
+It means only the structure of the application is evolved and the new database is obtained as a result od ORM. Stored data are usually useless in many cases as their structure does not correspond to the new database schema. We believe the data preservation and consistency is a crucial issue during the software evolution. 
 
-an object-relational mapping is a transformation between application and database schema
+The evolution process we propose is in Figure \ref{fig:evolution}. The transition from the first generation to the second one is based on application evolution which is interpreted on the database level. The interpretation of application evolution is called evolutionary object-relation mapping (eORM) and its defined as a function:
+\begin{equation*}
+	\Phi : \epsilon_{app} \rightarrow \epsilon_{db}
+\end{equation*}
+The evolution of the software can be than defined as:
+\begin{equation*}
+\epsilon(software(App, Db)) = \{software(\epsilon_{app}(App), \Phi((\epsilon_{app}, Db), \rho)\}
+\end{equation*}
 
-$instantiated : Class \times Application \rightarrow Boolean $ \\
-
-\section{Data Evolution in ORM System}
-The data evolution is a change of a state of the ORM system. The change of a state is described via evolution operations on application level, the change than has to be propagated into the rest of the system - database schema and data. The evolution process is in Figure \ref{fig:evolution}. There are three static components (static because they do not define behavior, but state of the system): an application, a database schema and stored data. Then there are two dynamic components (they define transition between system states): component for evolution of application and component for database evolution. To simplify the model we will consider the database schema and data are evolved by one component. Last component is the most important one - it is component which maps the evolution from application level to relational database level. We call this component evolution object-relational mapping (eORM).
-
-
-%Each evolution operation consist of two parts - applying evolution operation on application and on database. The mapping of the evolution change is called extended Object-Relational Mapping (eORM). The state of a system is called generation and transformation from one state to another is called evolution. The state of the system defines a context for each evolution and it determines if the evolution is successful or not. The eORM mapping helps to assure consistency of the system by transforming application evolution into database schema and data. Each eORM function applied on an ORM system produces a new generation of the system. If the function cannot be applied on a system the system cannot be evolved by the function. 
 
 \begin{figure}
 \begin{center}
@@ -59,31 +66,24 @@ The data evolution is a change of a state of the ORM system. The change of a sta
 
 
 \begin{itemize}
-	\item \textbf{TODO show how a whole system is evolved}
 	\item \textbf{TODO state monade}
 \end{itemize}
 
 
-A description of each component follows. Models of static components and dynamic components are defined, then ORM and eORM is defined. There are several common parts of the model we can define in advance. The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
-
-%%%%%%%%%%%%%%%%%%%
-
-
-
-
 \section{Application Model}
-The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model:
+\label{sec:appModel}
+The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
+
+The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
  
 $$
-Application = <Class*>
+Application = < Class* > 
 $$
 $classes : Application \rightarrow Class*$ \\
-$classes(<cs, is >) = = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
+$classes(<cs, is >) = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
 $class : Label \times Application \rightarrow Class  $ \\ 
-$class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a \in Application* $ \\
-%TODO: variable types
-
-The structure consist not only of classes, the structure of the application is defined by five concepts. Each concept is defined and a set of manipulating functions is define to manipulate the application model easily.
+$class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a = Application $ \\ \\
+The structure of an application consists not only of classes, it is defined by five other concepts. Besides the structure definition, there is defined a set of functions, which allows to manipulate the application model easily. 
 
 \paragraph{Class} represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
 	 
@@ -154,7 +154,8 @@ $$
 %%%%%%%%%%%%%%%%%%%
 
 \section{Database Model}
-The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is a pair:
+\label{sec:dbModel}
+The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is:
 $$
 Database = <table*, row*>
 $$
@@ -219,21 +220,32 @@ $Constraint = NOTNULL$ $|$ $UNIQUE $
 \end{center}
 
 \subsection{Model of Stored Data}
-The representation of stored data in the relational database is based on pairs:
-$$pair = < refColumn, value > | < refFK, value>$$
 
-\textbf{TODO: primary key}
-where the $refColumn$ reference a column or foreign key by its name and $value$ represents concrete value stored in the database. A row in a table is a set of pairs with reference to a concrete table:
 
+
+
+
+A row in a table is tuple consisting of reference to a concrete table and a set of value pairs, which represents concrete values of concrete columns.
 $$row = < refTable, pair* >$$
+$$pair = < reference, value >$$
+The $reference $ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema, otherwise the database is inconsistent. The consistency of database is then:
+\begin{equation*}\begin{gathered}\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u) \end{gathered}\end{equation*}
+		
 
-\textbf{TODO: define consistency of rows and schema}
-\textbf{TODO: define operations such as instantiated}
+\begin{itemize}
+	\item \textbf{TODO: define operations such as instantiated}
+\end{itemize}
+
+$instantiated : Class \times Application \rightarrow Boolean $ \\
 
 
 \section{Object-Relational Mapping}
+\label{sec:orm}
 There are defined functions for object-relational mapping used in the model in this section. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution (see Section \ref{sec:eorm}) and its propagation from application to database.
 
+\begin{itemize}
+	\item \textbf{TODO: $\rho(Application) = Database$ show how database is build from Application}
+\end{itemize}
 
 \subsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
@@ -307,7 +319,6 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
   \end{gathered}}  
  \end{cases}
 $
-
 
 \section{Evolution}
 \label{sec:eorm}
