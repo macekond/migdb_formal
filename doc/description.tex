@@ -5,6 +5,8 @@
 \usepackage{listings}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{algpseudocode}
+
 
 \title{Evolution of ORM Systems: Formal Foundations}
 \author{Ondrej Macek}
@@ -28,7 +30,9 @@ The paper is organized as follows: in Section \ref{sec:evolution} the concept of
 \section{Data Evolution in ORM Software}
 \label{sec:evolution}
 The ORM software consist of an application created using object oriented language and relational database. The application and database are in consistent state according to a concrete ORM function, otherwise the software cannot work properly. An ORM software is illustrated in Figure \ref{fig:appStructure}. The software can be defined as a triple:
-$$software = < Application, Database, \rho >$$
+\begin{equation*}
+	software = < Application, Database, \rho >
+\end{equation*}
 Models of $Application$ and $Database$ will be introduced in detail in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM function $\rho$ is defined in Section \ref{sec:orm}. The consistent state of application and database is defined as:
 $$\rho(Application) = Database$$
  
@@ -230,30 +234,61 @@ $$row = < refTable, pair* >$$
 $$pair = < reference, value >$$
 The $reference $ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema, otherwise the database is inconsistent. The consistency of database is then:
 \begin{equation*}\begin{gathered}\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u) \end{gathered}\end{equation*}
-		
+There are two functions connected with stored data - first of them verify if the table contains any data:
+$$contains : Table \times Database \rightarrow Boolean $$
+\begin{equation*}
+\begin{gathered}
+	contains(t, d) = \begin{cases}
+ \inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
+  \inference{\forall r \in data(d) : refTable(r) \neq name(t)}{false}
+ \end{cases} \\ \\
+ t \in tables(d), d \in Database
+\end{gathered}
+\end{equation*}
 
-\begin{itemize}
-	\item \textbf{TODO: define operations such as instantiated}
-\end{itemize}
-
-$instantiated : Class \times Application \rightarrow Boolean $ \\
+second of them verify if there are instances of a class:
+$$instantiated : Class \times Software \rightarrow Boolean $$ 
+\begin{equation*}
+\begin{gathered}
+	instantiated(c, s) = \begin{cases}
+ \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
+  \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge ! contains(t, database(s))}{false} \\ \\
+ \end{cases} \\ \\
+ c \in classes(application(s)), s \in Software 
+\end{gathered}
+\end{equation*}
 
 
 \section{Object-Relational Mapping}
 \label{sec:orm}
-There are defined functions for object-relational mapping used in the model in this section. The purpose of a function is indicated in its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution (see Section \ref{sec:eorm}) and its propagation from application to database.
+There are defined functions for object-relational mapping used in the model in this section. The purpose of a function is indicated by its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution (see Section \ref{sec:eorm}) and its propagation from application to database. However the database can be obtained from an application model by using following algorithm:
 
-\begin{itemize}
-	\item \textbf{TODO: $\rho(Application) = Database$ show how database is build from Application}
-\end{itemize}
+\begin{algorithmic}[1]
+	\Require $a \in Application$
+	\State d = Database
+	\ForAll{$c \in classes(a)$} 
+		\State $\rho_c(c), d$
+		\ForAll{$p \in properties(c)$} 
+			\State $\rho_p(p, d)$
+		\EndFor
+	 \EndFor
+	\ForAll{$c \in classes(a)$}
+		\ForAll{$as \in associations(c)$} 
+			\State $\rho_{a}(as, d)$
+		\EndFor
+	\EndFor
+\end{algorithmic}
+
 
 \subsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
 
-\begin{center}
-$ \rho_{t} : AppType \rightarrow DbType $ \\
-$ \rho_{t}(APPSTRING) = DBSTRING $
-\end{center}
+\begin{equation*}
+\begin{gathered}
+	\rho_{t} : AppType \rightarrow DbType  \\
+ 	\rho_{t}(APPSTRING) = DBSTRING 
+\end{gathered}
+\end{equation*}
 
 \subsection{Mapping of Classes}
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
@@ -372,15 +407,29 @@ RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) =
 $
 
 \subsubsection{Application Alternation}
-\paragraph{Rename}
-\paragraph{Change Cardinality}
-\paragraph{Copy Property}
+\paragraph{Rename Class}
+$$\rho_{RenC} : Label \times Label \times Application \rightarrow Class $$
+\begin{equation*}
+	\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
+c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), reference(f) = l_c : f.reference = l_n 
+\end{gathered}
+}
+\end{equation*}
 
+\paragraph{Rename Property}
+$$\rho_{RenP} : Property \times Label \times Application \rightarrow Property $$
+\paragraph{Rename Association}
+$$\rho_{RenA} : Association \times Label \times Application \rightarrow Association $$
+\paragraph{Change Cardinality}
+$$\rho_{CcP} : Property \times NzNat \times Application \rightarrow Property $$
+$$\rho_{cardA} : Association \times NzNat \times Application \rightarrow Association $$
+\paragraph{Copy Property}
+$$\rho_{copyP} : Property \times Class \times Class \times Application \rightarrow Class \times Class $$
 
 \subsection{Extended Object-Relation Mapping}
 The extended object-relational mapping maps the evolution of the application level into the database schema and stored data. This section introduces the mapping for evolution operations introduced earlier.
 
-\subsubsection{Creation of a System}
+\subsubsection{Creation of a Software}
 \paragraph{Add Class} The $AddClass$ operation changes the structure of the database schema only.
 $$
 \Phi_{AC}(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
@@ -431,7 +480,7 @@ $$
  \end{cases}
 $$
 
-\subsubsection{Deconstruction of a System}
+\subsubsection{Deconstruction of a Software}
 \paragraph{Remove Class}
 $$
 \Phi_{RC}(c,d) = \inference{ \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{ tables(d) \setminus \rho(c)}
@@ -460,7 +509,7 @@ $$
  \end{cases}
 $$
 
-\subsubsection{Altering a System}	
+\subsubsection{Altering a Software}	
 
 
 
