@@ -27,7 +27,7 @@ This paper provides a formal description of an evolutionary framework, which evo
 
 The paper is organized as follows: in Section \ref{sec:evolution} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:eorm}.
 
-\section{Data Evolution in ORM Software}
+\section{ORM Software}
 \label{sec:evolution}
 The ORM software consist of an application created using object oriented language and relational database. The application and database are in consistent state according to a concrete ORM function, otherwise the software cannot work properly. An ORM software is illustrated in Figure \ref{fig:appStructure}. The software can be defined as a triple:
 \begin{equation*}
@@ -67,11 +67,6 @@ The evolution of the software can be than defined as:
 \end{center}
 	\label{fig:evolution}
 \end{figure}
-
-
-\begin{itemize}
-	\item \textbf{TODO state monade}
-\end{itemize}
 
 
 \section{Application Model}
@@ -362,12 +357,47 @@ There are introduced operations for evolution of an application first as they ar
 \subsection{Evolution of Application}
 \label{sec:appEvolution}
 
-The evolution of an application is defined as a set of operations which change a structure of the application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. We decide to use following transcription:
+The evolution of an application is defined as a set of operations which change a structure of the application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. If the conditions of feasibility are not met, the operation cannot change the application structure - the software cannot evolve. This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $evolve$, which is used as a concatenation of operations as well.
+$$state = Consistent s | Inconsistent s, s \in Softwares$$
 
-$$
-operation = \inference{conditions$ $of$ $feasibility}{impact$ $on$ $application$ $structure}
-$$
-If the conditions of feasibility are not met, the operation cannot impact the application structure.
+$$ret : Software \rightarrow State $$
+\begin{equation*}
+\begin{gathered}
+	ret(s) = \begin{cases}
+ Consistent s, consistent(s)
+ \\
+ Inconsistent s, ! consistent(s)
+ \end{cases}
+\end{gathered}
+\end{equation*}
+
+Each evolution operation has a definition: $Software \rightarrow State$ and all evolution operations creates a set called $Operations$, then a concatenation of evolution operations is defined as:
+
+$$evolve : State \times Operations \rightarrow State  $$
+\begin{equation*}
+\begin{gathered}
+ evolve(t, o) = \begin{cases}
+ t, \; t = Inconsistent \; s \\
+ o(s), \; t = Consistent \; s 
+\end{cases}\\ 
+t \in States, o \in Operatons, s \in Softwares
+\end{gathered}
+\end{equation*}
+
+
+We decide to use following transcription to cover all aspects  of operation definition:
+
+\begin{equation*}
+\begin{gathered}
+operation(parameters, software) = \begin{cases}
+  \inference{conditions \; of \; feasibility}{impact \; on \; software \; structure}\\ \\
+  \inference{otherwise}{Inconsistent \; software}
+ \end{cases}
+\end{gathered}
+\end{equation*}
+
+The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. We will not state this implicit assumption in the operations definitions to increase theirs readability.
+
 
 \subsubsection{Application Creation}
 $$addClass: Class \times Application \rightarrow Application $$
@@ -408,7 +438,7 @@ $
 
 \subsubsection{Application Alternation}
 \paragraph{Rename Class}
-$$\rho_{RenC} : Label \times Label \times Application \rightarrow Class $$
+$$\rho_{RenC} : Label \times Label \times Application \rightarrow Application $$
 \begin{equation*}
 	\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
 c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), reference(f) = l_c : f.reference = l_n 
@@ -417,14 +447,46 @@ c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), referenc
 \end{equation*}
 
 \paragraph{Rename Property}
-$$\rho_{RenP} : Property \times Label \times Application \rightarrow Property $$
+$$\rho_{RenP} : Label \times Label \times Label \times Application \rightarrow Application $$
+\begin{equation*}
+	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
+p.name = l_n 
+\end{gathered}
+}
+\end{equation*}
+
 \paragraph{Rename Association}
-$$\rho_{RenA} : Association \times Label \times Application \rightarrow Association $$
+$$\rho_{RenA} : Label \times Label \times Label \times Application \rightarrow Application $$
+\begin{equation*}
+	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists a \in associations(c) : name(a) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
+a.name = l_n 
+\end{gathered}
+}
+\end{equation*}
+
+
+
+\paragraph{Copy Property}
+All transformations described earlier does change only the structure of a application. These operation can be used in case there are no instances in the application. If instances are present in the application, the decomposition transformations could cause a data lost. Therefore we define  the transformation for copying a property from one class to another. The copy property is the basic way to copy data from instance of a class to instance of another class.
+
+The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, thus we define the copy property operation as a basic and atomic operation which will help us to handle instances.
+
+$$\rho_{copyP} : Label \times Label \times Label \times (Instance \times Instance) \times Application \rightarrow Application $$
+\begin{equation*}
+	\rho_{copy}(l_s, l_t, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists e \in classes(a) : name(e) = l_t  \\ \wedge \forall q \in properties(c) : name(q) \neq l_p}{\begin{gathered}
+properites(e) \cup p 
+\end{gathered}
+}
+\end{equation*}
+
+With a copy property transformation defined we are able to define advanced evolution scenarios.
+
+\subsection{Composing of Evolution Operations}
+
+
 \paragraph{Change Cardinality}
 $$\rho_{CcP} : Property \times NzNat \times Application \rightarrow Property $$
 $$\rho_{cardA} : Association \times NzNat \times Application \rightarrow Association $$
-\paragraph{Copy Property}
-$$\rho_{copyP} : Property \times Class \times Class \times Application \rightarrow Class \times Class $$
 
 \subsection{Extended Object-Relation Mapping}
 The extended object-relational mapping maps the evolution of the application level into the database schema and stored data. This section introduces the mapping for evolution operations introduced earlier.
@@ -510,6 +572,16 @@ $$
 $$
 
 \subsubsection{Altering a Software}	
+\paragraph{Copy Column}
+$$\Phi_{copyC} : Label \times Label \times Label \times f_m \times Database \rightarrow Database $$
+
+\begin{equation*}
+	\begin{gathered}
+		\Phi_{copyC}(l_c, l_s, l_t, f_m, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c \wedge \forall r \in rows(t) : f_m(r) \cup getPair(l_c,r)}
+	\end{cases}
+	\end{gathered}
+\end{equation*}
 
 
 
