@@ -12,64 +12,94 @@
 \author{Ondrej Macek}
 
 \begin{document}
-\tableofcontents \newpage
 
 \maketitle
 \begin{abstract}
-The formal definition of the evolution in context of  software created using an object oriented programming language and a relational database is introduced in this paper. Special attention is given to the data stored in databases (instances) and theirs consistency during evolution process.
+The evolution of a software is a common issue during software lifecycle. The evolution od code and database are usually separated tasks. We discuss the evolution of software in context of  software created using an object oriented programming language and a relational database. The formal definition of the evolutionary framework is introduced in this paper. Special attention is given to the data stored in databases (instances) and theirs consistency during evolution process.
 \end{abstract}
 
 \textbf{Keywords:} data evolution, data migration
 \section{Introduction}
-The evolution of an application is a common issue during software development. The evolution can occur from many reasons in different parts of application lifecycle. The evolution of a software  created using an object oriented programming language and a relational database is usually processed as code refactoring and database migration is processed as a set of SQL scripts. The code refactoring is supported by many IDEs and the database migration is supported by many frameworks and tools, nevertheless these tools are usually not capable to solve complicated migration cases or preserve stored data. Another disadvantage is the evolution has to be define twice - as a code refactoring and as a database migration.
+The evolution of a software is a common issue during software development. The evolution can occur from many reasons in different stages of software lifecycle. The evolution of a software created using an object oriented programming language and a relational database is usually processed in two steps - as a code refactoring and as a database migration, which is processed as an SQL script. The code refactoring is supported by many IDEs, whereas the database migration is usually processed manually. There are frameworks and tools capable of database evolution, nevertheless these tools are usually not capable to solve complicated migration cases or preserve stored data. Another disadvantage of such an approach to data evolution is the evolution has to be define twice - as a code refactoring and as a database migration.
 
-This paper provides a formal description of an evolutionary framework, which evolves a database including stored data according to a evolution in application. There are defined models representing an application and database in the paper, together with functions which are able to perform an evolution of the whole software.
+This paper provides a formal definition of an evolutionary framework, which evolves a database including stored data according to a evolution in application. There are defined models representing an application and database in the paper, together with functions which are able to perform an evolution of the whole software.
 
-The paper is organized as follows: in Section \ref{sec:evolution} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:eorm}.
+The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:eorm}.
 
 \section{ORM Software}
-\label{sec:evolution}
-The ORM software consist of an application created using object oriented language and relational database. The application and database are in consistent state according to a concrete ORM function, otherwise the software cannot work properly. An ORM software is illustrated in Figure \ref{fig:appStructure}. The software can be defined as a triple:
-\begin{equation*}
-	software = < Application, Database, \rho >
-\end{equation*}
-Models of $Application$ and $Database$ will be introduced in detail in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM function $\rho$ is defined in Section \ref{sec:orm}. The consistent state of application and database is defined as:
-$$\rho(Application) = Database$$
- 
+\label{sec:evoIntro}
 \begin{figure}
-\begin{center}
+\centering
 	\includegraphics[scale=0.3]{./images/system}
 	\caption{The model of one generation of an ORM system consists of application persistent layer and relational database for storing instances.}
-\end{center}
-	\label{fig:appStructure}
+\label{fig:appStructure}
 \end{figure}
-
-The evolution of an software is a transformation of one consistent state to another consistent state: $$\epsilon : system \rightarrow system $$ We will call consistent states of one software \emph{generations} of the software. The evolution is quite easy if we consider only structure of an application and database and ignore instances (stored data). The evolution can be described in such a case as:
-\begin{equation*}
-\epsilon(software(App, Db)) = \{a \rightarrow \epsilon_{App}(App)  | software(a, \rho(a), \rho)\}
-\end{equation*}
-It means only the structure of the application is evolved and the new database is obtained as a result od ORM. Stored data are usually useless in many cases as their structure does not correspond to the new database schema. We believe the data preservation and consistency is a crucial issue during the software evolution. 
-
-The evolution process we propose is in Figure \ref{fig:evolution}. The transition from the first generation to the second one is based on application evolution which is interpreted on the database level. The interpretation of application evolution is called evolutionary object-relation mapping (eORM) and its defined as a function:
-\begin{equation*}
-	\Phi : \epsilon_{app} \rightarrow \epsilon_{db}
-\end{equation*}
-The evolution of the software can be than defined as:
-\begin{equation*}
-\epsilon(software(App, Db)) = \{software(\epsilon_{app}(App), \Phi((\epsilon_{app}, Db), \rho)\}
-\end{equation*}
-
-
+A software implemented in an object-oriented language, which uses relational database as a data storage is context of this paper. The situation is illustrated in the Figure \ref{fig:appStructure}. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software a triple:
+\begin{gather*}
+	software = < Application, Database, \rho > \\
+	soft : Applications \times Databases \times ORM \rightarrow Software \\ \\
+	application : Software \rightarrow Application \\
+	application(soft(a, d, \rho)) = a \\ \\
+	database : Software \rightarrow Database \\
+	database(soft(a, d, \rho)) = d \\
+	a \in Applications, d \in Databases
+\end{gather*}
+The software has to be in consistent state so it is beneficial for its user. The state of the software is defined to communicate the sate of the software to its user:
+\begin{gather*}
+	state = Consistent\; s \: | \: Inconsistent \; s, \\
+	s \in Softwares \\ \\
+	state : Software \rightarrow State \\
+	state(s) = \begin{cases}
+ 		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
+ 		\inference{otherwise}{Inconsistent \; s}
+ 	\end{cases}
+\end{gather*}
+\subsection{Software Evolution}
 \begin{figure}
-\begin{center}
+\centering
 	\includegraphics[scale=0.4]{./images/evolution_simple}
 	\caption{The evolution of data changes the system on all levels. The figure shows all the components of the evolution process.}
-\end{center}
 	\label{fig:evolution}
 \end{figure}
+The evolution of a software is a transformation from one consistent state to another one. These states are called generations of the software. The evolution consists of change in application and in database as shown in the Figure \ref{fig:evolution}. We focus on situations when the evolution is initiated on the application level (as code refactoring), however the evolution has to be processed on the database level too. It means there is a set of application transformations called $AppOps$ and a set of database transformations called $DbOps$ and a mapping between these two sets. We call this mapping $\Phi$:
+\begin{gather*}
+\Phi : AppOps \rightarrow DbOps
+\end{gather*}
 
+The evolution of the software is defined as the $\oplus$ operator:
+$$\oplus : State \times AppOps \rightarrow State $$
+and similarly the $\oplus_{app}$ and the $\oplus_{db}$ operators for evolving application and database:
+\begin{gather*}
+\oplus_{app} : Application \times AppOps \rightarrow Application \\
+ \oplus_{db} : Database \times DbOps \rightarrow Database
+\end{gather*}
+The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell) so the state of the evolution can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
+\begin{gather*}
+ u \oplus t = \begin{cases}
+ 	\inference{u = Inconsistent \; s}{u} \\ \\
+ 	\inference{u = Consistent \; s}{state(soft(application(u) \oplus_{app} t, database(u) \oplus_{db} \Phi(t))} 
+\end{cases}\\ 
+u \in States, t \in AppOps, s \in Softwares
+\end{gather*}
+\begin{gather*}
+ a \oplus o = \begin{cases}
+ 	\inference{!\;consistent(a)}{a} \\ \\
+ 	\inference{consistent(a)}{a \oplus_{app} o} 
+\end{cases}\\ 
+a \in Applications, o \in AppOps
+\end{gather*}
+\begin{gather*}
+ d \oplus o = \begin{cases}
+ 	\inference{!\;consistent(d)}{d} \\ \\
+ 	\inference{consistent(d)}{d \oplus_{app} o} 
+\end{cases}\\ 
+d \in Applications, o \in DbOps
+\end{gather*}
 
-\section{Application Model}
+\section{Software Model}
+The model of an ORM software consists of three parts - an application model, a database model and a ORM. 
+
+\subsection{Application Model}
 \label{sec:appModel}
 The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
 
@@ -158,9 +188,7 @@ $$
 AppType = APPSTRING
 $$
 
-%%%%%%%%%%%%%%%%%%%
-
-\section{Database Model}
+\subsection{Database Model}
 \label{sec:dbModel}
 The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is:
 \begin{gather*}
@@ -176,7 +204,7 @@ tabs \in Tables, rows \in Rows, l \in Labels, d \in Databases
 \end{gather*}
 
 
-\subsection{Database Schema Model}
+\subsubsection{Database Schema Model}
 The database schema model is defined by following concepts:
 \paragraph{Table} represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
 \begin{gather*}
@@ -238,7 +266,7 @@ Constraint = NOTNULL \; | \; UNIQUE
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Model of Stored Data}
+\subsubsection{Model of Stored Data}
 A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of reference to a concrete table and a set of value pairs, which represents concrete values of concrete columns.
 \begin{gather*}
 row = < refTable, pair* > \\
@@ -261,8 +289,6 @@ pair = < refCol, value > \\
 The $reference $ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema, otherwise the database is inconsistent. The consistency of database is then:
 \begin{equation*}\begin{gathered}\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u) \end{gathered}\end{equation*}
 
-
-
 second of them verify if there are instances of a class:
 $$instantiated : Class \times Software \rightarrow Boolean $$ 
 \begin{equation*}
@@ -275,8 +301,7 @@ $$instantiated : Class \times Software \rightarrow Boolean $$
 \end{gathered}
 \end{equation*}
 
-
-\section{Object-Relational Mapping}
+\subsection{Object-Relational Mapping}
 \label{sec:orm}
 There are defined functions for object-relational mapping used in the model in this section. The purpose of a function is indicated by its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution (see Section \ref{sec:eorm}) and its propagation from application to database. However the database can be obtained from an application model by using following algorithm:
 
@@ -297,7 +322,7 @@ There are defined functions for object-relational mapping used in the model in t
 \end{algorithmic}
 
 
-\subsection{Mapping of Types}
+\subsubsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
 
 \begin{equation*}
@@ -315,7 +340,7 @@ $\rho_{c}: Class \rightarrow Table $ \\
 $\rho_{c}(c,d) = tables(d) \cup table(name(c), primaryKey("Id"), \varnothing, \varnothing) $
 \end{center}
 
-\subsection{Mapping of Properties}
+\subsubsection{Mapping of Properties}
 There are two types of properties - the first type has cardinality 1  and it is mapped to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. This constraint affect already stored instances a new mandatory value has to be added to each instance.
 
 $
@@ -345,7 +370,7 @@ $\rho_p(p, d) = \begin{cases}
 	 \end{gathered}}
  \end{cases}$
 
-\subsection{Mapping of Associations}
+\subsubsection{Mapping of Associations}
 A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
 
 $
@@ -368,63 +393,21 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
  \end{cases}
 $
 
-\section{Evolution}
-\label{sec:eorm}
-There are introduced operations for evolution of an application first as they are a source for the evolution of the whole ORM system. The mapping of the application evolution into a database schema and stored data are introduced later in this section too.
+\section{Evolutionaty Transformations}
+Each evolutionary transformation consist in changes of the application (a transformation from the $AppOps$ set) and the database (a transformation from the  $DbOps$ set). The function $\Phi$ provides a mapping between the $AppOps$ and $DbOps$ sets, which makes the $AppOps$ set a source for the transformation of the whole software.
 
-\subsection{Evolution of Application}
-\label{sec:appEvolution}
-
-The evolution of a software is defined as a set of transformations which change a structure of the software. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. If the conditions of feasibility are not met, the operation cannot change the application structure - the software cannot evolve. This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $\oplus$ (called evolve), which is used as a concatenation of operations as well.
+The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context. If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve.  We decide to use following transcription to cover all aspects  of transformation definition:
 \begin{gather*}
-state = Consistent \; s \: | \: Inconsistent \; s, v \in Softwares 
-\end{gather*}
-
-\begin{equation*}
-\begin{gathered}
-ret : Software \rightarrow State \\ \\
-	ret(s) = \begin{cases}
- Consistent \; s, consistent(s)
- \\
- Inconsistent\;  s, ! consistent(s)
- \end{cases}
-\end{gathered}
-\end{equation*}
-Each evolution transformation has a definition: $Software \rightarrow State$ and all evolution transformations creates a set called $Transformations$, then a concatenation of evolution transformation is defined as:
-\begin{equation*}
-\begin{gathered}
- \oplus : State \times Transformations \rightarrow State  \\ \\
- u \oplus t = \begin{cases}
- u, \; u = Inconsistent \; s \\
- t(u), \; u = Consistent \; s 
-\end{cases}\\ 
-u \in States, t \in Transformations, s \in Softwares
-\end{gathered}
-\end{equation*}
-Each transformation consist in changes of the application and the database. To describe these two aspects od software evolution we decide to define transformations for each layer separately. The separation of transformation contexts help us to define transformation specific for application or database evolution, which can ease both - understanding and defining the transformation. The transformations specific for a context are called operations and they creates two sets- first one for application evolution: $AppOps$  and second one for database evolution $DbOps$. Applying of a transformation is defined:
-\begin{gather*}
-u \oplus t = ret(<application(u) \oplus o_{app}, database(u) \oplus o_{db}>) \\
-u \in Softwares, t \in Transformations, o_{app} \in AppOps, o_{db} \in DbOps
-\end{gather*}
-The function $\Phi$ provides a mapping between the $AppOps$ and $DbOps$ sets. The $\Phi$ function makes possible to use a description of an application evolution as a source for the evolution of the whole software.
-\begin{gather*}
-\Phi : AppOps \rightarrow DbOps
-\end{gather*}
-
-The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the context. We decide to use following transcription to cover all aspects  of operation definition:
-
-\begin{equation*}
-\begin{gathered}
 operation(parameters, context) = \begin{cases}
   \inference{conditions \; of \; feasibility}{impact \; on \; context}\\ \\
-  \inference{otherwise}{Inconsistent \; context}
+  \inference{otherwise}{context}
  \end{cases}
-\end{gathered}
-\end{equation*}
+\end{gather*}
 
 The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. We will not state this implicit assumption in the operations definitions to increase theirs readability.
 
 
+\subsection{Application Transformation}
 \subsubsection{Application Creation}
 \begin{gather*}
 addClass: Class \times Application \rightarrow Application \\ 
@@ -490,33 +473,7 @@ l_c, l_o, l_n \in Label, a \in Applications
 \end{gather*}
 
 
-
-\paragraph{Copy Property}
-All transformations described earlier does change only the structure of a application. These operation can be used in case there are no instances in the application. If instances are present in the application, the decomposition transformations could cause a data lost. Therefore we define  the transformation for copying a property from one class to another. The copy property is the basic way to copy data from instance of a class to instance of another class.
-
-The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, thus we define the copy property operation as a basic and atomic operation which will help us to handle instances.
-
-$$\rho_{copyP} : Label \times Label \times Label \times (Instance \times Instance) \times Application \rightarrow Application $$
-\begin{equation*}
-	\rho_{copy}(l_s, l_t, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists e \in classes(a) : name(e) = l_t  \\ \wedge \forall q \in properties(c) : name(q) \neq l_p}{\begin{gathered}
-properites(e) \cup p 
-\end{gathered}
-}
-\end{equation*}
-
-With a copy property transformation defined we are able to define advanced evolution scenarios.
-
-\subsection{Composing of Evolution Operations}
-
-
-\paragraph{Change Cardinality}
-$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
-$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
-
-\subsection{Extended Object-Relation Mapping}
-The extended object-relational mapping maps the evolution of the application level into the database schema and stored data. This section introduces the mapping for evolution operations introduced earlier.
-
-\subsubsection{Creation of a Software}
+\subsection{Database Transformation}
 \paragraph{Add Class} The $AddClass$ operation changes the structure of the database schema only.
 $$
 \Phi_{AC}(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
@@ -527,7 +484,6 @@ $$
 \end{gathered}
 }
 $$
-
 \paragraph{Add Property} The function $AddProperty$ on level of database does not change the structure only, but it has an impact on stored data too. This is because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 $$
 \Phi_{AP}(p, d) = \begin{cases}
@@ -608,6 +564,47 @@ $$\Phi_{copyC} : Label \times Label \times Label \times f_m \times Database \rig
 	\end{gathered}
 \end{equation*}
 
+\subsection{Composing of Evolution Operations}
+\paragraph{Copy Property}
+All transformations described earlier does change only the structure of a application. These operation can be used in case there are no instances in the application. If instances are present in the application, the decomposition transformations could cause a data lost. Therefore we define  the transformation for copying a property from one class to another. The copy property is the basic way to copy data from instance of a class to instance of another class.
+
+The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, thus we define the copy property operation as a basic and atomic operation which will help us to handle instances.
+
+$$\rho_{copyP} : Label \times Label \times Label \times (Instance \times Instance) \times Application \rightarrow Application $$
+\begin{equation*}
+	\rho_{copy}(l_s, l_t, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists e \in classes(a) : name(e) = l_t  \\ \wedge \forall q \in properties(c) : name(q) \neq l_p}{\begin{gathered}
+properites(e) \cup p 
+\end{gathered}
+}
+\end{equation*}
+
+With a copy property transformation defined we are able to define advanced evolution scenarios.
+
+\paragraph{Change Cardinality}
+$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
+$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
+
+\section{Summary}
+
 
 
 \end{document}
+% This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $\oplus$ (called evolve), which is used as a concatenation of operations as well.
+%
+%Each evolution transformation has a definition: $Software \rightarrow State$ and all evolution transformations creates a set called $Transformations$, then a concatenation of evolution transformation is defined as:
+%\begin{equation*}
+%\begin{gathered}
+% \oplus : State \times Transformations \rightarrow State  \\ \\
+% u \oplus t = \begin{cases}
+% u, \; u = Inconsistent \; s \\
+% t(u), \; u = Consistent \; s 
+%\end{cases}\\ 
+%u \in States, t \in Transformations, s \in Softwares
+%\end{gathered}
+%\end{equation*}
+%
+% To describe these two aspects od software evolution we decide to define transformations for each layer separately. The separation of transformation contexts help us to define transformation specific for application or database evolution, which can ease both - understanding and defining the transformation. The transformations specific for a context are called operations and they creates two sets- first one for application evolution: $AppOps$  and second one for database evolution $DbOps$. Applying of a transformation is defined:
+%\begin{gather*}
+%u \oplus t = ret(<application(u) \oplus o_{app}, database(u) \oplus o_{db}>) \\
+%u \in Softwares, t \in Transformations, o_{app} \in AppOps, o_{db} \in DbOps
+%\end{gather*}
