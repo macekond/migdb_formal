@@ -74,80 +74,84 @@ The evolution of the software can be than defined as:
 The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
 
 The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
- 
-$$
-Application = < Class* > 
-$$
-$classes : Application \rightarrow Class*$ \\
-$classes(<cs, is >) = cs, cs \in Class* \wedge is \in Instance* $ \\ \\
-$class : Label \times Application \rightarrow Class  $ \\ 
-$class(l, a) = c, c \in classes(a) \wedge name(c) = l, l \in Label, a = Application $ \\ \\
+\begin{gather*}
+  Application = < Class* >
+  \\ 
+  app : Class* \rightarrow  Application \\ \\
+  classes : Application \rightarrow Class* \\
+  classes(app(cs)) = cs  \\\\
+  class : Label \times Application \rightarrow Class   \\ 
+  class(l, a) = c, c \in classes(a) \wedge name(c) = l \\ \\
+  l \in Label, a = Application, cs \in Class* 
+  \\ \\
+  associated :  Label \times Application \rightarrow Boolean \\
+  owningClass : Property \times Application \rightarrow Class  \\ owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) \\
+  owningClass : Association \times Application \rightarrow Class  \\
+owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c)
+\end{gather*}
 The structure of an application consists not only of classes, it is defined by five other concepts. Besides the structure definition, there is defined a set of functions, which allows to manipulate the application model easily. 
 
 \paragraph{Class} represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
+
+$$Class = <label, Property*, Association*>$$
+\begin{equation*}
+\begin{alignat}{2}
+cl : Label \times Property* \times Association* \rightarrow Class &\quad&\text{constructor}\\ \\
+% TODO association has to be only to self (all associated has to exists)
+name : Class \rightarrow Label &\quad&\text{name of the class}\\
+name(cl(l, props, assocs)) = l \\ \\
+properties : Class \rightarrow Property* &\quad&\text{all properties}\\
+properties(cl(l, props, assocs)) = props \\ \\
+primitiveProperties : Class \rightarrow Property* &\quad&\text{all primitive properties}\\
+primitiveProperties(cl(l, props, assocs)) = props', \\ props' \subset props,  \forall p \in props' : cardinality(p) \leq 1 \\ \\
+collectionProperties : Class \rightarrow Property* &\quad&\text{all collections}\\
+collectionProperties(cl(l, props, assocs)) = props', \\ props' \subset props, \forall p \in props' : cardinality(p) > 1 \\ \\
+associations : Class \rightarrow Association* &\quad&\text{all associations}\\
+associations(cl(l, props, assocs)) = assocs
+\end{alignat}
+\end{equation*}
+$$l \in Label, props \in Properties, assocs \in Associations$$
 	 
-$$Class = < label, Property*, Association* >$$
-$name : Class \rightarrow Label$ \\
-$name(< lab, props, assocs  >) = lab$ \\ \\
-$properties : Class \rightarrow Property*$ \\
-$properties(< lab, props, assocs  >) = props $\\ \\
-$primitiveProperties : Class \rightarrow Property*$ \\
-$primitiveProperties(< lab, props, assocs  >) = props', \forall p \in props' : cardinality(p) \leq 1 $\\ \\
-$collectionProperties : Class \rightarrow Property*$ \\
-$collectionProperties(< lab, props, assocs  >) = props', \forall p \in props' : cardinality(p) > 1 $\\ \\
-$associations : Class \rightarrow Association*$ \\
-$associations(< lab, props, assocs  >) = assocs $ \\ \\
-$associated :  Class \times Application \rightarrow Boolean $
-%TODO: variable types
 
 \paragraph{Property} represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
-$$
-Property = < label, AppType, DefaultValue, Cardinality, Mandatory >
-$$
-$name : Property \rightarrow Label$ \\
-$name(< lab, t, val, n  >) = lab$ \\ \\
-$type : Property \times AppType$ \\
-$type(< lab, t, val, n  >) = t$ \\ \\
-$cardinality : Property \rightarrow NzNat$ \\
-$cardinality(< lab, t, val, n  >) = n$ \\ \\
-$mandatory : Property \rightarrow Boolean $
-$mandatory(<lab, t, val, n, m >) = = m $ \\ \\
-$owningClass : Property \times Application \rightarrow Class $ \\
-$owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) $
+\begin{gather*}
+Property = <label, AppType, DefaultValue, Cardinality, Mandatory> \\ \\
+prop : Label \times AppType \times String \times \mathbb{N^{*}} \times Boolean \rightarrow Property \\ \\
+name : Property \rightarrow Label \\
+name(prop(l, t, val, n, m)) = l \\ \\
+type : Property \times AppType \\
+type(prop(l, t, val, n, m)) = t \\ \\
+cardinality : Property \rightarrow \mathbb{N^{*}} \\
+cardinality(prop(l, t, val, n, m)) = n \\ \\
+mandatory : Property \rightarrow Boolean \\
+mandatory(prop(l, t, val, n, m)) = m  \\ \\
+l \in Label, t \in AppType, val \in String*, n \in \mathbb{N^{*}}, m \in Boolean
+\end{gather*}
+
+
 %TODO: variable types
 
 \paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
-$$
-Association = (label, classRef, startCardinality, endCardinality)
-$$
-$name : Association \rightarrow Label$ \\
-$name(< lab, ref, n_1, n_2  >) = lab$\\ \\
-$reference : Association \rightarrow Label$ \\
-$reference(< lab, ref, n_1, n_2  >) = ref$\\ \\
-$startCardinality : Association \rightarrow NzNat$ \\
-$startCardinality(< lab, ref, n_1, n_2  >) = n_1$\\ \\
-$endCardinality : Association \rightarrow NzNat$ \\
-$endCardinality(< lab, ref, n_1, n_2  >) = n_2$ \\ \\
-$owningClass : Association \times Application \rightarrow Class $ \\
-$owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) $
+\begin{gather*}
+Association = <label, classRef, startCardinality, endCardinality> \\ \\
+assoc : Label \times Label \times \mathbb{N} \times \mathbb{N} \rightarrow Association
+name : Association \rightarrow Label \\
+name(assoc(l, ref, n_1, n_2)) = l\\ \\
+reference : Association \rightarrow Label \\
+reference(assoc(l, ref, n_1, n_2)) = ref\\ \\
+startCardinality : Association \rightarrow \mathbb{N} \\
+startCardinality(assoc(l, ref, n_1, n_2)) = n_1\\ \\
+endCardinality : Association \rightarrow \mathbb{N} \\
+endCardinality(assoc(l, ref, n_1, n_2)) = n_2 \\ \\
+l, ref \in Label,  n_1, n_2 \in \mathbb{N}
+\end{gather*}
+
+
 %TODO: variable types
 
 \paragraph{AppType} represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
 $$
 AppType = APPSTRING
-$$
-The types used in application model:
-$$
-cardinality = NzNat
-$$
-$$
-referencesClass = label
-$$
-$$
-startCardinality = NzNat
-$$
-$$
-endCardinality = NzNat
 $$
 
 %%%%%%%%%%%%%%%%%%%
@@ -168,24 +172,24 @@ $$
 Table = (label, primaryKey, Column*, ForeignKey*)
 $$
 $name : Table \rightarrow Label $ \\
-$name(< lab, pk, cols, fks  >) = lab$ \\ \\
+$name(< lab, pk, cols, fks)) = lab$ \\ \\
 $primaryKey : Table \rightarrow PrimaryKey $ \\
-$primaryKey(< lab, pk, cols, fks  >) = pk$ \\ \\
+$primaryKey(< lab, pk, cols, fks)) = pk$ \\ \\
 $columns : Table \rightarrow Column* $ \\
-$columns(< lab, pk, cols, fks  >) = cols$ \\ \\
+$columns(< lab, pk, cols, fks)) = cols$ \\ \\
 $foreignKeys : Table \rightarrow ForeignKey* $ \\
-$foreignKeys(< lab, pk, cols, fks  >) = fks$ 
+$foreignKeys(< lab, pk, cols, fks)) = fks$ 
 
 \paragraph{Column} columns define possible data values and types which can be part of a table record.
 $$
 Column = (label, DbType, DefaultValue, Constraint*)
 $$
 $name : Column \rightarrow Label $ \\
-$name(< lab, t, val, cons  >) = lab $ \\ \\
+$name(< lab, t, val, cons)) = lab $ \\ \\
 $type : Column \rightarrow DbType $ \\
-$type(< lab, t, val, cons  >) = t $ \\ \\
+$type(< lab, t, val, cons)) = t $ \\ \\
 $constraints : Column \rightarrow Constraint* $ \\
-$constraints(< lab, t, val, cons  >) = cons $ \\ \\
+$constraints(< lab, t, val, cons)) = cons $ \\ \\
 $owningTable : Column \times Database \rightarrow Table $ \\
 $constraints(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) $
 
@@ -194,11 +198,11 @@ $$
 ForeignKey = (label, tableRef, Constraint*)
 $$
 $name : ForeignKey \rightarrow Label $ \\
-$name(< lab, tRef, cons  >) = lab $ \\ \\
+$name(< lab, tRef, cons)) = lab $ \\ \\
 $reference : ForeignKey \rightarrow Label $ \\
-$reference(< lab, tRef, cons  >) = tRef $ \\ \\
+$reference(< lab, tRef, cons)) = tRef $ \\ \\
 $reference : ForeignKey \rightarrow Constraint* $ \\
-$reference(< lab, tRef, cons  >) = cons $ \\ \\
+$reference(< lab, tRef, cons)) = cons $ \\ \\
 $owningTable : ForeignKey \times Database \rightarrow Table $ \\
 $owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d) $
 
@@ -286,7 +290,7 @@ The mapping of types assumes a bijection between application types and database 
 \end{equation*}
 
 \subsection{Mapping of Classes}
-We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and od NzNat type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
+We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and of the $\mathbb{N^{*}}$ type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
 \begin{center}
 $\rho_{c}: Class \rightarrow Table $ \\ 
@@ -357,41 +361,49 @@ There are introduced operations for evolution of an application first as they ar
 \subsection{Evolution of Application}
 \label{sec:appEvolution}
 
-The evolution of an application is defined as a set of operations which change a structure of the application. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. If the conditions of feasibility are not met, the operation cannot change the application structure - the software cannot evolve. This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $evolve$, which is used as a concatenation of operations as well.
-$$state = Consistent s | Inconsistent s, s \in Softwares$$
+The evolution of a software is defined as a set of transformations which change a structure of the software. The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the application structure. If the conditions of feasibility are not met, the operation cannot change the application structure - the software cannot evolve. This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $\oplus$ (called evolve), which is used as a concatenation of operations as well.
+\begin{gather*}
+state = Consistent \; s \: | \: Inconsistent \; s, v \in Softwares 
+\end{gather*}
 
-$$ret : Software \rightarrow State $$
 \begin{equation*}
 \begin{gathered}
+ret : Software \rightarrow State \\ \\
 	ret(s) = \begin{cases}
- Consistent s, consistent(s)
+ Consistent \; s, consistent(s)
  \\
- Inconsistent s, ! consistent(s)
+ Inconsistent\;  s, ! consistent(s)
  \end{cases}
 \end{gathered}
 \end{equation*}
-
-Each evolution operation has a definition: $Software \rightarrow State$ and all evolution operations creates a set called $Operations$, then a concatenation of evolution operations is defined as:
-
-$$evolve : State \times Operations \rightarrow State  $$
+Each evolution transformation has a definition: $Software \rightarrow State$ and all evolution transformations creates a set called $Transformations$, then a concatenation of evolution transformation is defined as:
 \begin{equation*}
 \begin{gathered}
- evolve(t, o) = \begin{cases}
- t, \; t = Inconsistent \; s \\
- o(s), \; t = Consistent \; s 
+ \oplus : State \times Transformations \rightarrow State  \\ \\
+ u \oplus t = \begin{cases}
+ u, \; u = Inconsistent \; s \\
+ t(u), \; u = Consistent \; s 
 \end{cases}\\ 
-t \in States, o \in Operatons, s \in Softwares
+u \in States, t \in Transformations, s \in Softwares
 \end{gathered}
 \end{equation*}
+Each transformation consist in changes of the application and the database. To describe these two aspects od software evolution we decide to define transformations for each layer separately. The separation of transformation contexts help us to define transformation specific for application or database evolution, which can ease both - understanding and defining the transformation. The transformations specific for a context are called operations and they creates two sets- first one for application evolution: $AppOps$  and second one for database evolution $DbOps$. Applying of a transformation is defined:
+\begin{gather*}
+u \oplus t = ret(<application(u) \oplus o_{app}, database(u) \oplus o_{db}>) \\
+u \in Softwares, t \in Transformations, o_{app} \in AppOps, o_{db} \in DbOps
+\end{gather*}
+The function $\Phi$ provides a mapping between the $AppOps$ and $DbOps$ sets. The $\Phi$ function makes possible to use a description of an application evolution as a source for the evolution of the whole software.
+\begin{gather*}
+\Phi : AppOps \rightarrow DbOps
+\end{gather*}
 
-
-We decide to use following transcription to cover all aspects  of operation definition:
+The definition of an operation consists of two parts - a conditions of operation feasibility and operation impact on the context. We decide to use following transcription to cover all aspects  of operation definition:
 
 \begin{equation*}
 \begin{gathered}
-operation(parameters, software) = \begin{cases}
-  \inference{conditions \; of \; feasibility}{impact \; on \; software \; structure}\\ \\
-  \inference{otherwise}{Inconsistent \; software}
+operation(parameters, context) = \begin{cases}
+  \inference{conditions \; of \; feasibility}{impact \; on \; context}\\ \\
+  \inference{otherwise}{Inconsistent \; context}
  \end{cases}
 \end{gathered}
 \end{equation*}
@@ -485,8 +497,8 @@ With a copy property transformation defined we are able to define advanced evolu
 
 
 \paragraph{Change Cardinality}
-$$\rho_{CcP} : Property \times NzNat \times Application \rightarrow Property $$
-$$\rho_{cardA} : Association \times NzNat \times Application \rightarrow Association $$
+$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
+$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
 
 \subsection{Extended Object-Relation Mapping}
 The extended object-relational mapping maps the evolution of the application level into the database schema and stored data. This section introduces the mapping for evolution operations introduced earlier.
