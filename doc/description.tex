@@ -87,7 +87,11 @@ The model uses a set $Labels$ which contains all possible identifiers for the mo
   associated :  Label \times Application \rightarrow Boolean \\
   owningClass : Property \times Application \rightarrow Class  \\ owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) \\
   owningClass : Association \times Application \rightarrow Class  \\
-owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c)
+owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) \\ \\
+owningTable : Column \times Database \rightarrow Table  \\
+owningTable(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) \\ \\
+owningTable : ForeignKey \times Database \rightarrow Table  \\
+owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d)\\ \\ 
 \end{gather*}
 The structure of an application consists not only of classes, it is defined by five other concepts. Besides the structure definition, there is defined a set of functions, which allows to manipulate the application model easily. 
 
@@ -159,57 +163,68 @@ $$
 \section{Database Model}
 \label{sec:dbModel}
 The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is:
-$$
-Database = <table*, row*>
-$$
-$table : Label \times Database \rightarrow Table $ \\
-$table(l, d) = t, t \in tables(d) \wedge name(t) = l$ \\
+\begin{gather*}
+Database = <table*, row*> \\ \\
+db : Tables \times Rows \rightarrow Database \\ \\
+tables : Database \rightarrow Tables \\
+tables(db(tabs, rows)) = tabs \\ \\
+data : Database \rightarrow Rows \\
+data(db(tabs, rows)) = rows \\ \\
+table : Label \times Database \rightarrow Table  \\
+table(l, d) = t, t \in tables(d) \wedge name(t) = l \\ \\
+tabs \in Tables, rows \in Rows, l \in Labels, d \in Databases
+\end{gather*}
+
 
 \subsection{Database Schema Model}
 The database schema model is defined by following concepts:
 \paragraph{Table} represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
-$$
-Table = (label, primaryKey, Column*, ForeignKey*)
-$$
-$name : Table \rightarrow Label $ \\
-$name(< lab, pk, cols, fks)) = lab$ \\ \\
-$primaryKey : Table \rightarrow PrimaryKey $ \\
-$primaryKey(< lab, pk, cols, fks)) = pk$ \\ \\
-$columns : Table \rightarrow Column* $ \\
-$columns(< lab, pk, cols, fks)) = cols$ \\ \\
-$foreignKeys : Table \rightarrow ForeignKey* $ \\
-$foreignKeys(< lab, pk, cols, fks)) = fks$ 
+\begin{gather*}
+Table = <label, primaryKey, Column*, ForeignKey*>\\ \\
+tab : Label \times PrimaryKeys \times Columns \times ForeignKeys \rightarrow Table \\ \\
+name : Table \rightarrow Label  \\
+name(tab(l, pk, cols, fks)) = l \\ \\
+primaryKey : Table \rightarrow PrimaryKeys  \\
+primaryKey(tab(l, pk, cols, fks)) = pk \\ \\
+columns : Table \rightarrow Columns  \\
+columns(tab(l, pk, cols, fks)) = cols \\ \\
+foreignKeys : Table \rightarrow ForeignKeys  \\
+foreignKeys(tab(l, pk, cols, fks)) = fks \\ \\
+l \in Label, pk \in PrimaryKey, cols \in Columns, fks \in ForeignKeys
+\end{gather*}
 
 \paragraph{Column} columns define possible data values and types which can be part of a table record.
-$$
-Column = (label, DbType, DefaultValue, Constraint*)
-$$
-$name : Column \rightarrow Label $ \\
-$name(< lab, t, val, cons)) = lab $ \\ \\
-$type : Column \rightarrow DbType $ \\
-$type(< lab, t, val, cons)) = t $ \\ \\
-$constraints : Column \rightarrow Constraint* $ \\
-$constraints(< lab, t, val, cons)) = cons $ \\ \\
-$owningTable : Column \times Database \rightarrow Table $ \\
-$constraints(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) $
+\begin{gather*}
+Column = <label, DbType, DefaultValue, Constraint*> \\ \\
+col : Label \times DbType \times String \times Constraints \rightarrow Column \\ \\
+name : Column \rightarrow Label  \\
+name(col(l, t, val, cons)) = l  \\ \\
+type : Column \rightarrow DbType  \\
+type(col(l, t, val, cons)) = t  \\ \\
+constraints : Column \rightarrow Constraints  \\
+constraints(col(l, t, val, cons)) = cons  \\ \\
+l \in Labels, t \in DbType, val \in Strings, cons \in Constraints
+\end{gather*}
 
 \paragraph{Foreign key}
-$$
-ForeignKey = (label, tableRef, Constraint*)
-$$
-$name : ForeignKey \rightarrow Label $ \\
-$name(< lab, tRef, cons)) = lab $ \\ \\
-$reference : ForeignKey \rightarrow Label $ \\
-$reference(< lab, tRef, cons)) = tRef $ \\ \\
-$reference : ForeignKey \rightarrow Constraint* $ \\
-$reference(< lab, tRef, cons)) = cons $ \\ \\
-$owningTable : ForeignKey \times Database \rightarrow Table $ \\
-$owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d) $
+\begin{gather*}
+ForeignKey = <label, tableRef, Constraint*> \\ \\
+fk : Label \times Label \times Constraints \rightarrow ForeignKey \\ \\
+name : ForeignKey \rightarrow Label \\
+name(fk(l, tRef, cons)) = lab  \\ \\
+reference : ForeignKey \rightarrow Label  \\
+reference(fk(l, tRef, cons)) = tRef  \\ \\
+reference : ForeignKey \rightarrow Constraint*  \\
+reference(fk(l, tRef, cons)) = cons  \\ \\
+l, tRef \in Label, cons \in Constraints
+\end{gather*}
+
 
 \paragraph{Primary key}
-$$
-PrimaryKey =  < label > 	
-$$
+\begin{gather*}
+PrimaryKey =  < label > 	\\
+pk : Label \rightarrow PrimaryKey
+\end{gather*}
 
 \paragraph{DbType} represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DBSTRING.
 $$
@@ -217,33 +232,36 @@ DbType = DBSTRING
 $$
 
 \paragraph{Constraint} there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+\begin{gather*}
+Constraint = NOTNULL \; | \; UNIQUE 
+\end{gather*}
 
-\begin{center}
-$Constraint = NOTNULL$ $|$ $UNIQUE $
-\end{center}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Model of Stored Data}
-
-
-
-
-
-A row in a table is tuple consisting of reference to a concrete table and a set of value pairs, which represents concrete values of concrete columns.
-$$row = < refTable, pair* >$$
-$$pair = < reference, value >$$
-The $reference $ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema, otherwise the database is inconsistent. The consistency of database is then:
-\begin{equation*}\begin{gathered}\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u) \end{gathered}\end{equation*}
-There are two functions connected with stored data - first of them verify if the table contains any data:
-$$contains : Table \times Database \rightarrow Boolean $$
-\begin{equation*}
-\begin{gathered}
-	contains(t, d) = \begin{cases}
+A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of reference to a concrete table and a set of value pairs, which represents concrete values of concrete columns.
+\begin{gather*}
+row = < refTable, pair* > \\
+row : Label \times Pairs \rightarrow Row \\ \\
+refTable : Row \rightarrow Label \\
+refTable(row(l, pairs) = l \\ \\
+contains : Table \times Database \rightarrow Boolean \\
+contains(t, d) = \begin{cases}
  \inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
   \inference{\forall r \in data(d) : refTable(r) \neq name(t)}{false}
  \end{cases} \\ \\
- t \in tables(d), d \in Database
-\end{gathered}
-\end{equation*}
+ l \in Labels, pairs \in Pairs, t \in tables(d), d \in Database
+\end{gather*}
+There functions $contains$ verify if the table contains any data.
+
+\begin{gather*}
+pair = < refCol, value > \\
+[Label \times Strings] \rightarrow Pair
+\end{gather*}
+The $reference $ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema, otherwise the database is inconsistent. The consistency of database is then:
+\begin{equation*}\begin{gathered}\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u) \end{gathered}\end{equation*}
+
+
 
 second of them verify if there are instances of a class:
 $$instantiated : Class \times Software \rightarrow Boolean $$ 
@@ -315,15 +333,11 @@ $\rho_p(p, d) = \begin{cases}
 
   \inference{cardinality(p) = 1 \wedge mandatory(p)
  \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}
- 	 columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL ) \\
- 	
- 	
-\end{gathered}
-} 
+ 	 columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
+\end{gathered}} 
 \\ \\
  
  \inference{ cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
- 
 \end{gathered}}
 \\ \\
 
@@ -412,69 +426,68 @@ The second branch of the operation definition is an implicit assumption - if an 
 
 
 \subsubsection{Application Creation}
-$$addClass: Class \times Application \rightarrow Application $$
-
-$
-addClass(c, a) = \inference{\forall s \in classes(A) : name(s) \neq name(c)}
-{classes(a) \cup c}
-$
-
-$$AddProperty : Label \times Property \times Application \rightarrow Application $$
-
-$
-AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p }
-$
-$$AddAssociation : Label \times Association \times Application \rightarrow Application $$
-$
-AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}
-$
+\begin{gather*}
+addClass: Class \times Application \rightarrow Application \\ 
+addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c)}{classes(a) \cup c} \\ \\
+c \in Classes, a \in Applications
+\end{gather*}
+\begin{gather*}
+AddProperty : Label \times Property \times Application \rightarrow Application \\
+AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
+l \in Label, p \in Properties, a \in Applications
+\end{gather*}
+\begin{gather*}
+AddAssociation : Label \times Association \times Application \rightarrow Application \\
+AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
+l \in Labels, s \in Associations, a \in Applications
+\end{gather*}
 
 \subsubsection{Application Deconstruction}
-$$RemoveClass: Label \times Application \rightarrow Application $$
-$
+\begin{gather*}
+RemoveClass: Label \times Application \rightarrow Application  \\
 RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
-\wedge not$ $instantiated(c) = \varnothing \wedge not$ $associated(c)}{classes(a) \setminus c }
-$
+\wedge !\: instantiated(c) = \varnothing \wedge ! \: associated(c)} {classes(a) \setminus c } \\
+q \in Label, a \in Applications
+\end{gather*}
+\begin{gather*}
+RemoveProperty: Label \times Label \times Application \rightarrow Application \\
+RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }\\
+l_c, l_p \in Label, a \in Applications 
+\end{gather*}
+\begin{gather*}
+RemoveAssociation : Label \times Labels \times Application \rightarrow Application \\ 
+RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s} \\
+l_c, l_a \in Labels, a \in Applications
+\end{gather*}
 
-$$RemoveProperty: Label \times Label \times Application \rightarrow Application $$
-
-$
-RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }
-$
-
-$$RemoveAssociation : Label \times Labels \times Application \rightarrow Application $$
-
-$
-RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s}
-$
 
 \subsubsection{Application Alternation}
 \paragraph{Rename Class}
-$$\rho_{RenC} : Label \times Label \times Application \rightarrow Application $$
-\begin{equation*}
-	\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
+\begin{gather*}
+\rho_{RenC} : Label \times Label \times Application \rightarrow Application \\ 
+\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
 c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), reference(f) = l_c : f.reference = l_n 
-\end{gathered}
-}
-\end{equation*}
+\end{gathered}}\\
+l_o, l_n \in Label, a \in Applications
+\end{gather*}
 
 \paragraph{Rename Property}
-$$\rho_{RenP} : Label \times Label \times Label \times Application \rightarrow Application $$
-\begin{equation*}
+\begin{gather*}
+\rho_{RenP} : Label \times Label \times Label \times Application \rightarrow Application \\ \\
 	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
 p.name = l_n 
-\end{gathered}
-}
-\end{equation*}
+\end{gathered}}\\
+l_c, l_o, l_n \in Label, a \in Applications
+\end{gather*}
 
 \paragraph{Rename Association}
-$$\rho_{RenA} : Label \times Label \times Label \times Application \rightarrow Application $$
-\begin{equation*}
+\begin{gather*}
+\rho_{RenA} : Label \times Label \times Label \times Application \rightarrow Application \\
 	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists a \in associations(c) : name(a) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
 a.name = l_n 
-\end{gathered}
-}
-\end{equation*}
+\end{gathered}}\\
+l_c, l_o, l_n \in Label, a \in Applications
+\end{gather*}
 
 
 
