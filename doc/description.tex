@@ -22,7 +22,9 @@ The evolution of a software is a common issue during software lifecycle. The evo
 \section{Introduction}
 The evolution of a software is a common issue during software development. The evolution can occur from many reasons in different stages of software lifecycle. The evolution of a software created using an object oriented programming language and a relational database is usually processed in two steps - as a code refactoring and as a database migration, which is processed as an SQL script. The code refactoring is supported by many IDEs, whereas the database migration is usually processed manually. There are frameworks and tools capable of database evolution, nevertheless these tools are usually not capable to solve complicated migration cases or preserve stored data. Another disadvantage of such an approach to data evolution is the evolution has to be define twice - as a code refactoring and as a database migration.
 
-This paper provides a formal definition of an evolutionary framework, which evolves a database including stored data according to a evolution in application. There are defined models representing an application and database in the paper, together with functions which are able to perform an evolution of the whole software.
+There are three main goals of our evolutionary framework: 1) provide one source of evolution definition for both: code and database 2) provide a tool, which will be able to preserve stored data 3) minimize the manual work during data evolution in a software.
+
+This paper provides a formal definition of such a framework, which is based on model driven architecture. There are defined models representing an application and database in this paper, together with transformations which are able to perform an evolution of the whole software and preserve data.
 
 The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:eorm}.
 
@@ -47,7 +49,7 @@ A software implemented in an object-oriented language, which uses relational dat
 The software has to be in consistent state so it is beneficial for its user. The state of the software is defined to communicate the sate of the software to its user:
 \begin{gather*}
 	state = Consistent\; s \: | \: Inconsistent \; s, \\
-	s \in Softwares \\ \\
+	s \in Softwares  \\ \\
 	state : Software \rightarrow State \\
 	state(s) = \begin{cases}
  		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
@@ -61,37 +63,40 @@ The software has to be in consistent state so it is beneficial for its user. The
 	\caption{The evolution of data changes the system on all levels. The figure shows all the components of the evolution process.}
 	\label{fig:evolution}
 \end{figure}
-The evolution of a software is a transformation from one consistent state to another one. These states are called generations of the software. The evolution consists of change in application and in database as shown in the Figure \ref{fig:evolution}. We focus on situations when the evolution is initiated on the application level (as code refactoring), however the evolution has to be processed on the database level too. It means there is a set of application transformations called $AppOps$ and a set of database transformations called $DbOps$ and a mapping between these two sets. We call this mapping $\Phi$:
+The evolution of a software is a transformation from one consistent state to another one. These states are called generations of the software. The evolution consists of change in application and in database as shown in the Figure \ref{fig:evolution}. We focus on situations when the evolution is initiated on the application level (as code refactoring), however the evolution has to be processed on the database level too. It means there is a set of application transformations called $AppOps$ and a set of database transformations called $DbOps$. Because there are needed different parameters for application and database evolution the set of transformation called $E$ which evolves the whole software and a mapping between $E$ and $AppOps$, respectively $DbOps$ is defined. We call this mappings $\Psi$ and $\Phi$:
 \begin{gather*}
-\Phi : AppOps \rightarrow DbOps
+\Psi : E \rightarrow AppOps \\
+\Phi : E \rightarrow DbOps
 \end{gather*}
+A subset of $E$ represents an evolution transformation of a software, which mets the first goal of our framework - a single source of data evolution for the whole software.
 
-The evolution of the software is defined as the $\oplus$ operator:
-$$\oplus : State \times AppOps \rightarrow State $$
-and similarly the $\oplus_{app}$ and the $\oplus_{db}$ operators for evolving application and database:
+The application of a transformation on a software state (evolution) is marked by the $\oplus$ operator:
+$$\oplus : State \times E \rightarrow State $$
+and similarly the $\circ$ and the $\bullet$ operators for evolving application and database:
 \begin{gather*}
-\oplus_{app} : Application \times AppOps \rightarrow Application \\
- \oplus_{db} : Database \times DbOps \rightarrow Database
+\circ : Application \times AppOps \rightarrow Application \\
+ \bullet : Database \times DbOps \rightarrow Database
 \end{gather*}
-The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell) so the state of the evolution can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
+The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell programming language) so the state of the software can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
+
 \begin{gather*}
  u \oplus t = \begin{cases}
  	\inference{u = Inconsistent \; s}{u} \\ \\
- 	\inference{u = Consistent \; s}{state(soft(application(u) \oplus_{app} t, database(u) \oplus_{db} \Phi(t))} 
+ 	\inference{u = Consistent \; s}{state(soft(application(u) \circ \Psi(t), database(u) \bullet \Phi(t))} 
 \end{cases}\\ 
-u \in States, t \in AppOps, s \in Softwares
+u \in States, t \in E, s \in Softwares
 \end{gather*}
 \begin{gather*}
- a \oplus o = \begin{cases}
+ a \circ o = \begin{cases}
  	\inference{!\;consistent(a)}{a} \\ \\
- 	\inference{consistent(a)}{a \oplus_{app} o} 
+ 	\inference{consistent(a)}{a \circ o} 
 \end{cases}\\ 
 a \in Applications, o \in AppOps
 \end{gather*}
 \begin{gather*}
- d \oplus o = \begin{cases}
+ d \bullet o = \begin{cases}
  	\inference{!\;consistent(d)}{d} \\ \\
- 	\inference{consistent(d)}{d \oplus_{app} o} 
+ 	\inference{consistent(d)}{d \circ o} 
 \end{cases}\\ 
 d \in Applications, o \in DbOps
 \end{gather*}
@@ -394,7 +399,7 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
 $
 
 \section{Evolutionaty Transformations}
-Each evolutionary transformation consist in changes of the application (a transformation from the $AppOps$ set) and the database (a transformation from the  $DbOps$ set). The function $\Phi$ provides a mapping between the $AppOps$ and $DbOps$ sets, which makes the $AppOps$ set a source for the transformation of the whole software.
+Each evolutionary transformation of a software consist in changes of the application (a transformation from the $AppOps$ set) and the database (a transformation from the  $DbOps$ set). The function $\Phi$ provides a mapping between the $AppOps$ and $DbOps$ sets, which makes the $AppOps$ set a source for the transformation of the whole software.
 
 The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context. If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve.  We decide to use following transcription to cover all aspects  of transformation definition:
 \begin{gather*}
