@@ -515,9 +515,6 @@ insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho
 
 
 \subsection{Software Decomposition}
-\subsection{Software Alternation}
-
-\subsubsection{Application Deconstruction}
 \begin{gather*}
 RemoveClass: Label \times Application \rightarrow Application  \\
 RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
@@ -534,40 +531,6 @@ RemoveAssociation : Label \times Labels \times Application \rightarrow Applicati
 RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s} \\
 l_c, l_a \in Labels, a \in Applications
 \end{gather*}
-
-
-\subsubsection{Application Alternation}
-\paragraph{Rename Class}
-\begin{gather*}
-\rho_{RenC} : Label \times Label \times Application \rightarrow Application \\ 
-\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
-c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), reference(f) = l_c : f.reference = l_n 
-\end{gathered}}\\
-l_o, l_n \in Label, a \in Applications
-\end{gather*}
-
-\paragraph{Rename Property}
-\begin{gather*}
-\rho_{RenP} : Label \times Label \times Label \times Application \rightarrow Application \\ \\
-	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
-p.name = l_n 
-\end{gathered}}\\
-l_c, l_o, l_n \in Label, a \in Applications
-\end{gather*}
-
-\paragraph{Rename Association}
-\begin{gather*}
-\rho_{RenA} : Label \times Label \times Label \times Application \rightarrow Application \\
-	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists a \in associations(c) : name(a) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
-a.name = l_n 
-\end{gathered}}\\
-l_c, l_o, l_n \in Label, a \in Applications
-\end{gather*}
-
-
-\subsection{Database Transformation}
-
-\subsubsection{Deconstruction of a Software}
 \paragraph{Remove Class}
 $$
 \Phi_{RC}(c,d) = \inference{ \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{ tables(d) \setminus \rho(c)}
@@ -596,19 +559,38 @@ $$
  \end{cases}
 $$
 
+
+
+\subsection{Software Alternation}
+\paragraph{Rename Class}
+\begin{gather*}
+\rho_{RenC} : Label \times Label \times Application \rightarrow Application \\ 
+\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
+c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), reference(f) = l_c : f.reference = l_n 
+\end{gathered}}\\
+l_o, l_n \in Label, a \in Applications
+\end{gather*}
+
+\paragraph{Rename Property}
+\begin{gather*}
+\rho_{RenP} : Label \times Label \times Label \times Application \rightarrow Application \\ \\
+	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
+p.name = l_n 
+\end{gathered}}\\
+l_c, l_o, l_n \in Label, a \in Applications
+\end{gather*}
+
+\paragraph{Rename Association}
+\begin{gather*}
+\rho_{RenA} : Label \times Label \times Label \times Application \rightarrow Application \\
+	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists a \in associations(c) : name(a) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
+a.name = l_n 
+\end{gathered}}\\
+l_c, l_o, l_n \in Label, a \in Applications
+\end{gather*}
+
+
 \subsubsection{Altering a Software}	
-\paragraph{Copy Column}
-$$\Phi_{copyC} : Label \times Label \times Label \times f_m \times Database \rightarrow Database $$
-
-\begin{equation*}
-	\begin{gathered}
-		\Phi_{copyC}(l_c, l_s, l_t, f_m, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c \wedge \forall r \in rows(t) : f_m(r) \cup getPair(l_c,r)}
-	\end{cases}
-	\end{gathered}
-\end{equation*}
-
-\subsection{Composing of Evolution Operations}
 \paragraph{Copy Property}
 All transformations described earlier does change only the structure of a application. These operation can be used in case there are no instances in the application. If instances are present in the application, the decomposition transformations could cause a data lost. Therefore we define  the transformation for copying a property from one class to another. The copy property is the basic way to copy data from instance of a class to instance of another class.
 
@@ -623,6 +605,19 @@ properites(e) \cup p
 \end{equation*}
 
 With a copy property transformation defined we are able to define advanced evolution scenarios.
+
+\paragraph{Copy Column}
+$$\Phi_{copyC} : Label \times Label \times Label \times f_m \times Database \rightarrow Database $$
+
+\begin{equation*}
+	\begin{gathered}
+		\Phi_{copyC}(l_c, l_s, l_t, f_m, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c \wedge \forall r \in rows(t) : f_m(r) \cup getPair(l_c,r)}
+	\end{cases}
+	\end{gathered}
+\end{equation*}
+
+\subsection{Composing of Evolution Operations}
 
 \paragraph{Change Cardinality}
 $$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
