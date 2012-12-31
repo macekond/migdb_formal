@@ -39,11 +39,11 @@ The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of 
 A software implemented in an object-oriented language, which uses relational database as a data storage is context of this paper. The situation is illustrated in the Figure \ref{fig:appStructure}. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software a triple:
 \begin{gather*}
 	software = < Application, Database, \rho > \\
-	soft : Applications \times Databases \times ORM \rightarrow Software \\ \\
+	sw : Applications \times Databases \times ORM \rightarrow Software \\ \\
 	application : Software \rightarrow Application \\
-	application(soft(a, d, \rho)) = a \\ \\
+	application(sw(a, d, \rho)) = a \\ \\
 	database : Software \rightarrow Database \\
-	database(soft(a, d, \rho)) = d \\
+	database(sw(a, d, \rho)) = d \\
 	a \in Applications, d \in Databases
 \end{gather*}
 The software has to be in consistent state so it is beneficial for its user. The state of the software is defined to communicate the sate of the software to its user:
@@ -82,7 +82,7 @@ The definition of the evolving operator is inspired by the monads (as used e.g. 
 \begin{gather*}
  u \oplus t = \begin{cases}
  	\inference{u = Inconsistent \; s}{u} \\ \\
- 	\inference{u = Consistent \; s}{state(soft(application(u) \circ \Psi(t), database(u) \bullet \Phi(t))} 
+ 	\inference{u = Consistent \; s}{state(sw(\Psi(u, t), \Phi(u,t))} 
 \end{cases}\\ 
 u \in States, t \in E, s \in Softwares
 \end{gather*}
@@ -102,16 +102,14 @@ d \in Applications, o \in DbOps
 \end{gather*}
 
 \section{Software Model}
-The model of an ORM software consists of three parts - an application model, a database model and a ORM. 
+The model of an ORM software consists of three parts - an application model, a database model and a ORM. The definitions of all parts assume a set $Label$ exist which contains all possible identifiers and each modeled entity is identified unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. 
 
 \subsection{Application Model}
 \label{sec:appModel}
-The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure and relationships of the instance. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
+The model represents a persistent layer of an application created using object oriented language. It means the layer is a set of instances which cooperates together. Each instance is defined according to a class - the class defines the structure of its instances and relationships between them an the rest of the application. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. Besides the structure definition, there is defined a set of functions, which allows to manipulate the application model easily. 
 
-The model uses a set $Labels$ which contains all possible identifiers for the model. Each model component which has a label ($label \in Labels$) is unambiguously identified in the model.
 \begin{gather*}
-  Application = < Class* >
-  \\ 
+  Application = < Class* > \\ 
   app : Class* \rightarrow  Application \\ \\
   classes : Application \rightarrow Class* \\
   classes(app(cs)) = cs  \\\\
@@ -120,15 +118,8 @@ The model uses a set $Labels$ which contains all possible identifiers for the mo
   l \in Label, a = Application, cs \in Class* 
   \\ \\
   associated :  Label \times Application \rightarrow Boolean \\
-  owningClass : Property \times Application \rightarrow Class  \\ owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) \\
-  owningClass : Association \times Application \rightarrow Class  \\
-owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) \\ \\
-owningTable : Column \times Database \rightarrow Table  \\
-owningTable(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) \\ \\
-owningTable : ForeignKey \times Database \rightarrow Table  \\
-owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d)\\ \\ 
-\end{gather*}
-The structure of an application consists not only of classes, it is defined by five other concepts. Besides the structure definition, there is defined a set of functions, which allows to manipulate the application model easily. 
+ \end{gather*}
+
 
 \paragraph{Class} represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
 
@@ -152,7 +143,7 @@ associations(cl(l, props, assocs)) = assocs
 $$l \in Label, props \in Properties, assocs \in Associations$$
 	 
 
-\paragraph{Property} represents a feature of  a class which is can be represented as a primitive type. The property can be mandatory, can have a default value.
+\paragraph{Property} represents a feature of  a class which is represented as a primitive type. The property can be mandatory, can have a default value and can represent a single value or a collection of values.
 \begin{gather*}
 Property = <label, AppType, DefaultValue, Cardinality, Mandatory> \\ \\
 prop : Label \times AppType \times String \times \mathbb{N^{*}} \times Boolean \rightarrow Property \\ \\
@@ -170,7 +161,7 @@ l \in Label, t \in AppType, val \in String*, n \in \mathbb{N^{*}}, m \in Boolean
 
 %TODO: variable types
 
-\paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be a starting class of an association, referenced class is consider to be an ending class of an association. The cardinalities defines the multiplicity of the association.
+\paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of the association ends.
 \begin{gather*}
 Association = <label, classRef, startCardinality, endCardinality> \\ \\
 assoc : Label \times Label \times \mathbb{N} \times \mathbb{N} \rightarrow Association
@@ -259,9 +250,9 @@ PrimaryKey =  < label > 	\\
 pk : Label \rightarrow PrimaryKey
 \end{gather*}
 
-\paragraph{DbType} represents primitive types in the database. There are usually defined types such as Char, Integer, Boolean etc. There is only one type defined in the model which is called DBSTRING.
+\paragraph{DbType} represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There are only two types defined in the model $DBSTRING$ as a default type of values in columns and $DBINT$ as a default type for keys.
 $$
-DbType = DBSTRING
+DbType = DBSTRING \; | \; DBINT 
 $$
 
 \paragraph{Constraint} there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
@@ -281,26 +272,50 @@ refTable(row(l, pairs) = l \\ \\
 contains : Table \times Database \rightarrow Boolean \\
 contains(t, d) = \begin{cases}
  \inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
-  \inference{\forall r \in data(d) : refTable(r) \neq name(t)}{false}
+  \inference{otherwise}{false}
  \end{cases} \\ \\
  l \in Labels, pairs \in Pairs, t \in tables(d), d \in Database
 \end{gather*}
-There functions $contains$ verify if the table contains any data.
+There functions $contains$ verify if the table contains data in context of concrete database.
 
 \begin{gather*}
 pair = < refCol, value > \\
-[Label \times Strings] \rightarrow Pair
+[Label \times Value] \rightarrow Pair\\ \\
+\mathbf{reference} : Pair \rightarrow Label \\
+reference([l,val]) = l \\ \\
+\mathbf{value} : Pair \rightarrow Label \\ 
+value([l,val]) = val \\
+l \in Label, val \in Value
 \end{gather*}
-The $reference $ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema, otherwise the database is inconsistent. The consistency of database is then:
-\begin{equation*}\begin{gathered}\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u) \end{gathered}\end{equation*}
+The $refCol$ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema and has a structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{gather*}
+\mathbf{consistent} : Database \rightarrow Boolean \\
+consistent(d) = \begin{cases}
+ 	\inference{\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) : reference(p) = name(u)}{true}
+ 	\\ \\
+ 	\inference{otherwise}{false}
+ \end{cases}\end{gather*}
 
-second of them verify if there are instances of a class:
+\subsection{Extension of Software Definition}
+
+\begin{gather*}
+ owningClass : Property \times Application \rightarrow Class  \\ owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) \\
+  owningClass : Association \times Application \rightarrow Class  \\
+owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) \\ \\
+owningTable : Column \times Database \rightarrow Table  \\
+owningTable(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) \\ \\
+owningTable : ForeignKey \times Database \rightarrow Table  \\
+owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d)\\ \\ 
+\end{gather*}
+
+
+The database stores instances of the application, thus the $instantiated$ function has to be defined:
+
 $$instantiated : Class \times Software \rightarrow Boolean $$ 
 \begin{equation*}
 \begin{gathered}
 	instantiated(c, s) = \begin{cases}
  \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
-  \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge ! contains(t, database(s))}{false} \\ \\
+  \inference{otherwise}{false} \\ \\
  \end{cases} \\ \\
  c \in classes(application(s)), s \in Software 
 \end{gathered}
@@ -341,7 +356,7 @@ The mapping of types assumes a bijection between application types and database 
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and of the $\mathbb{N^{*}}$ type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
 \begin{center}
-$\rho_{c}: Class \rightarrow Table $ \\ 
+$\rho_{c}: Class \times Database \rightarrow Database $ \\ 
 $\rho_{c}(c,d) = tables(d) \cup table(name(c), primaryKey("Id"), \varnothing, \varnothing) $
 \end{center}
 
@@ -349,11 +364,11 @@ $\rho_{c}(c,d) = tables(d) \cup table(name(c), primaryKey("Id"), \varnothing, \v
 There are two types of properties - the first type has cardinality 1  and it is mapped to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. This constraint affect already stored instances a new mandatory value has to be added to each instance.
 
 $
-\rho_p : Property \times Database \rightarrow Column 
+\rho_p : Property \times Database \rightarrow Database 
 $
 
 $\rho_p(p, d) = \begin{cases}
-  \inference{cardinality(p) = 1 \wedge ! mandatory(p)
+  \inference{cardinality(p) = 1 \wedge !\;mandatory(p)
  \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
  \\ \wedge \not instanciated(owningClass(p))
  }{\begin{gathered}
@@ -367,7 +382,7 @@ $\rho_p(p, d) = \begin{cases}
 \end{gathered}} 
 \\ \\
  
- \inference{ cardinality(p) > 1 \wedge ! mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
+ \inference{ cardinality(p) > 1 \wedge !\;mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
 \end{gathered}}
 \\ \\
 
@@ -399,42 +414,114 @@ foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
 $
 
 \section{Evolutionaty Transformations}
-Each evolutionary transformation of a software consist in changes of the application (a transformation from the $AppOps$ set) and the database (a transformation from the  $DbOps$ set). The function $\Phi$ provides a mapping between the $AppOps$ and $DbOps$ sets, which makes the $AppOps$ set a source for the transformation of the whole software.
+The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro} together with sets $AppOps$ and $DbOps$ for evolving various layers of the software. The semantic of transformations in the set $E$ is defined by their interpretation on individual software layers. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
 
-The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context. If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve.  We decide to use following transcription to cover all aspects  of transformation definition:
+The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context (application or database). If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve.  We decide to use following transcription to cover all aspects of transformation definition:
 \begin{gather*}
 operation(parameters, context) = \begin{cases}
   \inference{conditions \; of \; feasibility}{impact \; on \; context}\\ \\
   \inference{otherwise}{context}
  \end{cases}
 \end{gather*}
-
 The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. We will not state this implicit assumption in the operations definitions to increase theirs readability.
 
+\subsection{Software Creation}
+There are defined three transformations which are able to create a software: $newClass$, $addProperty$, $addAssociation$. These three transformations can be used to create a software from a scratch. The first of them has no impact on stored data, whereas the rest of them can in some cases.
+\begin{gather*}
+\mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
+\Psi(s, addProperty(l, p)) = application(s) \circ addProp(l,p) \\
+\Phi(s, addProperty(l, p)) = database(s) \bullet insertProp(l, p) \\
+s \in Softwares, l \in Label, p \in Properties
+\end{gather*}
+Adding a property into an application structure has to verify a name collision only:
+\begin{gather*}
+addProp : Label \times Property \times Application \rightarrow Application \\
+addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
+l \in Label, p \in Properties, a \in Applications
+\end{gather*}
+Whereas the $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
+\begin{gather*}
+insertProp(p, d) = \begin{cases}
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (!\;mandatory(p) \vee !\;instantiated(owningClass(p))}{ \rho(p,d)} 
+\\ \\ 
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
+ \rho(p,d) \wedge \forall r \in data(d), reference(r) = name(t) : pairs(r) \\ \cup [name(p), defaultValue(p)]
+\end{gathered}
+} 
+\\ \\
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
+ \rho(p,d) \wedge \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))]) 
+\end{gathered}
+} 
+\end{cases}\\
+p \in Properties, d \in Dataabses
+\end{gather*}
 
-\subsection{Application Transformation}
-\subsubsection{Application Creation}
+\begin{gather*}
+\mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
+\Psi(s, addAsociation(l, a, f_m)) = application(s) \circ addAssoc(l, a) \\
+\Phi(s, addAsociation(l, a, f_m)) = database(s) \bullet insertAssoc(l, a, f_m)
+\end{gather*}
+Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the model.
+\begin{gather*}
+addAssoc : Label \times Association \times Application \rightarrow Application \\
+addAssoc(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
+l \in Labels, s \in Associations, a \in Applications
+\end{gather*}
+Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
+$$f_m : \rightarrow Instance \times Instance $$
+
+\textbf{TODO: define the features of the $f_m$ function}
+
+The $insertAssoc$ function is defined as:
+\begin{gather*}
+insertAssoc : Association \times Database \times (Row \times Row) \\
+insertAssoc(a, d, f_m) = \begin{cases}
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
+\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]) 
+\end{gathered}
+ }
+ \\ \\
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered}
+\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ data(t) \cup row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))])
+\end{gathered}
+ } 
+ \end{cases}\\
+ a \in Associations, d \in Databases
+\end{gather*}
+
+\begin{gather*}
+\mathbf{newClass} : Class \times State \rightarrow State \\
+\Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
+\Phi(s, newClass(c)) = database(s) \bullet insertClass(c) 
+\end{gather*}
 \begin{gather*}
 addClass: Class \times Application \rightarrow Application \\ 
 addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c)}{classes(a) \cup c} \\ \\
 c \in Classes, a \in Applications
 \end{gather*}
+\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only.
 \begin{gather*}
-AddProperty : Label \times Property \times Application \rightarrow Application \\
-AddProperty(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
-l \in Label, p \in Properties, a \in Applications
+insertClass : Class \times Database \rightarrow Database \\
+insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
+	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
+}{
+\begin{gathered}
+  \rho(c) \wedge \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ \wedge \rho(associations(c))
+\end{gathered}
+}
 \end{gather*}
-\begin{gather*}
-AddAssociation : Label \times Association \times Application \rightarrow Application \\
-AddAssociation(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
-l \in Labels, s \in Associations, a \in Applications
-\end{gather*}
+
+
+
+\subsection{Software Decomposition}
+\subsection{Software Alternation}
 
 \subsubsection{Application Deconstruction}
 \begin{gather*}
 RemoveClass: Label \times Application \rightarrow Application  \\
 RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
-\wedge !\: instantiated(c) = \varnothing \wedge ! \: associated(c)} {classes(a) \setminus c } \\
+\wedge !\: instantiated(c) = \varnothing \wedge !\: associated(c)} {classes(a) \setminus c } \\
 q \in Label, a \in Applications
 \end{gather*}
 \begin{gather*}
@@ -479,54 +566,6 @@ l_c, l_o, l_n \in Label, a \in Applications
 
 
 \subsection{Database Transformation}
-\paragraph{Add Class} The $AddClass$ operation changes the structure of the database schema only.
-$$
-\Phi_{AC}(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
-	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
-}{
-\begin{gathered}
-  \rho(c) \wedge \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ \wedge \rho(associations(c))
-\end{gathered}
-}
-$$
-\paragraph{Add Property} The function $AddProperty$ on level of database does not change the structure only, but it has an impact on stored data too. This is because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
-$$
-\Phi_{AP}(p, d) = \begin{cases}
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (! mandatory(p) \vee ! instantiated(owningClass(p))}{ \rho(p,d)} 
-\\ \\ 
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
- \rho(p,d) \wedge \forall r \in data(d), reference(r) = t : pair(r) \\ \cup pair(name(p), defaultValue(p))
-\end{gathered}
-} 
-\\ \\
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
- \rho(p,d) \wedge \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), pair("value", defaultValue(p)), \\ pair(name(p), value(primaryKey(r))) 
-\end{gathered}
-} 
-
-\end{cases}
-$$
-
-\paragraph{Add Association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
-$$f_m : Property \rightarrow Instance \times Instance $$
-
-\textbf{TODO: define the features of the $f_m$}
-
-The mapping of the $AddAssociation$ function is defined as:
-$$
-\Phi_{AA}(a, f_m, d) = \begin{cases}
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), pair(name(a), \\ value(primaryKey(first(r)))) 
-\end{gathered}
- }
- \\ \\
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered}
-\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ data(t) \cup row(name(a), pair(name(t_s), \\ value(primaryKey(first(r)))) pair(name(t_t), \\ value(primaryKey(second(r)))))
-\end{gathered}
- } 
- 
- \end{cases}
-$$
 
 \subsubsection{Deconstruction of a Software}
 \paragraph{Remove Class}
