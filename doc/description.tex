@@ -372,13 +372,13 @@ $\rho_p(p, d) = \begin{cases}
  \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
  \\ \wedge \not instanciated(owningClass(p))
  }{\begin{gathered}
-	  columns(t) \cup column(name(p), \rho_t(type(p)), \varnothing )
+	  column(name(p), \rho_t(type(p)), \varnothing )
 \end{gathered}
  } \\ \\
 
   \inference{cardinality(p) = 1 \wedge mandatory(p)
  \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}
- 	 columns(t) \cup column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
+ 	 column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
 \end{gathered}} 
 \\ \\
  
@@ -386,7 +386,7 @@ $\rho_p(p, d) = \begin{cases}
 \end{gathered}}
 \\ \\
 
- \inference{ cardinality(p) > 1 \wedge mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d) }{\begin{gathered} tables(d) \cup  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), NOTNULL), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL)
+ \inference{ cardinality(p) > 1 \wedge mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d) }{\begin{gathered}  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), NOTNULL), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL)
 	 \end{gathered}}
  \end{cases}$
 
@@ -442,15 +442,15 @@ l \in Label, p \in Properties, a \in Applications
 Whereas the $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 \begin{gather*}
 insertProp(p, d) = \begin{cases}
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (!\;mandatory(p) \vee !\;instantiated(owningClass(p))}{ \rho(p,d)} 
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge (!\;mandatory(p) \vee !\;instantiated(owningClass(p))}{ columns(t) \cup \rho(p,d)} 
 \\ \\ 
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
- \rho(p,d) \wedge \forall r \in data(d), reference(r) = name(t) : pairs(r) \\ \cup [name(p), defaultValue(p)]
+\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered} columns(t) \cup 
+ \rho(p,d) \\ \wedge \forall r \in data(d), reference(r) = name(t) : pairs(r) \\ \cup [name(p), defaultValue(p)]
 \end{gathered}
 } 
 \\ \\
 \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
- \rho(p,d) \wedge \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))]) 
+tables(d) \cup  \rho(p,d) \wedge \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))]) 
 \end{gathered}
 } 
 \end{cases}\\
@@ -478,12 +478,12 @@ The $insertAssoc$ function is defined as:
 insertAssoc : Association \times Database \times (Row \times Row) \\
 insertAssoc(a, d, f_m) = \begin{cases}
 \inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]) 
+columns(t_s) \cup \rho(a,d) \\ \wedge \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]) 
 \end{gathered}
  }
  \\ \\
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered}
-\rho(a,d) \wedge \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ data(t) \cup row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))])
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered} tables(d) \cup
+\rho(a,d) \\ \wedge \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ data(t) \cup row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))])
 \end{gathered}
  } 
  \end{cases}\\
@@ -500,14 +500,15 @@ addClass: Class \times Application \rightarrow Application \\
 addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c)}{classes(a) \cup c} \\ \\
 c \in Classes, a \in Applications
 \end{gather*}
-\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only.
+\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
 \begin{gather*}
 insertClass : Class \times Database \rightarrow Database \\
 insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
-	\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) 
+	%\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) \\ 
+	assocaiations(c) = \varnothing
 }{
 \begin{gathered}
-  \rho(c) \wedge \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ \wedge \rho(associations(c))
+  tables(d) \cup \rho(c) \\ \wedge \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ 
 \end{gathered}
 }
 \end{gather*}
@@ -516,48 +517,51 @@ insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho
 
 \subsection{Software Decomposition}
 \begin{gather*}
-RemoveClass: Label \times Application \rightarrow Application  \\
-RemoveClass(q, a) = \inference{\exists c \in classes(a) : name(c) = q \\
+RemoveClass: Label \times Software \rightarrow Software  \\
+\Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
+\Phi RemoveClass(l, s) = database(s) \bullet dropClass(l) \\
+\\ l \in Label, s \in Software 
+\\ \\
+remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\
 \wedge !\: instantiated(c) = \varnothing \wedge !\: associated(c)} {classes(a) \setminus c } \\
-q \in Label, a \in Applications
 \end{gather*}
 \begin{gather*}
-RemoveProperty: Label \times Label \times Application \rightarrow Application \\
+dropClass(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \not \exists r \in data(d) : owningTable(r) = l \\  \not \exists j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) = l }{ tables(d) \setminus \rho(c)}
+\end{gather*}
+
+\begin{gather*}
+RemoveProperty: Label \times Label \times Software \rightarrow Software \\
+\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
+\Phi RemoveProperty(l, l_p, s) =  database(s) \bullet dropProp(l, l_p) \\
 RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }\\
 l_c, l_p \in Label, a \in Applications 
 \end{gather*}
 \begin{gather*}
-RemoveAssociation : Label \times Labels \times Application \rightarrow Application \\ 
-RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists s \in associations(c) : name(s) = l_a }{associations(c) \setminus s} \\
-l_c, l_a \in Labels, a \in Applications
-\end{gather*}
-\paragraph{Remove Class}
-$$
-\Phi_{RC}(c,d) = \inference{ \rho(c) \in tables(d) \\ \wedge \not \exists r \in data(d) : owningTable(r) = \rho(c) \\ \not \exists j \in tables(d), f \in foreignKeys(j) : reference(f) = \rho(c)  }{ tables(d) \setminus \rho(c)}
-$$
-%TODO remove by label
-
-\paragraph{Remove Property}
-$$
-\Phi_{RP}(p, d) = \begin{cases}
+dropProp(p, d) = \begin{cases}
  \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \exists c \in columns(t) : name(c) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p)) }{columns(t) \setminus c
 } \\ \\
   \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \not \exists c \in columns(t) : name(c) = name(p) \\ \wedge \exists u \in tables(d) : name(u) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p))}{ tables(d) \setminus u }
  \end{cases}
-$$
+\end{gather*}
 
-\paragraph{Remove Association}
-$$
-\Phi_{RA}(a, d) =  \begin{cases}
- \inference{\exists t \in tables(d) : name(t) = name(owningClass(a))
- \\ \wedge \exists f \in foreignKeys(t) : name(f) = name(a)
+\begin{gather*}
+RemoveAssociation : Label \times Labels \times Software \rightarrow Software \\ 
+\Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
+\Phi RemoveAssociation(l, l_a, s) = database(s) \bullet dropAssoc(l, l_a) \\
+RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
+l_c, l_a \in Labels, a \in Applications
+\end{gather*}
+\begin{gather*}
+dropAssoc(l, l_a, d) =  \begin{cases}
+ \inference{\exists t \in tables(d) : name(t) = l
+ \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_a
  \\ \wedge \forall r \in data(d) : owningTable(r) \neq t}{ foreignKeys(t) \setminus f }
  \\ \\
- \inference{\exists t \in tables(d) : name(t) = name(a)
- \\ \wedge \exists f \in foreignKeys(t) : name(f) = name(owningClass(a))
- \\ \wedge \forall r \in data(d) : owningTable(r) \neq t}{ tables(d) \setminus t}
+ \inference{\exists t \in tables(d) : name(t) = l_a
+ \\ \wedge \exists f \in foreignKeys(t) : name(f) = l
+ \\ \wedge \forall r \in data(d) : reference(r) \neq t}{ tables(d) \setminus t}
  \end{cases}
-$$
+\end{gather*}
 
 
 
