@@ -517,7 +517,7 @@ insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho
 
 \subsection{Software Decomposition}
 \begin{gather*}
-RemoveClass: Label \times Software \rightarrow Software  \\
+RemoveClass: Label \times Software \rightarrow State  \\
 \Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
 \Phi RemoveClass(l, s) = database(s) \bullet dropClass(l) \\
 \\ l \in Label, s \in Software 
@@ -530,7 +530,7 @@ dropClass(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \n
 \end{gather*}
 
 \begin{gather*}
-RemoveProperty: Label \times Label \times Software \rightarrow Software \\
+RemoveProperty: Label \times Label \times State \rightarrow State \\
 \Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
 \Phi RemoveProperty(l, l_p, s) =  database(s) \bullet dropProp(l, l_p) \\
 RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }\\
@@ -545,7 +545,7 @@ dropProp(p, d) = \begin{cases}
 \end{gather*}
 
 \begin{gather*}
-RemoveAssociation : Label \times Labels \times Software \rightarrow Software \\ 
+RemoveAssociation : Label \times Labels \times State \rightarrow State \\ 
 \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
 \Phi RemoveAssociation(l, l_a, s) = database(s) \bullet dropAssoc(l, l_a) \\
 RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
@@ -568,29 +568,63 @@ dropAssoc(l, l_a, d) =  \begin{cases}
 \subsection{Software Alternation}
 \paragraph{Rename Class}
 \begin{gather*}
-\rho_{RenC} : Label \times Label \times Application \rightarrow Application \\ 
-\rho_{RenC}(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
-c.name = l_n \wedge \forall f \in associations(e), \\ e \in classes(a), reference(f) = l_c : f.reference = l_n 
+RenameClass : Label \times Label \times State \rightarrow State \\ 
+\Psi(RenameClass(l_o, l_n), s) = application(s) \circ renClass(l_o, l_n) \\
+\Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterClass(l_o, l_n) \\ \\
+renClass:  Label \times Label \times Application \rightarrow Application \\
+renClass(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_o \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
+c.name = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
+\end{gathered}}\\ \\
+alterTable:  Label \times Label \times Database \rightarrow Database \\
+alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
+t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
 \end{gathered}}\\
-l_o, l_n \in Label, a \in Applications
+l_o, l_n \in Label, s \in States, a \in Applications, d \in Databases
 \end{gather*}
 
 \paragraph{Rename Property}
 \begin{gather*}
-\rho_{RenP} : Label \times Label \times Label \times Application \rightarrow Application \\ \\
-	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
+RenameProperty : Label \times Label \times Label \times State \rightarrow State \\ \\
+\Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
+\Phi(RenameProperty(l_c, l_o, l_n, s)) = database(s) \bullet alterColumn(l_c, l_o, l_n) \\\\
+renProp : Label \times Label \times Label \times Application \rightarrow Application \\
+	renProp(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
 p.name = l_n 
-\end{gathered}}\\
-l_c, l_o, l_n \in Label, a \in Applications
+\end{gathered}}\\\\
+alterColumn : Label \times Label \times Label \times Database \rightarrow Database \\
+	alterColumn(l_c, l_o, l_n, d) = \begin{cases}
+ \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_o \\ \wedge \forall e \in columns(t) : name(e) \neq l_n}{\begin{gathered}
+c.name = l_n 
+\end{gathered}}
+\\ \\
+\inference{\exists t \in tables(a) : name(t) = l_o \\ \wedge \forall e \in tables(t) : name(e) \neq l_n}{\begin{gathered}
+t.name = l_n 
+\end{gathered}}
+ \end{cases}
+ \\
+l_c, l_o, l_n \in Label, a \in Applications, s \in States, d \in Databases
 \end{gather*}
 
 \paragraph{Rename Association}
 \begin{gather*}
-\rho_{RenA} : Label \times Label \times Label \times Application \rightarrow Application \\
-	\rho_{RenP}(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists a \in associations(c) : name(a) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
-a.name = l_n 
-\end{gathered}}\\
-l_c, l_o, l_n \in Label, a \in Applications
+RenameAssociation : Label \times Label \times Label \times State \rightarrow State \\
+\Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
+\Phi(RenameAssocaiation(l_c, l_o, l_n), s) = database(s) \bullet alterAsspoc(l_c, l_o, l_n)\\\\
+renAssoc(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists b \in associations(c) : name(b) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
+b.name = l_n 
+\end{gathered}}\\\\
+alterColumn : Label \times Label \times Label \times Database \rightarrow Database \\
+	alterAssoc(l_c, l_o, l_n, d) = \begin{cases}
+?? \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists f \in fks(t) : name(c) = l_o \\ \wedge \forall e \in fks(t) : name(e) \neq l_n}{\begin{gathered}
+f.name = l_n 
+\end{gathered}}
+\\ \\
+\inference{\exists t \in tables(a) : name(t) = l_o \\ \wedge \forall e \in tables(t) : name(e) \neq l_n}{\begin{gathered}
+t.name = l_n 
+\end{gathered}}
+ \end{cases}
+ \\
+l_c, l_o, l_n \in Label, a \in Applications, s \in Sates, d \in Databases
 \end{gather*}
 
 
