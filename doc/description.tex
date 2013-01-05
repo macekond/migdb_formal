@@ -281,6 +281,11 @@ There functions $contains$ verify if the table contains data in context of concr
 \begin{gather*}
 pair = < refCol, value > \\
 [Label \times Value] \rightarrow Pair\\ \\
+\mathbf{pairByRef} : Label \times Row \rightarrow Pair \\
+pairByRef(l,i) = \begin{cases}
+	\inference{\exists p \in pairs(i) : reference(p) = l}{p} \\ \\
+	\varnothing
+ \end{cases}\\\\
 \mathbf{reference} : Pair \rightarrow Label \\
 reference([l,val]) = l \\ \\
 \mathbf{value} : Pair \rightarrow Label \\ 
@@ -299,23 +304,82 @@ consistent(d) = \begin{cases}
 The database is composed from two separated parts - database schema and data. Several transformation are defined to make manipulating a database easily in this paper.
 
 \begin{gather*}
-addColumn : Label \times Column \times Database \rightarrow Database \\ addColum(l, c, d) = \begin{cases}
-columns(t) \cup c \; \mathbf{if} t \in tables(d) \wedge name(t) = l \\ \;\;\; \wedge \forall f \in columns(t) : name(f) \neq name(c)
-\\ 
+addColumn : Label \times Column* \times Database \rightarrow Database \\ addColum(l, c, d) = \begin{cases}
+\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)}
+\\ \\
+\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c)}{columns(t) \cup c}
+\\ \\
 Inconsistent \;d 
  \end{cases}
-\\ l \in Label, c \in Columns, d \in Databases
+\\ l \in Label, c = Column*, d = Database
 \end{gather*}
 
 \begin{gather*}
-addTable : Table \times Database \rightarrow Database \\ 
+	copyColumn : Label \times Label \times Label \times Database \rightarrow Database \\
+	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c }
+	\end{cases} \\
+	l_s,l_t,l_c \in Label, d = Database
+\end{gather*}
+
+\begin{gather*}
+addTable : Table* \times Database \rightarrow Database \\ 
 addTable(t, d) = \begin{cases}
-tables(d) \cup c \; \mathbf{if} \forall e \in tables(d) \wedge name(t) \neq name(e)
-\\ 
+	\inference{|t| > 1}{addTable(head(t),d) \bullet addTable(tail(t), d)}
+\\ \\	
+	\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e)}{tables(d) \cup c}
+\\ \\
 Inconsistent \;d 
  \end{cases}
-\\ t \in Tables,  d \in Databases
+\\ t = Table*,  d = Database
 \end{gather*}
+
+\begin{gather*}
+insertRow : Row* \times Database \rightarrow Database \\
+insertRow(r, d) = \begin{cases}
+	\inference{|r|>1}{insertRow(head(r), d) \bullet insertRow(tail(r), d)} 
+\\ \\
+ 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) }{data(d) \cup r}
+\\ \\
+ Inconsistent \; d
+ \end{cases}
+\\ r = Row*, d = Database
+\end{gather*}
+
+\begin{gather*}
+appendValues : Label \times Pair* \times Database \rightarrow Daatabase \\
+appendValues(l, p, d) = \begin{cases}
+ 	\inference{|p| > 1}{appendValues(l, head(p), d)\bullet appendValues(l, tail(p), d)} 
+ \\ \\
+ 	\inference{|p| = 1 \wedge \exists r \in data(d), reference(r) = l}{pairs(r) \cup [name(p), defaultValue(p)]}
+ \\ \\
+ 	 Inconsistent \; d
+ \end{cases} 
+ \\
+l \in Label, p = Pair*, d = Databases
+\end{gather*}
+
+\begin{gather*}
+insertPair : Row \times Pair \times Database \rightarrow Database \\
+insertPair(r_t, p, d) = \begin{cases}
+ \inference{\forall e \in pairs(r_t) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r_t), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{ pairs(r_t) \cup p}
+ \\\\
+ Inconsistent \; d
+ \end{cases}
+\end{gather*}
+
+
+\begin{gather*}
+copyValue : Label \times Label \times Label \times (Instancece \times Instance) \times Database \times Database \\
+copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
+ 	\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc} }{\begin{gathered}
+\forall p \in f_m(t_s, t_t)  : \\ insertPair(second(p), [l_{tc},value(pairByRef(l_{sc}, first(p))),d)
+\end{gathered}}
+ \end{cases}
+\end{gather*}
+
+
+
 
 \subsection{Extension of Software Definition}
 
@@ -404,7 +468,7 @@ $\rho_p(p, d) = \begin{cases}
 \end{gathered}} 
 \\ \\
  
- \inference{ cardinality(p) > 1 \wedge !\;mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}tables(d) \cup  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
+ \inference{ cardinality(p) > 1 \wedge !\;mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
 \end{gathered}}
 \\ \\
 
@@ -466,12 +530,12 @@ Whereas the $insertProp$ on database level can change stored data too, because a
 insertProp(p, d) = \begin{cases}
 \inference{!\:mandatory(p) \vee !\:instantiated(owningClass(p))}{addColumn(l, \rho(p,d), d)} 
 \\ \\ 
-\inference{ \wedge mandatory(p) \vee instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered} addColumn(l, \rho(p,d), d) \\ \bullet \forall r \in data(d), reference(r) = name(t) : pairs(r) \\ \cup [name(p), defaultValue(p)]
+\inference{ \wedge mandatory(p) \vee instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered} addColumn(l, \rho(p,d), d) \\ \bullet \forall r \in data(d), reference(r) = name(t) : \\ appendValue(name(t), [name(p), defaultValue(p)], d)
 \end{gathered}
 } 
 \\ \\
 \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
-addTable(\rho(p,d), d) \bullet \forall r \in row(owningClass(p)) : data(d)\\ \cup row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))]) 
+addTable(\rho(p,d), d) \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))]),d) 
 \end{gathered}
 } 
 \end{cases}\\
@@ -499,11 +563,11 @@ The $insertAssoc$ function is defined as:
 insertAssoc : Association \times Database \times (Row \times Row) \\
 insertAssoc(a, d, f_m) = \begin{cases}
 \inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-addColumn(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(a), reference(a)) : \\ data(t_t) \cup row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]) 
+addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(a), reference(a)) : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
 \end{gathered}
  }
  \\ \\
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered} addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ data(t) \cup row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))])
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered} addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ insertRow(row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))]), d)
 \end{gathered}
  } 
  \end{cases}\\
@@ -513,7 +577,7 @@ addColumn(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(a), 
 \begin{gather*}
 \mathbf{newClass} : Class \times State \rightarrow State \\
 \Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
-\Phi(s, newClass(c)) = database(s) \bullet insertClass(c) 
+\Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d), d) \\ \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, d) \\ \bullet addTable(name(c), \{\forall r \in collectionProperties(c) | \rho(r,d)\}, d)  
 \end{gather*}
 \begin{gather*}
 addClass: Class \times Application \rightarrow Application \\ 
@@ -521,17 +585,17 @@ addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c)}{cla
 c \in Classes, a \in Applications
 \end{gather*}
 \paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
-\begin{gather*}
-insertClass : Class \times Database \rightarrow Database \\
-insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
-	%\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) \\ 
-	assocaiations(c) = \varnothing
-}{
-\begin{gathered}
- addTable(\rho(c, d),d) \\ \wedge t \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ 
-\end{gathered}
-}
-\end{gather*}
+%\begin{gather*}
+%insertClass : Class \times Database \rightarrow Database \\
+%insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
+%	%\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) \\ 
+%	assocaiations(c) = \varnothing
+%}{
+%\begin{gathered}
+% addTable(\rho(c, d),d) \\ \wedge t \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ 
+%\end{gathered}
+%}
+%\end{gather*}
 
 
 
@@ -649,30 +713,17 @@ l_c, l_o, l_n \in Label, a \in Applications, s \in Sates, d \in Databases
 
 
 \paragraph{Copy Property}
-All transformations described earlier does change mostly the structure of a application only. Therefore we define  the transformation for copying a property from one class to another. The copy property is the basic way to copy data from instance of a class to instance of another class.
+All transformations described earlier does change mostly the structure of a application only. Therefore we define  the transformation for copying a property from one class to another. To copy property is the basic way to move data from instances of a class to instance of another class. Note the transformation does not move a single value, but it move the values for all instances in the software.
 
 The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, where the $copyData$ transformation is used.
-
-$$\rho_{copyP} : Label \times Label \times Label \times (Instance \times Instance) \times Application \rightarrow Application $$
-\begin{equation*}
-	\rho_{copy}(l_s, l_t, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists e \in classes(a) : name(e) = l_t  \\ \wedge \forall q \in properties(c) : name(q) \neq l_p}{\begin{gathered}
-properites(e) \cup p 
-\end{gathered}
-}
-\end{equation*}
+\begin{gather*}
+	CopyProperty : Label \times Label \times Label \times (Instance \times Instance) \times State \rightarrow State 
+\\
+\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = application(s) \circ copyProp(l_s,l_t, l_p) \\
+\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = database(s) \bullet copyColumn(l_s, l_t, l_p)\\  \bullet copyValues(l_s, l_t, l_p, f_m) \\ 
+\end{gather*}
 
 With a copy property transformation defined we are able to define advanced evolution scenarios.
-
-\paragraph{Copy Column}
-$$\Phi_{copyC} : Label \times Label \times Label \times f_m \times Database \rightarrow Database $$
-
-\begin{equation*}
-	\begin{gathered}
-		\Phi_{copyC}(l_c, l_s, l_t, f_m, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c \wedge \forall r \in rows(t) : f_m(r) \cup getPair(l_c,r)}
-	\end{cases}
-	\end{gathered}
-\end{equation*}
 
 \subsection{Composing of Evolution Operations}
 
@@ -680,11 +731,18 @@ $$\Phi_{copyC} : Label \times Label \times Label \times f_m \times Database \rig
 $$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
 $$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
 
-\section{Summary}
+\section{Conclusion}
 
 
 
 \end{document}
+
+
+%	CopyProperty(l_s, l_t, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists e \in classes(a) : name(e) = l_t  \\ \wedge \forall q \in properties(c) : name(q) \neq l_p}{\begin{gathered}
+%properites(e) \cup p 
+%\end{gathered}}
+
+
 % This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $\oplus$ (called evolve), which is used as a concatenation of operations as well.
 %
 %Each evolution transformation has a definition: $Software \rightarrow State$ and all evolution transformations creates a set called $Transformations$, then a concatenation of evolution transformation is defined as:
