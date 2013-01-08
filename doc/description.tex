@@ -542,9 +542,9 @@ The database is composed from two separated parts - database schema and data. Se
 \end{align*}
 \paragraph{Insert Values}
 \begin{align*}
-	\mathbf{appendValues} : Label \times Pair* \times Database \rightarrow Daatabase \\
-	appendValues(l, p, d) = \begin{cases}
- 		\inference{|p| > 1}{appendValues(l, head(p), d)\bullet appendValues(l, tail(p), d)}  \\ \\
+	\mathbf{insertValues} : Label \times Pair* \times Database \rightarrow Daatabase \\
+	insertValues(l, p, d) = \begin{cases}
+ 		\inference{|p| > 1}{insertValues(l, head(p), d)\bullet insertValues(l, tail(p), d)}  \\ \\
  		\inference{|p| = 1 \wedge \forall e \in pairs(r_t) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r_t), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
 	 	 Inconsistent \; d
  		\end{cases} \\
@@ -555,7 +555,7 @@ l \in Label, p = Pair*, d = Databases
 	\mathbf{copyValue} : Label \times Label \times Label \times (Instancece \times Instance) \times Database \times Database \\
 	copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
  		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc} }{\begin{gathered}
-			\forall p \in f_m(t_s, t_t)  : \\ appendValues(name(second(p)), \\ [l_{tc},value(pairByRef(l_{sc}, first(p))),d)
+			\forall p \in f_m(t_s, t_t)  : \\ insertValues(name(second(p)), \\ [l_{tc},value(pairByRef(l_{sc}, first(p))),d)
 		\end{gathered}}
  	\end{cases}
 \end{align*}
