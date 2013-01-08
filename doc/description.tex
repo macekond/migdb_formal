@@ -182,7 +182,6 @@ l, ref \in Label,  n_1, n_2 \in \mathbb{N}
 \mathbf{AppType} = APPSTRING
 \end{align*}
 
-\subsubsection{Application Transformation}
 
 \subsection{Database Model}
 \label{sec:dbModel}
@@ -414,74 +413,152 @@ There are defined functions for object-relational mapping used in the model in t
 
 \subsubsection{Mapping of Types}
 The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
-
-\begin{equation*}
-\begin{gathered}
-	\rho_{t} : AppType \rightarrow DbType  \\
+\begin{align*}
+	\mathbf{\rho_{t}} : AppType \rightarrow DbType  \\
  	\rho_{t}(APPSTRING) = DBSTRING 
-\end{gathered}
-\end{equation*}
+\end{align*}
+
 
 \subsection{Mapping of Classes}
 We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and of the $\mathbb{N^{*}}$ type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
 
-\begin{center}
-$\rho_{c}: Class \times Database \rightarrow Database $ \\ 
-$\rho_{c}(c,d) = table(name(c), primaryKey("Id"), \varnothing, \varnothing) $
-\end{center}
+\begin{align*}
+	\mathbf{\rho_{c}} : Class*  \rightarrow Table* \\
+	\rho_{c}(c) = \begin{cases}
+		\inference{c = \varnothing}{\varnothing}\\\\
+		\inference{|c| = 1}{table(name(c), primaryKey("Id"), \varnothing, \varnothing)}  \\ \\
+		\inference{|c| > 1}{\rho_c(head(c)) \cup \rho_c(tail(c))}
+ \end{cases}\\
+ c = Class
+\end{align*}
 
 \subsubsection{Mapping of Properties}
 There are two types of properties - the first type has cardinality 1  and it is mapped to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. This constraint affect already stored instances a new mandatory value has to be added to each instance.
 
-$
-\rho_p : Property \times Database \rightarrow Database 
-$
-
-$\rho_p(p, d) = \begin{cases}
-  \inference{cardinality(p) = 1 \wedge !\;mandatory(p)
- \\ \wedge \exists t : t = table(name(owningClass(p)), d) 
- \\ \wedge \not instanciated(owningClass(p))
- }{\begin{gathered}
-	  column(name(p), \rho_t(type(p)), \varnothing )
-\end{gathered}
- } \\ \\
-
-  \inference{cardinality(p) = 1 \wedge mandatory(p)
- \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}
- 	 column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
-\end{gathered}} 
-\\ \\
- 
- \inference{ cardinality(p) > 1 \wedge !\;mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d)}{\begin{gathered}table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL) \\
-\end{gathered}}
-\\ \\
-
- \inference{ cardinality(p) > 1 \wedge mandatory(p) \\ \wedge \exists t : t = table(name(owningClass(p)), d) }{\begin{gathered}  table(name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), NOTNULL), \\ foreignKey(name(p), name(owningClass(p)), NOTNULL)
+\begin{align*}
+	\mathbf{\rho_p} : Property* \rightarrow Column* \\ \\
+	\rho_{sp}(p) = \begin{cases}
+ 		\inference{cardinality(p) = 1 \wedge !\;mandatory(p)
+ 			\\ \wedge \exists t : t = table(name(owningClass(p)), d) 
+		 }{\begin{gathered}
+	  		column(name(p), \rho_t(type(p)), \varnothing )
+		\end{gathered}} \\ \\
+  		\inference{cardinality(p) = 1 \wedge mandatory(p)
+			 \\ \wedge \exists t : t = table(name(owningClass(p)), d)
+			\\ \wedge \not instanciated(owningClass(p))
+		}{\begin{gathered}
+ 	 		column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
+		\end{gathered}}
+ 	\end{cases}
+\end{align*}
+\begin{align*}
+	\mathbf{\rho_p} : Property* \rightarrow Table* \\ \\
+	\rho_{cp}(p) = \begin{cases}
+ 	\inference{cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
+ 		\wedge 	\exists t : t = table(name(owningClass(p)), d)
+ 		}{\begin{gathered}
+ 			table(name(p), primaryKey("Id"), \\ column("value", 			\rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
+	\end{gathered}}\\ \\
+ 	\inference{ cardinality(p) > 1 \wedge mandatory(p) \\ 
+ 		\wedge \exists t : t = table(name(owningClass(p)), d) 
+ 		}{\begin{gathered}  
+ 			table(name(p), primaryKey("Id"), \\ 
+ 			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
 	 \end{gathered}}
- \end{cases}$
+ 	\end{cases}
+\end{align*}
 
 \subsubsection{Mapping of Associations}
 A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
 
-$
-\rho_a(a,d) = \begin{cases}
- \inference{ startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{ 
- \begin{gathered}
- foreignKeys(u) \\ \cup foreignKey(name(a), name(t),  \varnothing) 
- \end{gathered}
- }
+\begin{align*}
+	\mathbf{\rho_a} : Association* \rightarrow ForeignKey* \\
+	\rho_a(a) = \begin{cases}
+		\inference{ startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
+		}{
+			foreignKey(name(a), name(t),  \varnothing) 
+	 	}
   \\ \\
- \inference{ startCardinality(a) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)}{\begin{gathered}  
-foreignKeys(u) \\ \cup  foreignKey(name(a), name(t),  NOTNULL) \\
-\end{gathered}
-} \\ \\
- 
-  \inference{  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)}{
-  \begin{gathered}  
- table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
-  \end{gathered}}  
- \end{cases}
-$
+ 	 \inference{ startCardinality(a) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
+ 	 }{ 
+		foreignKey(name(a), name(t),  NOTNULL)
+	}
+	 \end{cases}
+\end{align*}
+\begin{align*} 
+	\mathbf{\rho_a} : Association* \rightarrow Table* \\
+  	\rho_a(a) = \inference{  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)
+  		}{\begin{gathered}  
+		 table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
+  		\end{gathered}}  
+\end{align*}
+
+\section{Model Manipulating Transformation}
+\subsection{Application Transformation}
+\paragraph{Add Property}Adding a property into an application structure has to verify a name collision only:
+\begin{align*}
+ 	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
+	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
+	l \in Label, p \in Properties, a \in Applications
+\end{align*}
+\paragraph{Add Association} Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the model.
+\begin{align*}
+	\mathbf{addAssoc} : Label \times Association \times Application \rightarrow Application \\
+	addAssoc(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
+	l \in Labels, s \in Associations, a \in Applications
+\end{align*}
+\paragraph{Add Class} Adding a class is limited to the case when the class has no associations, this is because it simplifies the database migration and because it is a natural way of modeling. Next the transformation $addClass$ has to verify there is no name collision
+\begin{align*}
+	\mathbf{addClass} : Class \times Application \rightarrow Application \\ 
+	addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c) \\ \wedge associations(c) = \varnothing }{classes(a) \cup c} \\ \\
+	c \in Classes, a \in Applications
+\end{align*}
+\paragraph{Remove Property}
+\begin{align*}
+ 	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
+ 	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
+	}{properties(c) \setminus p }\\
+	l_c, l_p \in Label, a \in Applications 
+\end{align*}
+\paragraph{Remove Association}
+\begin{align*}
+	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
+	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
+	l_c, l_a \in Labels, a \in Applications
+\end{align*}
+\paragraph{Remove Class} The class can be removed only in case it is not referenced by any association existing in the application.
+\begin{align*}
+	\mathbf{remClass} : Label \times Application \rightarrow Application \\
+	remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge !\: associated(c)
+	} {classes(a) \setminus c }\\
+	l \in Label, a = Application
+\end{align*}
+\paragraph{Rename Property}
+\begin{align*}
+	\mathbf{renProp} : Label \times Label \times Label \times Application \rightarrow Application \\
+	renProp(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n
+	}{\begin{gathered}
+		p.name = l_n 
+	\end{gathered}}
+\end{align*}
+\paragraph{Rename Association}
+\begin{align*}
+	\mathbf{renAssoc} : Label \times Label \times Label \times Application \rightarrow Application \\
+	renAssoc(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists b \in associations(c) : name(b) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n
+	}{\begin{gathered}
+		b.name = l_n 
+	\end{gathered}}
+\end{align*}
+\paragraph{Rename Class}
+\begin{align*}
+	\mathbf{renClass} :  Label \times Label \times Application \rightarrow Application \\
+	renClass(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_o \\ \wedge \forall e \in classes(a) : name(e) \neq l_n
+	}{\begin{gathered}
+		c.name = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
+	\end{gathered}}
+\end{align*}
+
+
 
 \section{Evolutionaty Transformations}
 The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro} together with sets $AppOps$ and $DbOps$ for evolving various layers of the software. The semantic of transformations in the set $E$ is defined by their interpretation on individual software layers. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
@@ -495,6 +572,8 @@ operation(parameters, context) = \begin{cases}
 \end{align*}
 The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. We will not state this implicit assumption in the operations definitions to increase theirs readability.
 
+
+
 \subsection{Software Creation}
 There are defined three transformations which are able to create a software: $newClass$, $addProperty$, $addAssociation$. These three transformations can be used to create a software from a scratch. The first of them has no impact on stored data, whereas the rest of them can in some cases.
 \begin{align*}
@@ -503,12 +582,7 @@ There are defined three transformations which are able to create a software: $ne
 \Phi(s, addProperty(l, p)) = database(s) \bullet insertProp(l, p) \\
 s \in Softwares, l \in Label, p \in Properties
 \end{align*}
-Adding a property into an application structure has to verify a name collision only:
-\begin{align*}
-addProp : Label \times Property \times Application \rightarrow Application \\
-addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
-l \in Label, p \in Properties, a \in Applications
-\end{align*}
+
 Whereas the $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 \begin{align*}
 insertProp(p, d) = \begin{cases}
@@ -531,12 +605,7 @@ p \in Properties, d \in Dataabses
 \Psi(s, addAsociation(l, a, f_m)) = application(s) \circ addAssoc(l, a) \\
 \Phi(s, addAsociation(l, a, f_m)) = database(s) \bullet insertAssoc(l, a, f_m)
 \end{align*}
-Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the model.
-\begin{align*}
-addAssoc : Label \times Association \times Application \rightarrow Application \\
-addAssoc(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
-l \in Labels, s \in Associations, a \in Applications
-\end{align*}
+
 Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
 $$f_m : \rightarrow Instance \times Instance $$
 
@@ -563,11 +632,7 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 \Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
 \Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d), d) \\ \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, d) \\ \bullet addTable(name(c), \{\forall r \in collectionProperties(c) | \rho(r,d)\}, d)  
 \end{align*}
-\begin{align*}
-addClass: Class \times Application \rightarrow Application \\ 
-addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c)}{classes(a) \cup c} \\ \\
-c \in Classes, a \in Applications
-\end{align*}
+
 \paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
 %\begin{align*}
 %insertClass : Class \times Database \rightarrow Database \\
@@ -589,9 +654,6 @@ RemoveClass: Label \times Software \rightarrow State  \\
 \Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
 \Phi RemoveClass(l, s) = database(s) \bullet dropClass(l) \\
 \\ l \in Label, s \in Software 
-\\ \\
-remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\
-\wedge !\: instantiated(c) = \varnothing \wedge !\: associated(c)} {classes(a) \setminus c } \\
 \end{align*}
 \begin{align*}
 dropClass(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \not \exists r \in data(d) : owningTable(r) = l \\  \not \exists j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) = l }{ tables(d) \setminus \rho(c)}
@@ -600,10 +662,7 @@ dropClass(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \n
 \begin{align*}
 RemoveProperty: Label \times Label \times State \rightarrow State \\
 \Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
-\Phi RemoveProperty(l, l_p, s) =  database(s) \bullet dropProp(l, l_p) \\
-RemoveProperty(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{properties(c) \setminus p }\\
-l_c, l_p \in Label, a \in Applications 
-\end{align*}
+\Phi RemoveProperty(l, l_p, s) =  database(s) \bullet dropProp(l, l_p) \end{align*}
 \begin{align*}
 dropProp(p, d) = \begin{cases}
  \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \exists c \in columns(t) : name(c) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p)) }{columns(t) \setminus c
@@ -616,7 +675,6 @@ dropProp(p, d) = \begin{cases}
 RemoveAssociation : Label \times Labels \times State \rightarrow State \\ 
 \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
 \Phi RemoveAssociation(l, l_a, s) = database(s) \bullet dropAssoc(l, l_a) \\
-RemoveAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
 l_c, l_a \in Labels, a \in Applications
 \end{align*}
 \begin{align*}
@@ -639,10 +697,9 @@ dropAssoc(l, l_a, d) =  \begin{cases}
 RenameClass : Label \times Label \times State \rightarrow State \\ 
 \Psi(RenameClass(l_o, l_n), s) = application(s) \circ renClass(l_o, l_n) \\
 \Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterClass(l_o, l_n) \\ \\
-renClass:  Label \times Label \times Application \rightarrow Application \\
-renClass(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_o \\ \wedge \forall e \in classes(a) : name(e) \neq l_n}{\begin{gathered}
-c.name = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
-\end{gathered}}\\ \\
+\end{align*}
+
+\begin{align*}
 alterTable:  Label \times Label \times Database \rightarrow Database \\
 alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
 t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
@@ -652,13 +709,12 @@ l_o, l_n \in Label, s \in States, a \in Applications, d \in Databases
 
 \paragraph{Rename Property}
 \begin{align*}
-RenameProperty : Label \times Label \times Label \times State \rightarrow State \\ \\
+	RenameProperty : Label \times Label \times Label \times State \rightarrow State \\ \\
 \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
 \Phi(RenameProperty(l_c, l_o, l_n, s)) = database(s) \bullet alterColumn(l_c, l_o, l_n) \\\\
-renProp : Label \times Label \times Label \times Application \rightarrow Application \\
-	renProp(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n}{\begin{gathered}
-p.name = l_n 
-\end{gathered}}\\\\
+\end{align*}
+
+\begin{align*}
 alterColumn : Label \times Label \times Label \times Database \rightarrow Database \\
 	alterColumn(l_c, l_o, l_n, d) = \begin{cases}
  \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_o \\ \wedge \forall e \in columns(t) : name(e) \neq l_n}{\begin{gathered}
@@ -683,9 +739,6 @@ RenameAssociation : Label \times Label \times Label \times State \rightarrow Sta
   \inference{\mathbf{TODO}}{database(s) \bullet alterColumn(l_c, l_o, l_n)}
  \end{cases}
 \\\\
-renAssoc(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists b \in associations(c) : name(b) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n}{\begin{gathered}
-b.name = l_n 
-\end{gathered}}\\\\
 alterColumn : Label \times Label \times Label \times Database \rightarrow Database \\
 %	alterAssoc(l_c, l_o, l_n, d) = \begin{cases}
 %?? \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists f \in fks(t) : name(c) = l_o \\ \wedge \forall e \in fks(t) : name(e) \neq l_n}{\begin{gathered}
@@ -707,7 +760,7 @@ All transformations described earlier does change mostly the structure of a appl
 The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, where the $copyData$ transformation is used.
 \begin{align*}
 	\mathbf{CopyProperty} : Label \times Label \times Label \times (Instance \times Instance) \times State \rightarrow State \\
-	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = application(s) \circ copyProp(l_s,l_t, l_p) \\
+	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} \\
 	\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = \begin{cases}
 		\inference{\mathbf{TODO}}{\begin{gathered}
 			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, f_m) 
