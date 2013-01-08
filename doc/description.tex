@@ -299,67 +299,7 @@ The $refCol$ is a name of a column, a foreign key or its primary key and $value$
  	false
  \end{cases}\end{align*}
  
-\subsection{Transformations for Manipulating a Database}
-The database is composed from two separated parts - database schema and data. Several transformation are defined to make manipulating a database easily in this paper.
 
-\begin{align*}
-	\mathbf{addColumn} : Label \times Column* \times Database \rightarrow Database \\ 	
-	addColum(l, c, d) = \begin{cases}
-		\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)} \\ \\
-		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c)}{columns(t) \cup c}\\ \\
-		Inconsistent \;d 
-	 \end{cases}\\ 
-	 l \in Label, c = Column*, d = Database
-\end{align*}
-
-\begin{align*}
-	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
-	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c }
-	\end{cases} \\
-	l_s,l_t,l_c \in Label, d = Database
-\end{align*}
-
-\begin{align*}
-	\mathbf{addTable} : Table* \times Database \rightarrow Database \\ 
-	addTable(t, d) = \begin{cases}
-		\inference{|t| > 1}{addTable(head(t),d) \bullet addTable(tail(t), d)}
-\\ \\	
-		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e)}{tables(d) \cup c}
-\\ \\
-		Inconsistent \;d 
-	 \end{cases}\\ 
-	t = Table*,  d = Database
-\end{align*}
-
-\begin{align*}
-	\mathbf{insertRow} : Row* \times Database \rightarrow Database \\
-	insertRow(r, d) = \begin{cases}
-			\inference{|r|>1}{insertRow(head(r), d) \bullet insertRow(tail(r), d)} \\ \\
-		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) }{data(d) \cup r} \\ \\
-			 Inconsistent \; d
-		 \end{cases}	\\
-		 r = Row*, d = Database
-\end{align*}
-
-\begin{align*}
-	\mathbf{appendValues} : Label \times Pair* \times Database \rightarrow Daatabase \\
-	appendValues(l, p, d) = \begin{cases}
- 		\inference{|p| > 1}{appendValues(l, head(p), d)\bullet appendValues(l, tail(p), d)}  \\ \\
- 		\inference{|p| = 1 \wedge \forall e \in pairs(r_t) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r_t), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
-	 	 Inconsistent \; d
- 		\end{cases} \\
-l \in Label, p = Pair*, d = Databases
-\end{align*}
-
-\begin{align*}
-	\mathbf{copyValue} : Label \times Label \times Label \times (Instancece \times Instance) \times Database \times Database \\
-	copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
- 		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc} }{\begin{gathered}
-			\forall p \in f_m(t_s, t_t)  : \\ appendValues(name(second(p)), \\ [l_{tc},value(pairByRef(l_{sc}, first(p))),d)
-		\end{gathered}}
- 	\end{cases}
-\end{align*}
 
 
 
@@ -558,6 +498,68 @@ A association is mapped into database as a foreign key in table representing ass
 	\end{gathered}}
 \end{align*}
 
+\subsection{Database Transformation}
+The database is composed from two separated parts - database schema and data. Several transformation are defined to make manipulating a database easily in this paper.
+\paragraph{Add Column}
+\begin{align*}
+	\mathbf{addColumn} : Label \times Column* \times Database \rightarrow Database \\ 	
+	addColum(l, c, d) = \begin{cases}
+		\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)} \\ \\
+		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c)}{columns(t) \cup c}\\ \\
+		Inconsistent \;d 
+	 \end{cases}\\ 
+	 l \in Label, c = Column*, d = Database
+\end{align*}
+\paragraph{COPY COLUMN}
+\begin{align*}
+	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
+	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c }
+	\end{cases} \\
+	l_s,l_t,l_c \in Label, d = Database
+\end{align*}
+\paragraph{Add Table}
+\begin{align*}
+	\mathbf{addTable} : Table* \times Database \rightarrow Database \\ 
+	addTable(t, d) = \begin{cases}
+		\inference{|t| > 1}{addTable(head(t),d) \bullet addTable(tail(t), d)}
+\\ \\	
+		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e)}{tables(d) \cup c}
+\\ \\
+		Inconsistent \;d 
+	 \end{cases}\\ 
+	t = Table*,  d = Database
+\end{align*}
+\paragraph{Insert row}
+\begin{align*}
+	\mathbf{insertRow} : Row* \times Database \rightarrow Database \\
+	insertRow(r, d) = \begin{cases}
+			\inference{|r|>1}{insertRow(head(r), d) \bullet insertRow(tail(r), d)} \\ \\
+		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) }{data(d) \cup r} \\ \\
+			 Inconsistent \; d
+		 \end{cases}	\\
+		 r = Row*, d = Database
+\end{align*}
+\paragraph{Insert Values}
+\begin{align*}
+	\mathbf{appendValues} : Label \times Pair* \times Database \rightarrow Daatabase \\
+	appendValues(l, p, d) = \begin{cases}
+ 		\inference{|p| > 1}{appendValues(l, head(p), d)\bullet appendValues(l, tail(p), d)}  \\ \\
+ 		\inference{|p| = 1 \wedge \forall e \in pairs(r_t) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r_t), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
+	 	 Inconsistent \; d
+ 		\end{cases} \\
+l \in Label, p = Pair*, d = Databases
+\end{align*}
+\paragraph{COPY VALUES}
+\begin{align*}
+	\mathbf{copyValue} : Label \times Label \times Label \times (Instancece \times Instance) \times Database \times Database \\
+	copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
+ 		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc} }{\begin{gathered}
+			\forall p \in f_m(t_s, t_t)  : \\ appendValues(name(second(p)), \\ [l_{tc},value(pairByRef(l_{sc}, first(p))),d)
+		\end{gathered}}
+ 	\end{cases}
+\end{align*}
+
 
 
 \section{Evolutionaty Transformations}
@@ -571,7 +573,6 @@ operation(parameters, context) = \begin{cases}
  \end{cases}
 \end{align*}
 The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. We will not state this implicit assumption in the operations definitions to increase theirs readability.
-
 
 
 \subsection{Software Creation}
