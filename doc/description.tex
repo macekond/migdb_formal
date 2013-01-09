@@ -48,7 +48,7 @@ A software implemented in an object-oriented language, which uses relational dat
 \end{align*}
 The software definition above introduce the first type used in this paper. The notation $a \lhd Application$ indicates the variable $a$ has the type $Application$.
 
-The software has to be in consistent state so it is beneficial for its user. The state of the software is defined to communicate the sate of the software to its user:
+The software has to be in consistent state so its users could have benefit from its useage. The state of the software is defined to communicate the sate of the software to its user:
 \begin{align*}
  	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s, \\\\
 	\mathbf{state} : Software \rightarrow State \\
@@ -112,8 +112,7 @@ The definitions of all parts assume a set $Label$ exist which contains all possi
 \label{sec:appModel}
 The application model represents a persistent layer of an application created using object oriented language and transformations which can alter the model. 
 \subsubsection{Application Structure}
-Each instance is defined according to a class - the class defines the structure of its instances and relationships between them an the rest of the application. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. Besides the structure definition, there is defined a set of functions, which allows to manipulate the application model easily. 
-
+Each instance in an application is defined according to some class - the class defines the structure of its instances and relationships between them an the rest of the application. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
 \begin{align*}
   \mathbf{Application} = < Class* > \\ 
   \mathbf{app} : Class* \rightarrow  Application \\ \\
@@ -124,29 +123,30 @@ Each instance is defined according to a class - the class defines the structure 
   l \in Label,a \lhd Applications, cs = Class* 
 \end{align*}
 
-
-\paragraph{Class} represents a basic structural concept in the application model. It has a unique name, one or more properties and a class can be associated to other classes in the application. 
+\paragraph{Class} Class represents a basic structural unit in the application model. It has a unique name, one or more properties and it can be associated to other classes in the application. 
 \begin{align*}
 	\mathbf{Class} = <label, Property*, Association*> \\
 	\mathbf{cl} : Label \times Property* \times Association* \rightarrow Class \\\\
-% TODO association has to be only to self (all associated has to exists)
 	\mathbf{name} : Class \rightarrow Label \\
 	name(cl(l, props, assocs)) = l \\ \\
 	\mathbf{properties} : Class \rightarrow Property* \\
 	properties(cl(l, props, assocs)) = props \\ \\
-	\mathbf{primitiveProperties} : Class \rightarrow Property* \\	primitiveProperties(cl(l, props, assocs)) = props', \\ props' \subset props,  \forall p \in props' : cardinality(p) \leq 1 \\ \\
-	\mathbf{collectionProperties} : Class \rightarrow Property* \\	collectionProperties(cl(l, props, assocs)) = props', \\ props' \subset props, \forall p \in props' : cardinality(p) > 1 \\ \\
 	\mathbf{associations} : Class \rightarrow Association* \\	associations(cl(l, props, assocs)) = assocs \\ \\
+\end{align*}
+Three more function are defined to obtain information about a class - $primitives$ returns all properties of the class which represent a single value, whereas $collections$ returns all properties representing collections. The last one $associated$ determine if a class is associated by any other class in an application.
+\begin{align*}
+	\mathbf{primitives} : Class \rightarrow Property* \\	primitives(cl(l, props, assocs)) = props', \\ props' \subset props,  \forall p \in props' : cardinality(p) \leq 1 \\ \\
+	\mathbf{collections} : Class \rightarrow Property* \\	collections(cl(l, props, assocs)) = props', \\ props' \subset props, \forall p \in props' : cardinality(p) > 1 \\ \\
 	\mathbf{associated} :  Label \times Application \rightarrow Boolean \\
   	associated(l,a) = \begin{cases}
-  		\inference{\exists c \in classes(a) \wedge \exists e \in associations(c) : reference(e) = l
-  	}{ true } \\
+  		\inference{\exists c \in classes(a) \wedge \exists e \in associations(c) : \\ reference(e) = l
+  	}{ true } \\\\
  		false
  	\end{cases} \\ \\
 	l \in Label, props = Property*, assocs = Association*,a \lhd Applications
 \end{align*}
 	 
-\paragraph{Property} represents a feature of  a class which is represented as a primitive type. The property can be mandatory, can have a default value and can represent a single value or a collection of values.
+\paragraph{Property} Property represents a feature of a class which is represented as a primitive type. The property can be mandatory, can have a default value and according to its cardinality it can represent a single value or a collection of values. The $owningClass$ function returns the class in the model which owns the property.
 \begin{align*}
 	\mathbf{Property} = <label, AppType, DefaultValue, Cardinality, Mandatory> \\ \\
 	\mathbf{prop} : Label \times AppType \times String \times \mathbb{N^{*}} \times Boolean \rightarrow Property \\ \\
@@ -163,10 +163,10 @@ Each instance is defined according to a class - the class defines the structure 
 	l \in Label, t \lhd AppType, val \in Values, n \in \mathbb{N^{*}}, m \in Boolean 
 \end{align*}
 
-\paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of the association ends.
+\paragraph {Association} Assoctation represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of the association ends.
 \begin{align*}
 	\mathbf{Association} = <label, classRef, startCardinality, endCardinality> \\ \\
-	\mathbf{assoc} : Label \times Label \times \mathbb{N} \times \mathbb{N} \rightarrow Association\\
+	\mathbf{assoc} : Label \times Label \times \mathbb{N} \times \mathbb{N} \rightarrow Association\\ \\
 	\mathbf{name} : Association \rightarrow Label \\
 	name(assoc(l, ref, n_1, n_2)) = l\\ \\
 	\mathbf{reference} : Association \rightarrow Label \\
@@ -183,7 +183,7 @@ Each instance is defined according to a class - the class defines the structure 
 
 %TODO: variable types
 
-\paragraph{AppType} represents primitive types in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called APP-STRING.
+\paragraph{Application type} Application type ($AppType$) represents primitive type in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called $APPSTRING$.
 \begin{align*}
 \mathbf{AppType} = APPSTRING
 \end{align*}
@@ -193,20 +193,14 @@ Each instance is defined according to a class - the class defines the structure 
 \label{sec:dbModel}
 The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is:
 \begin{align*}
-	\mathbf{Database} = <table*, row*> \\ \\
+	\mathbf{Database} = < Table*, Row*> \\ \\
 	\mathbf{db} : Tables \times Rows \rightarrow Database \\ \\
 	\mathbf{tables} : Database \rightarrow Tables \\
 	tables(db(tabs, rs)) = tabs \\ \\
 	\mathbf{rows} : Database \rightarrow Rows \\
 	rows(db(tabs, rs)) = rs \\ \\
-	\mathbf{table} : Label \times Database \rightarrow Table  \\
-	table(l, d) = t, t \in tables(d) \wedge name(t) = l \\ \\
 	tabs = Table*, rs = Row*, l \in Label,d \lhd Database
 \end{align*}
-
-
-\subsubsection{Database Schema Model}
-The database schema model is defined by following concepts:
 \paragraph{Table} represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
 \begin{align*}
 	\mathbf{Table} = <label, primaryKey, Column*, ForeignKey*>\\ \\
@@ -220,6 +214,13 @@ The database schema model is defined by following concepts:
 	\mathbf{foreignKeys} : Table \rightarrow ForeignKeys  \\
 	foreignKeys(tab(l, pk, cols, fks)) = fks \\ \\
 l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
+\end{align*}
+
+The function $findTable$ finds and returns a table in the database according to the provided label.
+\begin{align*}
+	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
+	findTable(l, d) = \inference{\exists t \in tables(d) \wedge name(t) = l}{t}  \\ \\
+	l \in Label, d \lhd Database
 \end{align*}
 
 \paragraph{Column} columns define possible data values and types which can be part of a table record.
@@ -237,7 +238,7 @@ l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
 l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Column,d \lhd Database
 \end{align*}
 
-\paragraph{Foreign key}
+\paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
 \begin{align*}
 	\mathbf{ForeignKey} = <label, tableRef, Constraint*> \\ \\
 	\mathbf{fk} : Label \times Label \times Constraints \rightarrow ForeignKey \\ \\
@@ -253,26 +254,25 @@ l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Colu
 \end{align*}
 
 
-\paragraph{Primary key}
+\paragraph{Primary key} Primary key is unambiguous identifier of a record in a table. The primary key is always provided by the database as a non-zero natural number. Primary key is always defined with constraints $NOTNULL$ and $UNIQUE$. 
 \begin{align*}
 	\mathbf{PrimaryKey} =  < label > 	\\
 	\mathbf{pk} : Label \rightarrow PrimaryKey
 \end{align*}
 
-\paragraph{DbType} represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There are only two types defined in the model $DBSTRING$ as a default type of values in columns and $DBINT$ as a default type for keys.
+\paragraph{Data Types} Database data types $DbType$ represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There is only one type defined in the model $DBSTRING$ as a default type of values in columns.
 \begin{align*}
-	\mathbf{DbType} = DBSTRING \; | \; DBINT 
+	\mathbf{DbType} = DBSTRING
 \end{align*}
 
-\paragraph{Constraint} there are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+\paragraph{Constraints} There are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
 \begin{align*}
 	\mathbf{Constraint} = NOTNULL \; | \; UNIQUE 
 \end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Model of Stored Data}
-A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of reference to a concrete table and a set of value pairs, which represents concrete values of concrete columns.
+\paragraph{Stored Data} A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete values of concrete columns. Each row contains a name of a table it belongs to.
 \begin{align*}
 	\mathbf{Row} = < refTable, pair* > \\
 	\mathbf{row} : Label \times Pairs \rightarrow Row \\ \\
@@ -297,7 +297,7 @@ The value stored in concrete column of the row is represented by pair, where the
 	value([l,val]) = val \\ \\
 	l \in Label, val \in Value
 \end{align*}
-There functions $contains$ verify if the table contains data in context of concrete database.
+The definition of data allows definition of function $contains$ which verify if the table contains data in context of concrete database and $instantiated$, which search for instances of a class with given name and returns true if there are rows for the table in the database.
 \begin{align*}
 	\mathbf{contains} : Table \times Database \rightarrow Boolean \\
 	contains(t, d) = \begin{cases}
@@ -306,6 +306,15 @@ There functions $contains$ verify if the table contains data in context of concr
  		\end{cases} \\ \\
  l \in Label, ps = Pair*, t \in tables(d), d \lhd Database
 \end{align*}
+\begin{align*}
+	\mathbf{instantiated} : Class \times Software \rightarrow Boolean \\
+	instantiated(c, s) = \begin{cases} \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
+  false
+ \end{cases} \\ \\
+	 c \in classes(application(s)), s \lhd Software 
+\end{align*}
+
+\subsubsection{Database consistency}
 Each row in a database has to refer to a table in database schema and has a structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
 	\mathbf{consistent} : Database \rightarrow Boolean \\
 	consistent(d) = \begin{cases}
@@ -314,24 +323,6 @@ Each row in a database has to refer to a table in database schema and has a stru
  	false
  \end{cases}\end{align*}
  
-
-
-
-
-
-\subsection{Extension of Software Definition}
-The database stores instances of the application, thus the $instantiated$ function has to be defined:
-
-$$instantiated : Class \times Software \rightarrow Boolean $$ 
-\begin{equation*}
-\begin{gathered}
-	instantiated(c, s) = \begin{cases}
- \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
-  \inference{otherwise}{false} \\ \\
- \end{cases} \\ \\
- c \in classes(application(s)), s \in Software 
-\end{gathered}
-\end{equation*}
 
 \subsection{Object-Relational Mapping}
 \label{sec:orm}
@@ -647,7 +638,7 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 \begin{align*}
 \mathbf{newClass} : Class \times State \rightarrow State \\
 \Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
-\Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d), d) \\ \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, d) \\ \bullet addTable(name(c), \{\forall r \in collectionProperties(c) | \rho(r,d)\}, d)  
+\Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d), d) \\ \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, d) \\ \bullet addTable(name(c), \{\forall r \in collections(c) | \rho(r,d)\}, d)  
 \end{align*}
 
 \paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
@@ -658,7 +649,7 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 %	assocaiations(c) = \varnothing
 %}{
 %\begin{gathered}
-% addTable(\rho(c, d),d) \\ \wedge t \rho(singleProperties(c)) \wedge \rho(collectionProperties(c)) \\ 
+% addTable(\rho(c, d),d) \\ \wedge t \rho(singleProperties(c)) \wedge \rho(collections(c)) \\ 
 %\end{gathered}
 %}
 %\end{align*}
