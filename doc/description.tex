@@ -326,36 +326,15 @@ Each row in a database has to refer to a table in database schema and has a stru
 
 \subsection{Object-Relational Mapping}
 \label{sec:orm}
-There are defined functions for object-relational mapping used in the model in this section. The purpose of a function is indicated by its name and should be obvious from its definition. These functions do not serve for full object-relational mapping, their purpose is to help with data evolution (see Section \ref{sec:eorm}) and its propagation from application to database. However the database can be obtained from an application model by using following algorithm:
+There are defined functions for object-relational mapping used in this paper. The mapping function itself are not able to create a database from the application as they are mentioned to be used together with evolutionary transformations introduced in section \ref{sec:transformations}.
 
-\begin{algorithmic}[1]
-	\Require $a \in Application$
-	\State $d \lhd Database$
-	\ForAll{$c \in classes(a)$} 
-		\State $\rho_c(c), d$
-		\ForAll{$p \in properties(c)$} 
-			\State $\rho_p(p, d)$
-		\EndFor
-	 \EndFor
-	\ForAll{$c \in classes(a)$}
-		\ForAll{$as \in associations(c)$} 
-			\State $\rho_{a}(as, d)$
-		\EndFor
-	\EndFor
-\end{algorithmic}
-
-
-\subsubsection{Mapping of Types}
-The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore we simplify types and its mapping.
+\paragraph{Mapping of Types} The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore there is only one type in both our models. The mapping is then streightforward:
 \begin{align*}
 	\mathbf{\rho_{t}} : AppType \rightarrow DbType  \\
  	\rho_{t}(APPSTRING) = DBSTRING 
 \end{align*}
 
-
-\subsection{Mapping of Classes}
-We assume the primary key column is created automatically by database, therefore the primary key is always created with name Id and of the $\mathbb{N^{*}}$ type and properties with cardinality 0 or 1 are mapped into columns. The associations are ignored int this mapping as it is one of the partial mapping function used in eORM.
-
+\paragraph{Mapping of Classes} The class is mapped into an table with  automatically created primary key. The primary key is always created with name Id and of the $\mathbb{N^{*}}$ type. The properties and associations are mapped separately.
 \begin{align*}
 	\mathbf{\rho_{c}} : Class*  \rightarrow Table* \\
 	\rho_{c}(c) = \begin{cases}
@@ -367,8 +346,7 @@ We assume the primary key column is created automatically by database, therefore
 \end{align*}
 
 \subsubsection{Mapping of Properties}
-There are two types of properties - the first type has cardinality 1  and it is mapped to a column. A property with cardinality greater than one has to be mapped int a table not a column, thus we have a special mapping case. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. This constraint affect already stored instances a new mandatory value has to be added to each instance.
-
+There are two kinds of properties - the first kind has cardinality equal to one and it is mapped to a column; second kind - a property with cardinality greater than one has to be mapped to a table, thus there are two mapping cases. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. 
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Column* \\ \\
 	\rho_{sp}(p) = \begin{cases}
@@ -407,9 +385,7 @@ There are two types of properties - the first type has cardinality 1  and it is 
  	p \lhd Property
 \end{align*}
 
-\subsubsection{Mapping of Associations}
-A association is mapped into database as a foreign key in table representing associating class or an association can be mapped as a coupling table in case the association cardinality is M:N or 1:N.
-
+\paragraph{Mapping of Associations} An association is mapped into database as a foreign key in table representing associating class or as a table in case the association cardinality is one to many or many to many.
 \begin{align*}
 	\mathbf{\rho_a} : Association* \rightarrow ForeignKey* \\
 	\rho_a(a) = \begin{cases}
@@ -440,8 +416,10 @@ A association is mapped into database as a foreign key in table representing ass
 	 a \lhd Association
 \end{align*}
 
-\section{Model Manipulating Transformation}
+\section{Transformation for Models Manipulation}
+The evolution affects both parts of software and as shown in section \ref{sec:evoIntro} it is mapped to transformation specific for application (set $AppOps$ of transformations) and database (set $DbOps$). These sets are defined in this section.
 \subsection{Application Transformation}
+This section provide transformations for manipulating the application layer of a software - the $AppOps$ set. The set contains transformations for model creation, alternation and decomposition.
 \paragraph{Add Property}Adding a property into an application structure has to verify a name collision only:
 \begin{align*}
  	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
