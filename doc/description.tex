@@ -117,9 +117,7 @@ Each instance is defined according to a class - the class defines the structure 
   classes(app(cs)) = cs  \\\\
   \mathbf{class} : Label \times Application \rightarrow Class   \\ 
   class(l, a) = c, c \in classes(a) \wedge name(c) = l \\ \\
-  l \in Label, a = Application, cs \in Class* 
-  \\ \\
-  \mathbf{associated} :  Label \times Application \rightarrow Boolean \\
+  l \in Label, a = Application, cs = Class* 
 \end{align*}
 
 
@@ -135,12 +133,15 @@ Each instance is defined according to a class - the class defines the structure 
 	\mathbf{primitiveProperties} : Class \rightarrow Property* \\	primitiveProperties(cl(l, props, assocs)) = props', \\ props' \subset props,  \forall p \in props' : cardinality(p) \leq 1 \\ \\
 	\mathbf{collectionProperties} : Class \rightarrow Property* \\	collectionProperties(cl(l, props, assocs)) = props', \\ props' \subset props, \forall p \in props' : cardinality(p) > 1 \\ \\
 	\mathbf{associations} : Class \rightarrow Association* \\	associations(cl(l, props, assocs)) = assocs \\ \\
-l \in Label, props \in Properties, assocs \in Associations
+	\mathbf{associated} :  Label \times Application \rightarrow Boolean \\
+  	associated(l,a) = \begin{cases}
+  		\inference{\exists c \in classes(a) \wedge \exists e \in associations(c) : reference(e) = l
+  	}{ true } \\
+ 		false
+ 	\end{cases} \\ \\
+	l \in Label, props = Property*, assocs = Association*, a = Application
 \end{align*}
-
-
 	 
-
 \paragraph{Property} represents a feature of  a class which is represented as a primitive type. The property can be mandatory, can have a default value and can represent a single value or a collection of values.
 \begin{align*}
 	\mathbf{Property} = <label, AppType, DefaultValue, Cardinality, Mandatory> \\ \\
@@ -153,11 +154,8 @@ l \in Label, props \in Properties, assocs \in Associations
 	cardinality(prop(l, t, val, n, m)) = n \\ \\
 	\mathbf{mandatory} : Property \rightarrow Boolean \\
 	mandatory(prop(l, t, val, n, m)) = m  \\ \\
-l \in Label, t \in AppType, val \in String*, n \in \mathbb{N^{*}}, m \in Boolean
+	l \in Label, t \in AppType, val \in String*, n \in \mathbb{N^{*}}, m \in Boolean 
 \end{align*}
-
-
-%TODO: variable types
 
 \paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of the association ends.
 \begin{align*}
