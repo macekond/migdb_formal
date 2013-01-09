@@ -420,37 +420,41 @@ There are two kinds of properties - the first kind has cardinality equal to one 
 The evolution affects both parts of software and as shown in section \ref{sec:evoIntro} it is mapped to transformation specific for application (set $AppOps$ of transformations) and database (set $DbOps$). These sets are defined in this section.
 \subsection{Application Transformation}
 This section provide transformations for manipulating the application layer of a software - the $AppOps$ set. The set contains transformations for model creation, alternation and decomposition.
-\paragraph{Add Property}Adding a property into an application structure has to verify a name collision only:
+
+\paragraph{Add Property}Before adding a property into an application structure, the name collision only has to be verified:
 \begin{align*}
  	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
 	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
 	l \in Label, p \lhd Property, a \lhd Applications
 \end{align*}
-\paragraph{Add Association} Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the model.
+
+\paragraph{Add Association} Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the application model.
 \begin{align*}
 	\mathbf{addAssoc} : Label \times Association \times Application \rightarrow Application \\
 	addAssoc(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
 	l \in Labels, s \in Associations, a \lhd Applications
 \end{align*}
+
 \paragraph{Add Class} Adding a class is limited to the case when the class has no associations, this is because it simplifies the database migration and because it is a natural way of modeling. Next the transformation $addClass$ has to verify there is no name collision
 \begin{align*}
 	\mathbf{addClass} : Class \times Application \rightarrow Application \\ 
 	addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c) \\ \wedge associations(c) = \varnothing }{classes(a) \cup c} \\ \\
 	c \lhd Class, a \lhd Applications
 \end{align*}
-\paragraph{Remove Property}
+
+\paragraph{Remove Property or Association} The property or association can be simply removed from a class:
 \begin{align*}
  	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
  	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
 	}{properties(c) \setminus p }\\
 	l_c, l_p \in Label, a \lhd Applications 
 \end{align*}
-\paragraph{Remove Association}
 \begin{align*}
 	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
 	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
 	l_c, l_a \in Labels, a \lhd Applications
 \end{align*}
+
 \paragraph{Remove Class} The class can be removed only in case it is not referenced by any association existing in the application.
 \begin{align*}
 	\mathbf{remClass} : Label \times Application \rightarrow Application \\
@@ -458,7 +462,8 @@ This section provide transformations for manipulating the application layer of a
 	} {classes(a) \setminus c }\\
 	l \in Label,a \lhd Applications
 \end{align*}
-\paragraph{Rename Property}
+
+\paragraph{Rename Property and Association} Both renaming operations can change a name of the property, association respectively if there are no name collisions:
 \begin{align*}
 	\mathbf{renProp} : Label \times Label \times Label \times Application \rightarrow Application \\
 	renProp(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n
@@ -466,7 +471,6 @@ This section provide transformations for manipulating the application layer of a
 		p.name = l_n 
 	\end{gathered}}
 \end{align*}
-\paragraph{Rename Association}
 \begin{align*}
 	\mathbf{renAssoc} : Label \times Label \times Label \times Application \rightarrow Application \\
 	renAssoc(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists b \in associations(c) : name(b) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n
@@ -474,12 +478,13 @@ This section provide transformations for manipulating the application layer of a
 		b.name = l_n 
 	\end{gathered}}
 \end{align*}
-\paragraph{Rename Class}
+
+\paragraph{Rename Class} When a class is renamed, the name collisions has to be verified and then all referencing associations has to be updated.
 \begin{align*}
 	\mathbf{renClass} :  Label \times Label \times Application \rightarrow Application \\
 	renClass(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_o \\ \wedge \forall e \in classes(a) : name(e) \neq l_n
 	}{\begin{gathered}
-		c.name = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
+		c.name = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e) \wedge reference(f) = l_o ) :\\ f.reference = l_n 
 	\end{gathered}}
 \end{align*}
 
