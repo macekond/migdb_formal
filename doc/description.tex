@@ -770,18 +770,18 @@ All transformations described earlier does change mostly the structure of a appl
 The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, where the $copyData$ transformation is used.
 \begin{align*}
 	\mathbf{CopyProperty} : Label \times Label \times Label \times (Instance \times Instance) \times State \rightarrow State \\
-	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} \\
+	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} \\\\
 	\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = \begin{cases}
-		\inference{\mathbf{TODO}}{\begin{gathered}
+		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
 			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, f_m) 
 			\end{gathered}} \\ \\
-		\inference{\mathbf{TODO}}{\begin{gathered}
+		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
 			database(s) \bullet copyTable(l_s, l_t, l_p) \\ \bullet copyRows(l_s, l_t, l_p, f_m) 
 			\end{gathered}}
  \end{cases}
 \end{align*}
 
-With a copy property transformation defined we are able to define advanced evolution scenarios.
+With the copy property transformation defined we are able to define advanced evolution scenarios.
 
 \paragraph{Change Cardinality}
 $$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
