@@ -36,25 +36,27 @@ The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of 
 	\caption{The model of one generation of an ORM system consists of application persistent layer and relational database for storing instances.}
 \label{fig:appStructure}
 \end{figure}
-A software implemented in an object-oriented language, which uses relational database as a data storage is context of this paper. The situation is illustrated in the Figure \ref{fig:appStructure}. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software a triple:
+A software implemented in an object-oriented language, which uses relational database as a data storage is context of this paper. The situation is illustrated in the Figure \ref{fig:appStructure}. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software as a triple:
 \begin{align*}
-	software = < Application, Database, \rho > \\
+	\mathbf{software} = < Application, Database, \rho > \\
 	sw : Applications \times Databases \times ORM \rightarrow Software \\ \\
-	application : Software \rightarrow Application \\
+	\mathbf{application} : Software \rightarrow Application \\
 	application(sw(a, d, \rho)) = a \\ \\
-	database : Software \rightarrow Database \\
+	\mathbf{database} : Software \rightarrow Database \\
 	database(sw(a, d, \rho)) = d \\
-	a \in Applications, d \in Databases
+	a \lhd Application, d \lhd Database
 \end{align*}
+The software definition above introduce the first type used in this paper. The notation $a \lhd Application$ indicates the variable $a$ has the type $Application$.
+
 The software has to be in consistent state so it is beneficial for its user. The state of the software is defined to communicate the sate of the software to its user:
 \begin{align*}
-	state = Consistent\; s \: | \: Inconsistent \; s, \\
-	s \in Softwares  \\ \\
-	state : Software \rightarrow State \\
+ 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s, \\\\
+	\mathbf{state} : Software \rightarrow State \\
 	state(s) = \begin{cases}
- 		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
+ 		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \\ \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
  		\inference{otherwise}{Inconsistent \; s}
- 	\end{cases}
+ 	\end{cases} \\ \\
+ 	s \lhd Software  
 \end{align*}
 \subsection{Software Evolution}
 \begin{figure}
@@ -84,25 +86,27 @@ The definition of the evolving operator is inspired by the monads (as used e.g. 
  	\inference{u = Inconsistent \; s}{u} \\ \\
  	\inference{u = Consistent \; s}{state(sw(\Psi(u, t), \Phi(u,t))} 
 \end{cases}\\ 
-u \in States, t \in E, s \in Softwares
+u \lhd State, t \in E, s \lhd Software
 \end{align*}
 \begin{align*}
  a \circ o = \begin{cases}
  	\inference{!\;consistent(a)}{a} \\ \\
  	\inference{consistent(a)}{a \circ o} 
 \end{cases}\\ 
-a \in Applications, o \in AppOps
+a \lhd Application, o \in AppOps
 \end{align*}
 \begin{align*}
  d \bullet o = \begin{cases}
  	\inference{!\;consistent(d)}{d} \\ \\
  	\inference{consistent(d)}{d \circ o} 
 \end{cases}\\ 
-d \in Applications, o \in DbOps
+d \lhd Application, o \in DbOps
 \end{align*}
 
 \section{Software Model}
-The model of an ORM software consists of three parts - an application model, a database model and a ORM. The definitions of all parts assume a set $Label$ exist which contains all possible identifiers and each modeled entity is identified unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. 
+The model of an ORM software consists of three parts - an application model, a database model and a ORM. The model of application and database creates a type system for both kinds ORM and evolutionary transformations.
+
+The definitions of all parts assume a set $Label$ exist which contains all possible identifiers and each modeled entity is identified unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. 
 
 \subsection{Application Model}
 \label{sec:appModel}
@@ -117,7 +121,7 @@ Each instance is defined according to a class - the class defines the structure 
   classes(app(cs)) = cs  \\\\
   \mathbf{class} : Label \times Application \rightarrow Class   \\ 
   class(l, a) = c, c \in classes(a) \wedge name(c) = l \\ \\
-  l \in Label, a = Application, cs = Class* 
+  l \in Label,a \lhd Applications, cs = Class* 
 \end{align*}
 
 
@@ -139,7 +143,7 @@ Each instance is defined according to a class - the class defines the structure 
   	}{ true } \\
  		false
  	\end{cases} \\ \\
-	l \in Label, props = Property*, assocs = Association*, a = Application
+	l \in Label, props = Property*, assocs = Association*,a \lhd Applications
 \end{align*}
 	 
 \paragraph{Property} represents a feature of  a class which is represented as a primitive type. The property can be mandatory, can have a default value and can represent a single value or a collection of values.
@@ -156,7 +160,7 @@ Each instance is defined according to a class - the class defines the structure 
 	mandatory(prop(l, t, val, n, m)) = m  \\ \\
 	\mathbf{owningClass} : Property \times Application \rightarrow Class  \\ 	
 	owningClass(p, a) = \inference{\exists c \in classes(a) \wedge p \in properties(c)}{c}  \\ \\
-	l \in Label, t \in AppType, val \in String*, n \in \mathbb{N^{*}}, m \in Boolean 
+	l \in Label, t \lhd AppType, val \in Values, n \in \mathbb{N^{*}}, m \in Boolean 
 \end{align*}
 
 \paragraph {Association} represents a connection between two classes. It has a unique name and it contains a name of the class which is referenced by the association. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of the association ends.
@@ -173,7 +177,7 @@ Each instance is defined according to a class - the class defines the structure 
 	endCardinality(assoc(l, ref, n_1, n_2)) = n_2 \\ \\
 	\mathbf{owningClass} : Association \times Application \rightarrow Class  \\
 	owningClass(as, a) = \inference{\exists c \in classes(a) \wedge as \in associations(c)}{c}  \\ \\	
-	l, ref \in Label,  n_1, n_2 \in \mathbb{N}, as = Association
+	l, ref \in Label,  n_1, n_2 \in \mathbb{N}, as \lhd Association
 \end{align*}
 
 
@@ -197,7 +201,7 @@ The relational database consists of database schema which defines the structure 
 	rows(db(tabs, rs)) = rs \\ \\
 	\mathbf{table} : Label \times Database \rightarrow Table  \\
 	table(l, d) = t, t \in tables(d) \wedge name(t) = l \\ \\
-	tabs = Table*, rs = Row*, l \in Label, d = Database
+	tabs = Table*, rs = Row*, l \in Label,d \lhd Database
 \end{align*}
 
 
@@ -215,7 +219,7 @@ The database schema model is defined by following concepts:
 	columns(tab(l, pk, cols, fks)) = cols \\ \\
 	\mathbf{foreignKeys} : Table \rightarrow ForeignKeys  \\
 	foreignKeys(tab(l, pk, cols, fks)) = fks \\ \\
-l \in Label, pk = PrimaryKey, cols = Column*, fks = ForeignKey*
+l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
 \end{align*}
 
 \paragraph{Column} columns define possible data values and types which can be part of a table record.
@@ -230,7 +234,7 @@ l \in Label, pk = PrimaryKey, cols = Column*, fks = ForeignKey*
 	constraints(col(l, t, val, cons)) = cons  \\ \\
 	\mathbf{owningTable} : Column \times Database \rightarrow Table  \\
 	owningTable(c, d) = \inference{\exists tab \in tables(d) \wedge c \in columns(tab)}{tab} \\ \\
-l \in Label, t = DbType, val = String,\\ cons = Constraints, c = Column, d = Database
+l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Column,d \lhd Database
 \end{align*}
 
 \paragraph{Foreign key}
@@ -245,7 +249,7 @@ l \in Label, t = DbType, val = String,\\ cons = Constraints, c = Column, d = Dat
 	constaints(fk(l, tRef, cons)) = cons  \\ \\
 	\mathbf{owningTable} : ForeignKey \times Database \rightarrow Table  \\
 	owningTable(fk, d) = \inference{\exists tab \in tables(d) \wedge fk \in foreignKeys(tab)}{tab}\\\\
-	l, tRef \in Label, cons = Constraint*, d = Database, fk = ForeignKey
+	l, tRef \in Label, cons \lhd Constraint*,d \lhd Database, fk \lhd ForeignKey
 \end{align*}
 
 
@@ -281,7 +285,7 @@ A database consists not only from schema but also from data which are represente
 		\inference{\exists p \in pairs(i) : reference(p) = l}{p} \\ \\
 			\varnothing
 		\end{cases}\\
-	 l \in Label, ps = Pair*, i = Row
+	 l \in Label, ps = Pair*, i \lhd Row
 \end{align*}
 The value stored in concrete column of the row is represented by pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
 \begin{align*}
@@ -300,7 +304,7 @@ There functions $contains$ verify if the table contains data in context of concr
 			\inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
 		 	false
  		\end{cases} \\ \\
- l \in Label, ps = Pair*, t \in tables(d), d \in Database
+ l \in Label, ps = Pair*, t \in tables(d), d \lhd Database
 \end{align*}
 Each row in a database has to refer to a table in database schema and has a structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
 	\mathbf{consistent} : Database \rightarrow Boolean \\
@@ -335,7 +339,7 @@ There are defined functions for object-relational mapping used in the model in t
 
 \begin{algorithmic}[1]
 	\Require $a \in Application$
-	\State d = Database
+	\State $d \lhd Database$
 	\ForAll{$c \in classes(a)$} 
 		\State $\rho_c(c), d$
 		\ForAll{$p \in properties(c)$} 
@@ -368,7 +372,7 @@ We assume the primary key column is created automatically by database, therefore
 		\inference{|c| = 1}{table(name(c), primaryKey("Id"), \varnothing, \varnothing)}  \\ \\
 		\inference{|c| > 1}{\rho_c(head(c)) \cup \rho_c(tail(c))}
  \end{cases}\\
- c = Class
+ c \lhd Class
 \end{align*}
 
 \subsubsection{Mapping of Properties}
@@ -408,7 +412,8 @@ There are two types of properties - the first type has cardinality 1  and it is 
      			table(name(p), primaryKey("Id"), \\ 
      			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
     	 \end{gathered}}
- 	\end{cases}
+ 	\end{cases}\\
+ 	p \lhd Property
 \end{align*}
 
 \subsubsection{Mapping of Associations}
@@ -428,7 +433,8 @@ A association is mapped into database as a foreign key in table representing ass
  	 }{ 
 		foreignKey(name(a), name(t),  NOTNULL)
 	}
-	 \end{cases}
+	 \end{cases}\\
+	 a \lhd Association
 \end{align*}
 \begin{align*} 
 	\mathbf{\rho_a} : Association* \rightarrow Table* \\
@@ -439,7 +445,8 @@ A association is mapped into database as a foreign key in table representing ass
   		}{\begin{gathered}  
 		 table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
- 	\end{cases}
+ 	\end{cases}\\
+	 a \lhd Association
 \end{align*}
 
 \section{Model Manipulating Transformation}
@@ -448,39 +455,39 @@ A association is mapped into database as a foreign key in table representing ass
 \begin{align*}
  	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
 	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
-	l \in Label, p \in Properties, a \in Applications
+	l \in Label, p \lhd Property, a \lhd Applications
 \end{align*}
 \paragraph{Add Association} Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the model.
 \begin{align*}
 	\mathbf{addAssoc} : Label \times Association \times Application \rightarrow Application \\
 	addAssoc(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
-	l \in Labels, s \in Associations, a \in Applications
+	l \in Labels, s \in Associations, a \lhd Applications
 \end{align*}
 \paragraph{Add Class} Adding a class is limited to the case when the class has no associations, this is because it simplifies the database migration and because it is a natural way of modeling. Next the transformation $addClass$ has to verify there is no name collision
 \begin{align*}
 	\mathbf{addClass} : Class \times Application \rightarrow Application \\ 
 	addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c) \\ \wedge associations(c) = \varnothing }{classes(a) \cup c} \\ \\
-	c \in Classes, a \in Applications
+	c \lhd Class, a \lhd Applications
 \end{align*}
 \paragraph{Remove Property}
 \begin{align*}
  	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
  	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
 	}{properties(c) \setminus p }\\
-	l_c, l_p \in Label, a \in Applications 
+	l_c, l_p \in Label, a \lhd Applications 
 \end{align*}
 \paragraph{Remove Association}
 \begin{align*}
 	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
 	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
-	l_c, l_a \in Labels, a \in Applications
+	l_c, l_a \in Labels, a \lhd Applications
 \end{align*}
 \paragraph{Remove Class} The class can be removed only in case it is not referenced by any association existing in the application.
 \begin{align*}
 	\mathbf{remClass} : Label \times Application \rightarrow Application \\
 	remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge !\: associated(c)
 	} {classes(a) \setminus c }\\
-	l \in Label, a = Application
+	l \in Label,a \lhd Applications
 \end{align*}
 \paragraph{Rename Property}
 \begin{align*}
@@ -517,7 +524,7 @@ The database is composed from two separated parts - database schema and data. Se
 		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c)}{columns(t) \cup c}\\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
-	 l \in Label, c = Column*, d = Database
+	 l \in Label, c \lhd Column*,d \lhd Database
 \end{align*}
 \paragraph{COPY COLUMN}
 \begin{align*}
@@ -525,7 +532,7 @@ The database is composed from two separated parts - database schema and data. Se
 	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
  		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c }
 	\end{cases} \\
-	l_s,l_t,l_c \in Label, d = Database
+	l_s,l_t,l_c \in Label,d \lhd Database
 \end{align*}
 \paragraph{Add Table}
 \begin{align*}
@@ -537,7 +544,7 @@ The database is composed from two separated parts - database schema and data. Se
 \\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
-	t = Table*,  d = Database
+	t = Table*, d \lhd Database
 \end{align*}
 \paragraph{Insert row}
 \begin{align*}
@@ -547,7 +554,7 @@ The database is composed from two separated parts - database schema and data. Se
 		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) }{data(d) \cup r} \\ \\
 			 Inconsistent \; d
 		 \end{cases}	\\
-		 r = Row*, d = Database
+		 r = Row*,d \lhd Database
 \end{align*}
 \paragraph{Insert Values}
 \begin{align*}
@@ -557,7 +564,7 @@ The database is composed from two separated parts - database schema and data. Se
  		\inference{|p| = 1 \wedge \forall e \in pairs(r_t) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r_t), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
 	 	 Inconsistent \; d
  		\end{cases} \\
-l \in Label, p = Pair*, d = Databases
+l \in Label, p = Pair*,d \lhd Databases
 \end{align*}
 \paragraph{COPY VALUES}
 \begin{align*}
@@ -590,7 +597,7 @@ There are defined three transformations which are able to create a software: $ne
 \mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
 \Psi(s, addProperty(l, p)) = application(s) \circ addProp(l,p) \\
 \Phi(s, addProperty(l, p)) = database(s) \bullet insertProp(l, p) \\
-s \in Softwares, l \in Label, p \in Properties
+s \lhd Software, l \in Label, p \in Properties
 \end{align*}
 
 Whereas the $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
@@ -634,7 +641,7 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 \end{gathered}
  } 
  \end{cases}\\
- a \in Associations, d \in Databases
+ a \in Associations, d \lhd Database
 \end{align*}
 
 \begin{align*}
@@ -685,7 +692,7 @@ dropProp(p, d) = \begin{cases}
 RemoveAssociation : Label \times Labels \times State \rightarrow State \\ 
 \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
 \Phi RemoveAssociation(l, l_a, s) = database(s) \bullet dropAssoc(l, l_a) \\
-l_c, l_a \in Labels, a \in Applications
+l_c, l_a \in Labels, a \lhd Applications
 \end{align*}
 \begin{align*}
 dropAssoc(l, l_a, d) =  \begin{cases}
@@ -714,7 +721,7 @@ alterTable:  Label \times Label \times Database \rightarrow Database \\
 alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
 t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
 \end{gathered}}\\
-l_o, l_n \in Label, s \in States, a \in Applications, d \in Databases
+l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
 \end{align*}
 
 \paragraph{Rename Property}
@@ -736,7 +743,7 @@ t.name = l_n
 \end{gathered}}
  \end{cases}
  \\
-l_c, l_o, l_n \in Label, a \in Applications, s \in States, d \in Databases
+l_c, l_o, l_n \in Label, a \lhd Applications, s \in States, d \lhd Database
 \end{align*}
 
 \paragraph{Rename Association}
@@ -760,7 +767,7 @@ alterColumn : Label \times Label \times Label \times Database \rightarrow Databa
 %\end{gathered}}
 % \end{cases}
 % \\
-l_c, l_o, l_n \in Label, a \in Applications, s \in Sates, d \in Databases
+l_c, l_o, l_n \in Label, a \lhd Applications, s \in Sates, d \lhd Database
 \end{align*}
 
 
@@ -809,7 +816,7 @@ $$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarro
 % u, \; u = Inconsistent \; s \\
 % t(u), \; u = Consistent \; s 
 %\end{cases}\\ 
-%u \in States, t \in Transformations, s \in Softwares
+%u \in States, t \in Transformations, s \lhd Software
 %\end{gathered}
 %\end{equation*}
 %
