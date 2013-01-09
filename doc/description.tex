@@ -307,6 +307,16 @@ The definition of data allows definition of function $contains$ which verify if 
  l \in Label, ps = Pair*, t \in tables(d), d \lhd Database
 \end{align*}
 \begin{align*}
+	\mathbf{tableData} : Label \times Row* \rightarrow Row* \\
+	tableData(l, r) = \begin{cases}
+ 		\inference{r = \varnothing}{\varnothing} \\
+ 		\inference{|r| > 1}{tableData(head(r)) \cup tableData(tail(r))}\\ \\
+ 		\inference{|r| = 1 \wedge refTable(r) = l}{r}\\\\
+ 		\inference{|r| = 1 \wedge refTable(r) \neq l}{\varnothing}
+ \end{cases} \\ \\
+	r \in Rows, l \in Label
+\end{align*}
+\begin{align*}
 	\mathbf{instantiated} : Class \times Software \rightarrow Boolean \\
 	instantiated(c, s) = \begin{cases} \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
   false
@@ -489,56 +499,67 @@ This section provide transformations for manipulating the application layer of a
 \end{align*}
 
 \subsection{Database Transformation}
-The database is composed from two separated parts - database schema and data. Several transformation are defined to make manipulating a database easily in this paper.
-\paragraph{Add Column}
+The database is composed from two separated parts - database schema and data. Several transformation are defined to make manipulating a database easily.
+\paragraph{Add Column} A new column can be add into a table if there are no name collisions. If the column has the $NOTNULL$ constraint, then the default value has to be added to all rows in the table.
 \begin{align*}
 	\mathbf{addColumn} : Label \times Column* \times Database \rightarrow Database \\ 	
 	addColum(l, c, d) = \begin{cases}
 		\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)} \\ \\
-		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c)}{columns(t) \cup c}\\ \\
+		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \not \in constraints(c) }{columns(t) \cup c}\\ \\
+		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c}\\ \bullet appendValues(l, [name(c), defVal(c)]) \\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
 	 l \in Label, c \lhd Column*,d \lhd Database
 \end{align*}
-\paragraph{COPY COLUMN}
+
+\paragraph{Copy Column} The transformation creates a copy of a column in a another table in a database. The transformation changes only the structure of database - stored data are not changed.
 \begin{align*}
 	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
 	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c }
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c} 
 	\end{cases} \\
-	l_s,l_t,l_c \in Label,d \lhd Database
+	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \lhd Database
 \end{align*}
-\paragraph{Add Table}
+\paragraph{Add Table} The transformation creates a new table in the database. The new table should not contain any foreign keys.
 \begin{align*}
 	\mathbf{addTable} : Table* \times Database \rightarrow Database \\ 
 	addTable(t, d) = \begin{cases}
 		\inference{|t| > 1}{addTable(head(t),d) \bullet addTable(tail(t), d)}
 \\ \\	
-		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e)}{tables(d) \cup c}
+		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e) \\ \wedge foreignKeys(t) = \varnothing }{tables(d) \cup t}
 \\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
 	t = Table*, d \lhd Database
 \end{align*}
-\paragraph{Insert row}
+\paragraph{Insert row} The function allow to insert a row(s) into a database.
 \begin{align*}
 	\mathbf{insertRow} : Row* \times Database \rightarrow Database \\
 	insertRow(r, d) = \begin{cases}
 			\inference{|r|>1}{insertRow(head(r), d) \bullet insertRow(tail(r), d)} \\ \\
-		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) }{data(d) \cup r} \\ \\
+		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) \\ \wedge \forall e \in tableData(t, d) : pkValue(e) \neq pkValue(r)}{data(d) \cup r} \\ \\
 			 Inconsistent \; d
 		 \end{cases}	\\
 		 r = Row*,d \lhd Database
 \end{align*}
-\paragraph{Insert Values}
+\paragraph{Append Values} The function appends a pair to all rows of a table.
 \begin{align*}
-	\mathbf{insertValues} : Label \times Pair* \times Database \rightarrow Daatabase \\
-	insertValues(l, p, d) = \begin{cases}
- 		\inference{|p| > 1}{insertValues(l, head(p), d)\bullet insertValues(l, tail(p), d)}  \\ \\
- 		\inference{|p| = 1 \wedge \forall e \in pairs(r_t) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r_t), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
+	\mathbf{appendValues} : Label \times Pair \times Database \rightarrow Database \\
+	appemdValues(l, p, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l, \\ r = tableData(l, d)}{insertValue(r, p, d)} \\ \\
+ 		Inconsistent \; d
+ 	\end{cases}\\ \\
+ 	l \in Label, d \lhd Database
+\end{align*}
+\paragraph{Insert Value} The function inserts a new pair into an existing row.
+\begin{align*}
+	\mathbf{insertValues} : Row \times Pair* \times Database \rightarrow Daatabase \\
+	insertValues(r, p, d) = \begin{cases}
+ 		\inference{|p| > 1}{insertValues(r, head(p), d)\bullet insertValues(r, tail(p), d)}  \\ \\
+ 		\inference{|p| = 1 \wedge \forall e \in pairs(r) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
 	 	 Inconsistent \; d
  		\end{cases} \\
-l \in Label, p = Pair*,d \lhd Databases
+r \lhd Row, p = Pair*,d \lhd Databases
 \end{align*}
 \paragraph{COPY VALUES}
 \begin{align*}
@@ -750,7 +771,7 @@ All transformations described earlier does change mostly the structure of a appl
 
 The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, where the $copyData$ transformation is used.
 \begin{align*}
-	\mathbf{CopyProperty} : Label \times Label \times Label \times (Instance \times Instance) \times State \rightarrow State \\
+	\mathbf{CopyProperty} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
 	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} \\\\
 	\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = \begin{cases}
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
