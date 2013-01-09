@@ -154,6 +154,8 @@ Each instance is defined according to a class - the class defines the structure 
 	cardinality(prop(l, t, val, n, m)) = n \\ \\
 	\mathbf{mandatory} : Property \rightarrow Boolean \\
 	mandatory(prop(l, t, val, n, m)) = m  \\ \\
+	\mathbf{owningClass} : Property \times Application \rightarrow Class  \\ 	
+	owningClass(p, a) = \inference{\exists c \in classes(a) \wedge p \in properties(c)}{c}  \\ \\
 	l \in Label, t \in AppType, val \in String*, n \in \mathbb{N^{*}}, m \in Boolean 
 \end{align*}
 
@@ -169,7 +171,9 @@ Each instance is defined according to a class - the class defines the structure 
 	startCardinality(assoc(l, ref, n_1, n_2)) = n_1\\ \\
 	\mathbf{endCardinality} : Association \rightarrow \mathbb{N} \\
 	endCardinality(assoc(l, ref, n_1, n_2)) = n_2 \\ \\
-l, ref \in Label,  n_1, n_2 \in \mathbb{N}
+	\mathbf{owningClass} : Association \times Application \rightarrow Class  \\
+	owningClass(as, a) = \inference{\exists c \in classes(a) \wedge as \in associations(c)}{c}  \\ \\	
+	l, ref \in Label,  n_1, n_2 \in \mathbb{N}, as = Association
 \end{align*}
 
 
@@ -224,7 +228,9 @@ l \in Label, pk = PrimaryKey, cols = Column*, fks = ForeignKey*
 	type(col(l, t, val, cons)) = t  \\ \\
 	\mathbf{constraints} : Column \rightarrow Constraints  \\
 	constraints(col(l, t, val, cons)) = cons  \\ \\
-l \in Label, t = DbType, val = Strings, cons = Constraints
+	\mathbf{owningTable} : Column \times Database \rightarrow Table  \\
+	owningTable(c, d) = \inference{\exists tab \in tables(d) \wedge c \in columns(tab)}{tab} \\ \\
+l \in Label, t = DbType, val = String,\\ cons = Constraints, c = Column, d = Database
 \end{align*}
 
 \paragraph{Foreign key}
@@ -237,7 +243,9 @@ l \in Label, t = DbType, val = Strings, cons = Constraints
 	reference(fk(l, tRef, cons)) = tRef  \\ \\
 	\mathbf{constaints} : ForeignKey \rightarrow Constraint*  \\
 	constaints(fk(l, tRef, cons)) = cons  \\ \\
-l, tRef \in Label, cons \in Constraints
+	\mathbf{owningTable} : ForeignKey \times Database \rightarrow Table  \\
+	owningTable(fk, d) = \inference{\exists tab \in tables(d) \wedge fk \in foreignKeys(tab)}{tab}\\\\
+	l, tRef \in Label, cons = Constraint*, d = Database, fk = ForeignKey
 \end{align*}
 
 
@@ -265,16 +273,17 @@ A database consists not only from schema but also from data which are represente
 	\mathbf{Row} = < refTable, pair* > \\
 	\mathbf{row} : Label \times Pairs \rightarrow Row \\ \\
 	\mathbf{refTable} : Row \rightarrow Label \\
-	refTable(row(l, pairs) = l \\ \\
-	\mathbf{contains} : Table \times Database \rightarrow Boolean \\
-	contains(t, d) = \begin{cases}
-			\inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
-		 	false
- 		\end{cases} \\ \\
- l \in Label, ps = Pair*, t \in tables(d), d \in Database
+	refTable(row(l, ps) = l \\ \\
+	\mathbf{pairs} : Row \rightarrow Pair* \\
+	pairs(row(l, ps)) = ps \\ \\
+	\mathbf{pairByRef} : Label \times Row \rightarrow Pair \\
+	pairByRef(l,i) = \begin{cases}
+		\inference{\exists p \in pairs(i) : reference(p) = l}{p} \\ \\
+			\varnothing
+		\end{cases}\\
+	 l \in Label, ps = Pair*, i = Row
 \end{align*}
-There functions $contains$ verify if the table contains data in context of concrete database.
-
+The value stored in concrete column of the row is represented by pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
 \begin{align*}
 	\mathbf{Pair} = < refCol, value > \\
 	[Label \times Value] \rightarrow Pair\\ \\
@@ -282,14 +291,18 @@ There functions $contains$ verify if the table contains data in context of concr
 	reference([l,val]) = l \\ \\
 	\mathbf{value} : Pair \rightarrow Label \\ 
 	value([l,val]) = val \\ \\
-	\mathbf{pairByRef} : Label \times Row \rightarrow Pair \\
-	pairByRef(l,i) = \begin{cases}
-			\inference{\exists p \in pairs(i) : reference(p) = l}{p} \\ \\
-			\varnothing
-		\end{cases}\\
 	l \in Label, val \in Value
 \end{align*}
-The $refCol$ is a name of a column, a foreign key or its primary key and $value$ represents concrete value stored in the database. Each row in a database has to refer to a table in database schema and has a structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
+There functions $contains$ verify if the table contains data in context of concrete database.
+\begin{align*}
+	\mathbf{contains} : Table \times Database \rightarrow Boolean \\
+	contains(t, d) = \begin{cases}
+			\inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
+		 	false
+ 		\end{cases} \\ \\
+ l \in Label, ps = Pair*, t \in tables(d), d \in Database
+\end{align*}
+Each row in a database has to refer to a table in database schema and has a structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
 	\mathbf{consistent} : Database \rightarrow Boolean \\
 	consistent(d) = \begin{cases}
  		\inference{\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) : \\ reference(p) = name(u)}{true}
@@ -303,18 +316,6 @@ The $refCol$ is a name of a column, a foreign key or its primary key and $value$
 
 
 \subsection{Extension of Software Definition}
-
-\begin{align*}
- owningClass : Property \times Application \rightarrow Class  \\ owningClass(p, a) = c, c \in classes(a) \wedge p \in properties(c) \\
-  owningClass : Association \times Application \rightarrow Class  \\
-owningClass(as, a) = c, c \in classes(a) \wedge as \in associations(c) \\ \\
-owningTable : Column \times Database \rightarrow Table  \\
-owningTable(c, d) = tab, tab \in tables(d) \wedge c \in columns(d) \\ \\
-owningTable : ForeignKey \times Database \rightarrow Table  \\
-owningTable(fk, d) = tab, tab \in tables(d) \wedge fk \in foreignKeys(d)\\ \\ 
-\end{align*}
-
-
 The database stores instances of the application, thus the $instantiated$ function has to be defined:
 
 $$instantiated : Class \times Software \rightarrow Boolean $$ 
@@ -376,6 +377,8 @@ There are two types of properties - the first type has cardinality 1  and it is 
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Column* \\ \\
 	\rho_{sp}(p) = \begin{cases}
+		\inference{p = \varnothing}{\varnothing}\\
+		\inference{|p| > 1}{\rho_{sp}(head(p)) \cup \rho_{sp}(tail(p))}\\\\
  		\inference{cardinality(p) = 1 \wedge !\;mandatory(p)
  			\\ \wedge \exists t : t = table(name(owningClass(p)), d) 
 		 }{\begin{gathered}
