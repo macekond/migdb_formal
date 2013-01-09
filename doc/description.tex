@@ -395,17 +395,19 @@ There are two types of properties - the first type has cardinality 1  and it is 
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Table* \\ \\
 	\rho_{cp}(p) = \begin{cases}
- 	\inference{cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
- 		\wedge 	\exists t : t = table(name(owningClass(p)), d)
- 		}{\begin{gathered}
- 			table(name(p), primaryKey("Id"), \\ column("value", 			\rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
-	\end{gathered}}\\ \\
- 	\inference{ cardinality(p) > 1 \wedge mandatory(p) \\ 
- 		\wedge \exists t : t = table(name(owningClass(p)), d) 
- 		}{\begin{gathered}  
- 			table(name(p), primaryKey("Id"), \\ 
- 			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
-	 \end{gathered}}
+		\inference{p = \varnothing}{\varnothing}\\
+		\inference{|p| > 1}{\rho_{cp}(head(p)) \cup \rho_{cp}(tail(p))}\\\\
+     	\inference{cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
+     		\wedge 	\exists t : t = table(name(owningClass(p)), d)
+     		}{\begin{gathered}
+     			table(name(p), primaryKey("Id"), \\ column("value", 			\rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
+    	\end{gathered}}\\ \\
+     	\inference{ cardinality(p) > 1 \wedge mandatory(p) \\ 
+     		\wedge \exists t : t = table(name(owningClass(p)), d) 
+     		}{\begin{gathered}  
+     			table(name(p), primaryKey("Id"), \\ 
+     			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
+    	 \end{gathered}}
  	\end{cases}
 \end{align*}
 
@@ -415,6 +417,8 @@ A association is mapped into database as a foreign key in table representing ass
 \begin{align*}
 	\mathbf{\rho_a} : Association* \rightarrow ForeignKey* \\
 	\rho_a(a) = \begin{cases}
+		\inference{a = \varnothing}{\varnothing}\\
+		\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
 		\inference{ startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
 		}{
 			foreignKey(name(a), name(t),  \varnothing) 
@@ -428,10 +432,14 @@ A association is mapped into database as a foreign key in table representing ass
 \end{align*}
 \begin{align*} 
 	\mathbf{\rho_a} : Association* \rightarrow Table* \\
-  	\rho_a(a) = \inference{  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)
+	\rho_a(a) = \begin{cases}
+ 		\inference{a = \varnothing}{\varnothing}\\
+		\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
+		\inference{  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)
   		}{\begin{gathered}  
 		 table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
+ 	\end{cases}
 \end{align*}
 
 \section{Model Manipulating Transformation}
