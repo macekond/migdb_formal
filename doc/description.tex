@@ -499,14 +499,15 @@ This section provide transformations for manipulating the application layer of a
 \end{align*}
 
 \subsection{Database Transformation}
-The database is composed from two separated parts - database schema and data. Several transformation are defined to make manipulating a database easily.
+The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. These transformation were created with respect to evolutionary transformation, thus they ....
+
 \paragraph{Add Column} A new column can be add into a table if there are no name collisions. If the column has the $NOTNULL$ constraint, then the default value has to be added to all rows in the table.
 \begin{align*}
 	\mathbf{addColumn} : Label \times Column* \times Database \rightarrow Database \\ 	
 	addColum(l, c, d) = \begin{cases}
 		\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)} \\ \\
 		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \not \in constraints(c) }{columns(t) \cup c}\\ \\
-		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c}\\ \bullet appendValues(l, [name(c), defVal(c)]) \\ \\
+		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c}\\ \bullet addValueToTable(l, [name(c), defVal(c)]) \\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
 	 l \in Label, c \lhd Column*,d \lhd Database
@@ -520,6 +521,18 @@ The database is composed from two separated parts - database schema and data. Se
 	\end{cases} \\
 	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \lhd Database
 \end{align*}
+
+\paragraph{Alter Column Name}
+\begin{align*}
+\mathbf{alterColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
+	alterColumn(l_c, l_o, l_n, d) =
+ \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_o \\ \wedge \forall e \in columns(t) : name(e) \neq l_n}{\begin{gathered}
+c.name = l_n 
+\end{gathered}}
+ \\
+l_c, l_o, l_n \in Label, d \lhd Database
+\end{align*}
+
 \paragraph{Add Table} The transformation creates a new table in the database. The new table should not contain any foreign keys.
 \begin{align*}
 	\mathbf{addTable} : Table* \times Database \rightarrow Database \\ 
@@ -542,15 +555,19 @@ The database is composed from two separated parts - database schema and data. Se
 		 \end{cases}	\\
 		 r = Row*,d \lhd Database
 \end{align*}
-\paragraph{Append Values} The function appends a pair to all rows of a table.
+\paragraph{Add Value To Table} The function appends a pair to all rows of a table.
 \begin{align*}
-	\mathbf{appendValues} : Label \times Pair \times Database \rightarrow Database \\
-	appemdValues(l, p, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l, \\ r = tableData(l, d)}{insertValue(r, p, d)} \\ \\
+	\mathbf{addValueToTable} : Label \times Pair \times Database \rightarrow Database \\
+	addValueToTable(l, p, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l}	{\begin{gathered}
+		insertValue(head(tableData(l, d)), p, d) \\ \bullet addValueToTable(tail(tableData(l, d)), p, d)
+	\end{gathered}} \\ \\
  		Inconsistent \; d
  	\end{cases}\\ \\
- 	l \in Label, d \lhd Database
+ 	l \in Label, p \lhd Pair,  d \lhd Database
 \end{align*}
+
+
 \paragraph{Insert Value} The function inserts a new pair into an existing row.
 \begin{align*}
 	\mathbf{insertValues} : Row \times Pair* \times Database \rightarrow Daatabase \\
@@ -561,15 +578,37 @@ The database is composed from two separated parts - database schema and data. Se
  		\end{cases} \\
 r \lhd Row, p = Pair*,d \lhd Databases
 \end{align*}
-\paragraph{COPY VALUES}
+\paragraph{Copy Value} The function copy values from one column in a table to another column in the same or in another table - according to mapping function $f_m$. 
 \begin{align*}
-	\mathbf{copyValue} : Label \times Label \times Label \times (Instancece \times Instance) \times Database \times Database \\
+	\mathbf{copyValue} : Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
 	copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
- 		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc} }{\begin{gathered}
-			\forall p \in f_m(t_s, t_t)  : \\ insertValues(name(second(p)), \\ [l_{tc},value(pairByRef(l_{sc}, first(p))),d)
+		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
+			insertValues(second(p), \\ [l_{tc},value(pairByRef(l_{sc}, first(p)))],d)
 		\end{gathered}}
  	\end{cases}
 \end{align*}
+
+\paragraph{Copy rows}
+\begin{align*}
+	\mathbf{copyRows} : Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
+	copyRows(l_s, l_t, f_m, d) = \begin{cases}
+ 	\inference{|f_m| = \varnothing}{d} \\\\
+ 	\inference{|f_m| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{data(d) \cup insertRow(changeRef(l_t, first(f_m)), d)} \\\\
+ 	\inference{|f_m| > 1}{\begin{gathered}
+		 d \bullet copyRows(l_s, l_t, head(f_m)) \bullet copyRows(l_s, l_t, tail(f_m))
+	\end{gathered}}
+  \end{cases}
+\end{align*}
+
+
+%\begin{align*}
+%	v(l, fm, d) = \begin{cases}
+%	\inference{fm = \varnothing}{d}\\ \\
+%	\inference{|fm| > 1}{v(l, head(fm)) \bullet v(l, tail(fm))}\\ \\
+%	\inference{|fm| = 1 \exists c \in pairs(first(fm)) : reference(c) = l \\ \wedge \exists e \in pairs(second(fm)) : reference(e) = l}{e \cup pairByRef(l,c)} 
+% \end{cases}
+%\end{align*}
+
 
 
 
@@ -600,7 +639,7 @@ Whereas the $insertProp$ on database level can change stored data too, because a
 insertProp(p, d) = \begin{cases}
 \inference{!\:mandatory(p) \vee !\:instantiated(owningClass(p))}{addColumn(l, \rho(p,d), d)} 
 \\ \\ 
-\inference{ \wedge mandatory(p) \vee instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered} addColumn(l, \rho(p,d), d) \\ \bullet \forall r \in data(d), reference(r) = name(t) : \\ appendValue(name(t), [name(p), defaultValue(p)], d)
+\inference{ \wedge mandatory(p) \vee instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered} addColumn(l, \rho(p,d), d) \\ \bullet \forall r \in data(d), reference(r) = name(t) : \\ addValueToTable(name(t), [name(p), defaultValue(p)], d)
 \end{gathered}
 } 
 \\ \\
@@ -710,7 +749,6 @@ RenameClass : Label \times Label \times State \rightarrow State \\
 \Psi(RenameClass(l_o, l_n), s) = application(s) \circ renClass(l_o, l_n) \\
 \Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterClass(l_o, l_n) \\ \\
 \end{align*}
-
 \begin{align*}
 alterTable:  Label \times Label \times Database \rightarrow Database \\
 alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
@@ -723,35 +761,29 @@ l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
 \begin{align*}
 	RenameProperty : Label \times Label \times Label \times State \rightarrow State \\ \\
 \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
-\Phi(RenameProperty(l_c, l_o, l_n, s)) = database(s) \bullet alterColumn(l_c, l_o, l_n) \\\\
+\Phi(RenameProperty(l_c, l_o, l_n, s)) = \begin{cases}
+ 	\inference{cardinality(propertyByName(l_c, l_o, application(s))) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
+ 	\inference{cardinality(propertyByName(l_c, l_o, application(s))) > 1}{alterTable(l_o, l_n, database(s))}
+ \end{cases}\\
+l_c, l_o, l_n \in Label,  s \lhd Software
 \end{align*}
 
-\begin{align*}
-alterColumn : Label \times Label \times Label \times Database \rightarrow Database \\
-	alterColumn(l_c, l_o, l_n, d) = \begin{cases}
- \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists c \in columns(t) : name(c) = l_o \\ \wedge \forall e \in columns(t) : name(e) \neq l_n}{\begin{gathered}
-c.name = l_n 
-\end{gathered}}
-\\ \\
-\inference{\exists t \in tables(a) : name(t) = l_o \\ \wedge \forall e \in tables(t) : name(e) \neq l_n}{\begin{gathered}
-t.name = l_n 
-\end{gathered}}
- \end{cases}
- \\
-l_c, l_o, l_n \in Label, a \lhd Applications, s \in States, d \lhd Database
-\end{align*}
+
 
 \paragraph{Rename Association}
 \begin{align*}
 RenameAssociation : Label \times Label \times Label \times State \rightarrow State \\
 \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
 \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \begin{cases}
-	\inference{\mathbf{TODO}}{database(s) \bullet alterTable(l_c, l_o, l_n)}
- \\
-  \inference{\mathbf{TODO}}{database(s) \bullet alterColumn(l_c, l_o, l_n)}
+	\inference{\exists a  \in getAssocByname(application(s)) : \\
+  name(a) = l_c \\ \wedge startCardinality(a) > 1 }{database(s) \bullet alterTable(l_c, l_o, l_n)}
+ \\ \\
+  \inference{\exists a  \in getAssocByname(application(s)) : \\
+  name(a) = l_c \\ \wedge startCardinality(a) \leq 1 }{\begin{gathered}
+database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
+\end{gathered}}
  \end{cases}
 \\\\
-alterColumn : Label \times Label \times Label \times Database \rightarrow Database \\
 %	alterAssoc(l_c, l_o, l_n, d) = \begin{cases}
 %?? \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists f \in fks(t) : name(c) = l_o \\ \wedge \forall e \in fks(t) : name(e) \neq l_n}{\begin{gathered}
 %f.name = l_n 
@@ -788,6 +820,10 @@ With the copy property transformation defined we are able to define advanced evo
 \paragraph{Change Cardinality}
 $$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
 $$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
+
+\section{Refactoring Cases}
+\subsection{Move Property}
+\subsection{Extract and Inline Class}
 
 \section{Conclusion}
 
