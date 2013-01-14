@@ -452,6 +452,19 @@ This section provide transformations for manipulating the application layer of a
 	c \lhd Class, a \lhd Applications
 \end{align*}
 
+\paragraph{Get Property or Association}
+\begin{align*}
+	\mathbf{propertyByName} : Label \times Label \times Application \rightarrow Property \\
+	propertyByName(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
+	l_c, l_p \in Label, a \lhd Application
+\end{align*}
+\begin{align*}
+	\mathbf{associationByName} : Label \times Label \times Application \rightarrow Association \\
+	associationByName(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
+	l_c, l_a \in Label, a \lhd Application
+\end{align*}
+
+
 \paragraph{Remove Property or Association} The property or association can be simply removed from a class:
 \begin{align*}
  	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
@@ -785,10 +798,10 @@ l_c, l_o, l_n \in Label,  s \lhd Software
 RenameAssociation : Label \times Label \times Label \times State \rightarrow State \\
 \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
 \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \begin{cases}
-	\inference{\exists a  \in getAssocByname(application(s)) : \\
+	\inference{\exists a  \in associationByName(application(s)) : \\
   name(a) = l_c \\ \wedge startCardinality(a) > 1 }{database(s) \bullet alterTable(l_c, l_o, l_n)}
  \\ \\
-  \inference{\exists a  \in getAssocByname(application(s)) : \\
+  \inference{\exists a  \in associationByName(application(s)) : \\
   name(a) = l_c \\ \wedge startCardinality(a) \leq 1 }{\begin{gathered}
 database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
 \end{gathered}}
