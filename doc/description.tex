@@ -267,20 +267,17 @@ l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Colu
 
 \paragraph{Stored Data} A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete values of concrete columns. Each row contains a name of a table it belongs to.
 \begin{align*}
-	\mathbf{Row} = < refTable, pair* > \\
+	\mathbf{Row} = < refTable, pkValue, pair* > \\
 	\mathbf{row} : Label \times Pairs \rightarrow Row \\ \\
 	\mathbf{refTable} : Row \rightarrow Label \\
-	refTable(row(l, ps) = l \\ \\
+	refTable(row(l, n, ps) = l \\ \\
 	\mathbf{pairs} : Row \rightarrow Pair* \\
-	pairs(row(l, ps)) = ps \\ \\
-	\mathbf{pairByRef} : Label \times Row \rightarrow Pair \\
-	pairByRef(l,i) = \begin{cases}
-		\inference{\exists p \in pairs(i) : reference(p) = l}{p} \\ \\
-			\varnothing
-		\end{cases}\\
-	 l \in Label, ps = Pair*, i \lhd Row
+	pairs(row(l, n, ps)) = ps \\ \\
+	\mathbf{pkValue} : Row \rightarrow N \\
+	pkValue(row(l, n, ps)) = n \\ \\
+	 l \in Label, ps = Pair*, n \in N
 \end{align*}
-The value stored in concrete column of the row is represented by pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
+The value stored in concrete column of the row is represented by the pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
 \begin{align*}
 	\mathbf{Pair} = < refCol, value > \\
 	[Label \times Value] \rightarrow Pair\\ \\
@@ -541,7 +538,15 @@ The database is composed from two separated parts - database schema and data. Tr
  \end{cases}
 \end{align*}
 
-
+\paragraph{Find pair}
+\begin{align*}
+\mathbf{findPair} : Label \times Row \rightarrow Pair \\
+	findPair(l, r) = \begin{cases}
+		\inference{\exists p \in pairs(r) : reference(p) = l}{p} \\ \\
+			\varnothing
+		\end{cases}\\
+		l \in Label, r \lhd Row
+\end{align*}
 
 \paragraph{Add Column} A new column can be add into a table if there are no name collisions. If the column has the $NOTNULL$ constraint, then the default value has to be added to all rows in the table.
 \begin{align*}
@@ -625,7 +630,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	\mathbf{copyValue} : Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
 	copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
 		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
-			insertValues(second(p), \\ [l_{tc},value(pairByRef(l_{sc}, first(p)))],d)
+			insertValues(second(p), \\ [l_{tc},value(findPair(l_{sc}, first(p)))],d)
 		\end{gathered}}
  	\end{cases} \\
  	l_s, l_t, l_{sc}, l_{tc} \in Label, d \lhd Database
@@ -657,7 +662,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 %	v(l, fm, d) = \begin{cases}
 %	\inference{fm = \varnothing}{d}\\ \\
 %	\inference{|fm| > 1}{v(l, head(fm)) \bullet v(l, tail(fm))}\\ \\
-%	\inference{|fm| = 1 \exists c \in pairs(first(fm)) : reference(c) = l \\ \wedge \exists e \in pairs(second(fm)) : reference(e) = l}{e \cup pairByRef(l,c)} 
+%	\inference{|fm| = 1 \exists c \in pairs(first(fm)) : reference(c) = l \\ \wedge \exists e \in pairs(second(fm)) : reference(e) = l}{e \cup findPair(l,c)} 
 % \end{cases}
 %\end{align*}
 
