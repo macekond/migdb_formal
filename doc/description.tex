@@ -585,7 +585,8 @@ r \lhd Row, p = Pair*,d \lhd Databases
 		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
 			insertValues(second(p), \\ [l_{tc},value(pairByRef(l_{sc}, first(p)))],d)
 		\end{gathered}}
- 	\end{cases}
+ 	\end{cases} \\
+ 	l_s, l_t, l_{sc}, l_{tc} \in Label, d \lhd Database
 \end{align*}
 
 \paragraph{Copy rows}
@@ -597,8 +598,17 @@ r \lhd Row, p = Pair*,d \lhd Databases
  	\inference{|f_m| > 1}{\begin{gathered}
 		 d \bullet copyRows(l_s, l_t, head(f_m)) \bullet copyRows(l_s, l_t, tail(f_m))
 	\end{gathered}}
-  \end{cases}
+  \end{cases} \\
+  l_s, l_t \in Label, d \lhd Database
 \end{align*}
+
+\paragraph{Change ref}
+\begin{align*}
+	\mathbf{changeRef} : Label \times Row \rightarrow Row \\
+	changeRef(l, r) = \inference{}{reference(r) = l } \\
+	l \in Label, r \lhd Row
+\end{align*}
+
 
 
 %\begin{align*}
