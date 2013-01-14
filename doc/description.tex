@@ -216,13 +216,6 @@ The relational database consists of database schema which defines the structure 
 l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
 \end{align*}
 
-The function $findTable$ finds and returns a table in the database according to the provided label.
-\begin{align*}
-	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
-	findTable(l, d) = \inference{\exists t \in tables(d) \wedge name(t) = l}{t}  \\ \\
-	l \in Label, d \lhd Database
-\end{align*}
-
 \paragraph{Column} columns define possible data values and types which can be part of a table record.
 \begin{align*}
 	\mathbf{Column} = <label, DbType, DefaultValue, Constraint*> \\ \\
@@ -512,7 +505,43 @@ This section provide transformations for manipulating the application layer of a
 \end{align*}
 
 \subsection{Database Transformation}
-The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. These transformation were created with respect to evolutionary transformation, thus they ....
+The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. 
+
+\paragraph{Find Table} The function $findTable$ finds and returns a table in the database according to the provided label.
+\begin{align*}
+	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
+	findTable(l, d) = \inference{\exists t \in tables(d) \wedge name(t) = l}{t}  \\ \\
+	l \in Label, d \lhd Database
+\end{align*}
+
+\paragraph{Compare Tables} The need to compare two tables during the evolution results into the comparing operator $\cong$. The operator has to be defined for columns and foreign keys too.
+\begin{align*}
+	\mathbf{\cong} : Table \times Table \rightarrow Boolean \\
+	t_1 \cong t_2 = \begin{cases}
+ 		\inference{|columns(t_1)| = |columns(t_2)| \\ \wedge |foreignKeys(t_1)| = |foreignKeys(t_2)| \\ \wedge \forall c \in columns(t_1) \exists e \in columns(t_2) : c = e \\ \wedge \forall f \in foreignKeys(t_1) \exists g \in foreignKeys(t_2) : f = g }{true}\\\\
+ false
+ \end{cases}\\
+ t_1 \lhd Table, t_2 \lhd Table
+\end{align*}
+\begin{align*}
+	\mathbf{\cong} : Column \times Column \rightarrow Boolean \\
+	c_1 \cong c_2 = \begin{cases}
+ 		\inference{name(c_1) = name(c_2) \\ \wedge type(c_1) = type(c_2) \\ \wedge constraints(c_1) = comstraints(c_2)}{true}
+ 		\\ \\
+		false
+ \end{cases}\\
+ c_1 \lhd Column, c_2 \lhd Column
+\end{align*}
+\begin{align*}
+	\mathbf{\cong} : ForeignKey \times ForeignKey \rightarrow Boolean \\
+	f_1 \cong f_2 = \begin{cases}
+ 		\inference{name(f_1) = name(f_2) \\ \wedge reference(f_1) = reference(f_2) \\ \wedge constraints(f_1) = comstraints(f_2}{true}
+ 		\\ \\
+		false
+ \end{cases}
+\end{align*}
+
+
 
 \paragraph{Add Column} A new column can be add into a table if there are no name collisions. If the column has the $NOTNULL$ constraint, then the default value has to be added to all rows in the table.
 \begin{align*}
@@ -840,9 +869,9 @@ The copy property can be implemented as a transformation composed by operations 
 
 With the copy property transformation defined we are able to define advanced evolution scenarios.
 
-\paragraph{Change Cardinality}
-$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
-$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
+%\paragraph{Change Cardinality}
+%$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
+%$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
 
 \section{Refactoring Cases}
 \subsection{Move Property}
@@ -853,29 +882,3 @@ $$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarro
 
 
 \end{document}
-
-
-%	CopyProperty(l_s, l_t, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists e \in classes(a) : name(e) = l_t  \\ \wedge \forall q \in properties(c) : name(q) \neq l_p}{\begin{gathered}
-%properites(e) \cup p 
-%\end{gathered}}
-
-
-% This is important in case we have an evolution consisting of several evolution operations. These operations has to be proceed in concrete order and all of them has to change the software otherwise the software can become inconsistent from user point of view (the structure or stored data will not correspond with the users' reality). To assure the right behavior of evolution operations and to propagate operations fail to the user we extend the definition of a software to make it a monad. The extension consists in defining a software state and operations $ret$ and $\oplus$ (called evolve), which is used as a concatenation of operations as well.
-%
-%Each evolution transformation has a definition: $Software \rightarrow State$ and all evolution transformations creates a set called $Transformations$, then a concatenation of evolution transformation is defined as:
-%\begin{equation*}
-%\begin{gathered}
-% \oplus : State \times Transformations \rightarrow State  \\ \\
-% u \oplus t = \begin{cases}
-% u, \; u = Inconsistent \; s \\
-% t(u), \; u = Consistent \; s 
-%\end{cases}\\ 
-%u \in States, t \in Transformations, s \lhd Software
-%\end{gathered}
-%\end{equation*}
-%
-% To describe these two aspects od software evolution we decide to define transformations for each layer separately. The separation of transformation contexts help us to define transformation specific for application or database evolution, which can ease both - understanding and defining the transformation. The transformations specific for a context are called operations and they creates two sets- first one for application evolution: $AppOps$  and second one for database evolution $DbOps$. Applying of a transformation is defined:
-%\begin{align*}
-%u \oplus t = ret(<application(u) \oplus o_{app}, database(u) \oplus o_{db}>) \\
-%u \in Softwares, t \in Transformations, o_{app} \in AppOps, o_{db} \in DbOps
-%\end{align*}
