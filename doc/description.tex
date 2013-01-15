@@ -36,7 +36,7 @@ The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of 
 	\caption{The model of one generation of an ORM system consists of application persistent layer and relational database for storing instances.}
 \label{fig:appStructure}
 \end{figure}
-A software implemented in an object-oriented language, which uses relational database as a data storage is context of this paper. The situation is illustrated in the Figure \ref{fig:appStructure}. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software as a triple:
+A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:appStructure}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software as a triple:
 \begin{align*}
 	\mathbf{software} = < Application, Database, \rho > \\
 	sw : Applications \times Databases \times ORM \rightarrow Software \\ \\
@@ -48,16 +48,32 @@ A software implemented in an object-oriented language, which uses relational dat
 \end{align*}
 The software definition above introduce the first type used in this paper. The notation $a \lhd Application$ indicates the variable $a$ has the type $Application$.
 
-The software has to be in consistent state so its users could have benefit from its useage. The state of the software is defined to communicate the sate of the software to its user:
+The software has to be in consistent state so its users could have benefit from its usage. The state of the software is defined to communicate the sate of the software to its user. The components of a software (application and database) are transformed likewise, thus the state is defined for them too.
 \begin{align*}
- 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s, \\\\
+ 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s,  \\	s \lhd Software \vee s \lh Application \vee s \lhd Database
+\end{align*}
+Before the definition of the software consistency is provided, the notation of function transcription has to be introduced. Usually the definition of a function consists of two parts - an effect of the function and conditions when the effect occurs We decide to use following transcription, to simplify the notation and to improve understanding of functions:
+\begin{align*}
+f(x) =   \inference{conditions}{effect}
+\end{align*}
+The function querying the state (it means consistency) of a software is defined as:
+\begin{align*}
+ 	\mathbf{consistent} : State \rightarrow Boolean \\
+ 	consistent(s) = \begin{cases}
+ 		\inference{s = Consistent(s)}{true}\\\\
+ 		\inference{s = Inconsistent(s)}{false}\\
+ \end{cases}\\
+ s \lhd State
+\end{align*}
+The consistency of application and database is discussed later in this paper. The definition of software state only is provided:
+\begin{align*}
 	\mathbf{state} : Software \rightarrow State \\
 	state(s) = \begin{cases}
  		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \\ \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
  		\inference{otherwise}{Inconsistent \; s}
  	\end{cases} \\ \\
- 	s \lhd Software  
 \end{align*}
+
 \subsection{Software Evolution}
 \begin{figure}
 \centering
@@ -65,52 +81,53 @@ The software has to be in consistent state so its users could have benefit from 
 	\caption{The evolution of data changes the system on all levels. The figure shows all the components of the evolution process.}
 	\label{fig:evolution}
 \end{figure}
-The evolution of a software is a transformation from one consistent state to another one. These states are called generations of the software. The evolution consists of change in application and in database as shown in the Figure \ref{fig:evolution}. We focus on situations when the evolution is initiated on the application level (as code refactoring), however the evolution has to be processed on the database level too. It means there is a set of application transformations called $AppOps$ and a set of database transformations called $DbOps$. Because there are needed different parameters for application and database evolution the set of transformation called $E$ which evolves the whole software and a mapping between $E$ and $AppOps$, respectively $DbOps$ is defined. We call this mappings $\Psi$ and $\Phi$:
+The evolution of a software is a transformation from one consistent state to another one. These states are called generations of the software and the function which changed the state of a software are called transformations. The evolution consists of change in application and in database as shown in the Figure \ref{fig:evolution}. We focus on situations when the evolution is initiated on the application level (as code refactoring), thus the transformation are designed to conform to the refactoring cases. However a case when the evolution begins on database level is also possible (eg. as a result of database optimization) it is not considered in this paper. 
+
+The evolution of the whole software has to be processed on the both software components - application and database. It means there is a set of application transformations called $AppT$ and a set of database transformations called $DbT$. Because there are needed different parameters for application and database evolution the evolution of database can not be derived from application evolution only. Thus the set of transformation called $E$ is defined to evolve the whole software together with mappings $\Psi$ between $E$ and $AppT$ and $\Phi$ between $E$ and $DbT$ is defined:
 \begin{align*}
-\Psi : E \rightarrow AppOps \\
-\Phi : E \rightarrow DbOps
+\Psi : E \rightarrow AppT \\
+\Phi : E \rightarrow DbT
 \end{align*}
-A subset of $E$ represents an evolution transformation of a software, which mets the first goal of our framework - a single source of data evolution for the whole software.
+The set $E$ containing the evolution transformations of a software mets our first goal - a single source of data evolution for the whole software.
 
 The application of a transformation on a software state (evolution) is marked by the $\oplus$ operator:
 $$\oplus : State \times E \rightarrow State $$
 and similarly the $\circ$ and the $\bullet$ operators for evolving application and database:
 \begin{align*}
-\circ : Application \times AppOps \rightarrow Application \\
- \bullet : Database \times DbOps \rightarrow Database
+\circ : State \times AppT \rightarrow State \\
+ \bullet : State \times DbT \rightarrow State
 \end{align*}
 The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell programming language) so the state of the software can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
-
 \begin{align*}
- u \oplus t = \begin{cases}
- 	\inference{u = Inconsistent \; s}{u} \\ \\
- 	\inference{u = Consistent \; s}{state(sw(\Psi(u, t), \Phi(u,t))} 
+ state(s) \oplus t = \begin{cases}
+ 	\inference{! consistent(state(s))}{u} \\ \\
+ 	\inference{consistent(state(s))}{state(sw(\Psi(s, t), \Phi(s,t))} 
 \end{cases}\\ 
-u \lhd State, t \in E, s \lhd Software
+s \lhd Software, t \in E
 \end{align*}
 \begin{align*}
- a \circ o = \begin{cases}
- 	\inference{!\;consistent(a)}{a} \\ \\
- 	\inference{consistent(a)}{a \circ o} 
+ state(a) \circ e = \begin{cases}
+ 	\inference{!\;consistent(state(a))}{a} \\ \\
+ 	\inference{consistent(state(a))}{e(a)} 
 \end{cases}\\ 
-a \lhd Application, o \in AppOps
+a \lhd Application, e \in AppT
 \end{align*}
 \begin{align*}
- d \bullet o = \begin{cases}
- 	\inference{!\;consistent(d)}{d} \\ \\
- 	\inference{consistent(d)}{d \circ o} 
+ state(d) \bullet e = \begin{cases}
+ 	\inference{!\;consistent(state(d))}{d} \\ \\
+ 	\inference{consistent(state(d))}{e(d)} 
 \end{cases}\\ 
-d \lhd Application, o \in DbOps
+d \lhd Application, e \in DbT
 \end{align*}
 
 \section{Software Model}
-The model of an ORM software consists of three parts - an application model, a database model and a ORM. The model of application and database creates a type system for both kinds ORM and evolutionary transformations.
+The model of an ORM software consists of three parts - an application model, a database model and an ORM. The model of application and database creates a type system for both ORM and evolutionary transformations.
 
-The definitions of all parts assume a set $Label$ exist which contains all possible identifiers and each modeled entity is identified unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. 
+The definitions of all parts assume a set $Label$ exists which contains all possible identifiers and each modeled entity is unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. 
 
 \subsection{Application Model}
 \label{sec:appModel}
-The application model represents a persistent layer of an application created using object oriented language and transformations which can alter the model. 
+The application model represents an application persistent layer created using object oriented language and functions which can alter the model. 
 \subsubsection{Application Structure}
 Each instance in an application is defined according to some class - the class defines the structure of its instances and relationships between them an the rest of the application. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
 \begin{align*}
@@ -131,9 +148,10 @@ Each instance in an application is defined according to some class - the class d
 	name(cl(l, props, assocs)) = l \\ \\
 	\mathbf{properties} : Class \rightarrow Property* \\
 	properties(cl(l, props, assocs)) = props \\ \\
-	\mathbf{associations} : Class \rightarrow Association* \\	associations(cl(l, props, assocs)) = assocs \\ \\
+	\mathbf{associations} : Class \rightarrow Association* \\	associations(cl(l, props, assocs)) = assocs \\ 
+	l \in Label, props \lhd Property*, assocs \lhd Association*
 \end{align*}
-Three more function are defined to obtain information about a class - $primitives$ returns all properties of the class which represent a single value, whereas $collections$ returns all properties representing collections. The last one $associated$ determine if a class is associated by any other class in an application.
+Three more function are defined to obtain information about a class - function $primitives$ returns all properties of the class which represent a single value, whereas function $collections$ returns all properties representing collection of values. The last function called $associated$ determine if a class is associated by any other class in an application.
 \begin{align*}
 	\mathbf{primitives} : Class \rightarrow Property* \\	primitives(cl(l, props, assocs)) = props', \\ props' \subset props,  \forall p \in props' : cardinality(p) \leq 1 \\ \\
 	\mathbf{collections} : Class \rightarrow Property* \\	collections(cl(l, props, assocs)) = props', \\ props' \subset props, \forall p \in props' : cardinality(p) > 1 \\ \\
@@ -148,7 +166,7 @@ Three more function are defined to obtain information about a class - $primitive
 	 
 \paragraph{Property} Property represents a feature of a class which is represented as a primitive type. The property can be mandatory, can have a default value and according to its cardinality it can represent a single value or a collection of values. The $owningClass$ function returns the class in the model which owns the property.
 \begin{align*}
-	\mathbf{Property} = <label, AppType, DefaultValue, Cardinality, Mandatory> \\ \\
+	\mathbf{Property} = <label, AppType, DefaultValue, Cardinality, Mandatory> \\
 	\mathbf{prop} : Label \times AppType \times String \times \mathbb{N^{*}} \times Boolean \rightarrow Property \\ \\
 	\mathbf{name} : Property \rightarrow Label \\
 	name(prop(l, t, val, n, m)) = l \\ \\
@@ -163,9 +181,9 @@ Three more function are defined to obtain information about a class - $primitive
 	l \in Label, t \lhd AppType, val \in Values, n \in \mathbb{N^{*}}, m \in Boolean 
 \end{align*}
 
-\paragraph {Association} Assoctation represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of the association ends.
+\paragraph {Association} Associtation represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of both association ends.
 \begin{align*}
-	\mathbf{Association} = <label, classRef, startCardinality, endCardinality> \\ \\
+	\mathbf{Association} = <label, classRef, startCardinality, endCardinality> \\
 	\mathbf{assoc} : Label \times Label \times \mathbb{N} \times \mathbb{N} \rightarrow Association\\ \\
 	\mathbf{name} : Association \rightarrow Label \\
 	name(assoc(l, ref, n_1, n_2)) = l\\ \\
@@ -183,17 +201,18 @@ Three more function are defined to obtain information about a class - $primitive
 
 %TODO: variable types
 
-\paragraph{Application type} Application type ($AppType$) represents primitive type in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only App-Type type is called $APPSTRING$.
+\paragraph{Application type} Application type ($AppType$) represents primitive type in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only $AppType$ type is called $APPSTRING$.
 \begin{align*}
 \mathbf{AppType} = APPSTRING
 \end{align*}
 
+\subsubsection{Application consistency}
 
 \subsection{Database Model}
 \label{sec:dbModel}
-The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents instances. The database is:
+The relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents stored instances. The database is defined as a tuple:
 \begin{align*}
-	\mathbf{Database} = < Table*, Row*> \\ \\
+	\mathbf{Database} = < Table*, Row*> \\
 	\mathbf{db} : Tables \times Rows \rightarrow Database \\ \\
 	\mathbf{tables} : Database \rightarrow Tables \\
 	tables(db(tabs, rs)) = tabs \\ \\
@@ -201,9 +220,9 @@ The relational database consists of database schema which defines the structure 
 	rows(db(tabs, rs)) = rs \\ \\
 	tabs = Table*, rs = Row*, l \in Label,d \lhd Database
 \end{align*}
-\paragraph{Table} represents a basic concept of database schema. It has a unique name, one or more column and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
+\paragraph{Table} Table represents a basic concept of database schema. It has a unique name, one or more columns and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
 \begin{align*}
-	\mathbf{Table} = <label, primaryKey, Column*, ForeignKey*>\\ \\
+	\mathbf{Table} = <label, primaryKey, Column*, ForeignKey*>\\
 	\mathbf{tab} 	: Label \times PrimaryKeys \times Columns \times ForeignKeys \rightarrow Table \\ \\
 	\mathbf{name} : Table \rightarrow Label  \\
 	name(tab(l, pk, cols, fks)) = l \\ \\
@@ -216,9 +235,9 @@ The relational database consists of database schema which defines the structure 
 l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
 \end{align*}
 
-\paragraph{Column} columns define possible data values and types which can be part of a table record.
+\paragraph{Column} Column defines data values and types which can be part of a table record.
 \begin{align*}
-	\mathbf{Column} = <label, DbType, DefaultValue, Constraint*> \\ \\
+	\mathbf{Column} = <label, DbType, DefaultValue, Constraint*> \\
 	\mathbf{col} : Label \times DbType \times String \times Constraints \rightarrow Column \\ \\
 	\mathbf{name} : Column \rightarrow Label  \\
 	name(col(l, t, val, cons)) = l  \\ \\
@@ -228,12 +247,12 @@ l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
 	constraints(col(l, t, val, cons)) = cons  \\ \\
 	\mathbf{owningTable} : Column \times Database \rightarrow Table  \\
 	owningTable(c, d) = \inference{\exists tab \in tables(d) \wedge c \in columns(tab)}{tab} \\ \\
-l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Column,d \lhd Database
+l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraint*, c \lhd Column,d \lhd Database
 \end{align*}
 
 \paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
 \begin{align*}
-	\mathbf{ForeignKey} = <label, tableRef, Constraint*> \\ \\
+	\mathbf{ForeignKey} = <label, tableRef, Constraint*> \\ 
 	\mathbf{fk} : Label \times Label \times Constraints \rightarrow ForeignKey \\ \\
 	\mathbf{name} : ForeignKey \rightarrow Label \\
 	name(fk(l, tRef, cons)) = lab  \\ \\
@@ -247,25 +266,25 @@ l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Colu
 \end{align*}
 
 
-\paragraph{Primary key} Primary key is unambiguous identifier of a record in a table. The primary key is always provided by the database as a non-zero natural number. Primary key is always defined with constraints $NOTNULL$ and $UNIQUE$. 
+\paragraph{Primary key} Primary key is unambiguous identifier of a record in a table. The primary key is always provided (automatically generated) by the database as a non-zero natural number. Primary key is always defined with constraints $NOTNULL$ and $UNIQUE$. 
 \begin{align*}
 	\mathbf{PrimaryKey} =  < label > 	\\
 	\mathbf{pk} : Label \rightarrow PrimaryKey
 \end{align*}
 
-\paragraph{Data Types} Database data types $DbType$ represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There is only one type defined in the model $DBSTRING$ as a default type of values in columns.
+\paragraph{Data Types} Database data types $DbType$ represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There is only one type of column values defined in the model called $DBSTRING$. Next the $DBN$ type is defined for the values of keys.
 \begin{align*}
-	\mathbf{DbType} = DBSTRING
+	\mathbf{DbType} = DBSTRING | DBN
 \end{align*}
 
-\paragraph{Constraints} There are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines unique records in a column, second constraint defines non-empty columns.
+\paragraph{Constraints} There are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines non-empty columns, second constraint defines there has to be unique records in a column or foreign key.
 \begin{align*}
 	\mathbf{Constraint} = NOTNULL \; | \; UNIQUE 
 \end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{Stored Data} A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete values of concrete columns. Each row contains a name of a table it belongs to.
+\paragraph{Stored Data} A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete value of concrete column. Each row contains a name of a table it belongs to.
 \begin{align*}
 	\mathbf{Row} = < refTable, pkValue, pair* > \\
 	\mathbf{row} : Label \times Pairs \rightarrow Row \\ \\
@@ -277,13 +296,13 @@ l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraints, c \lhd Colu
 	pkValue(row(l, n, ps)) = n \\ \\
 	 l \in Label, ps = Pair*, n \in N
 \end{align*}
-The value stored in concrete column of the row is represented by the pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
+The value stored in concrete column of the row is represented by a pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
 \begin{align*}
 	\mathbf{Pair} = < refCol, value > \\
 	[Label \times Value] \rightarrow Pair\\ \\
 	\mathbf{reference} : Pair \rightarrow Label \\
 	reference([l,val]) = l \\ \\
-	\mathbf{value} : Pair \rightarrow Label \\ 
+	\mathbf{value} : Pair \rightarrow Value \\ 
 	value([l,val]) = val \\ \\
 	l \in Label, val \in Value
 \end{align*}
@@ -304,7 +323,7 @@ The definition of data allows definition of function $contains$ which verify if 
  		\inference{|r| = 1 \wedge refTable(r) = l}{r}\\\\
  		\inference{|r| = 1 \wedge refTable(r) \neq l}{\varnothing}
  \end{cases} \\ \\
-	r \in Rows, l \in Label
+	r \lhd Row*, l \in Label
 \end{align*}
 \begin{align*}
 	\mathbf{instantiated} : Class \times Software \rightarrow Boolean \\
@@ -315,7 +334,7 @@ The definition of data allows definition of function $contains$ which verify if 
 \end{align*}
 
 \subsubsection{Database consistency}
-Each row in a database has to refer to a table in database schema and has a structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
+The database consistency is founded on the consistency of structure and consistency between structure and stored values. Each row in a database has to refer to a table in database schema and it has to have the structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
 	\mathbf{consistent} : Database \rightarrow Boolean \\
 	consistent(d) = \begin{cases}
  		\inference{\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) : \\ reference(p) = name(u)}{true}
@@ -328,13 +347,13 @@ Each row in a database has to refer to a table in database schema and has a stru
 \label{sec:orm}
 There are defined functions for object-relational mapping used in this paper. The mapping function itself are not able to create a database from the application as they are mentioned to be used together with evolutionary transformations introduced in section \ref{sec:transformations}.
 
-\paragraph{Mapping of Types} The mapping of types assumes a bijection between application types and database types, otherwise these has to be additional information for type mapping. We focus on structural and data change therefore there is only one type in both our models. The mapping is then streightforward:
+\paragraph{Mapping of Types} The mapping of types assumes a bijection between application types and database types, otherwise there has to be additional information for type mapping. We focus on structural and data change therefore there is only one type of values in both our models. The mapping is then straightforward:
 \begin{align*}
 	\mathbf{\rho_{t}} : AppType \rightarrow DbType  \\
  	\rho_{t}(APPSTRING) = DBSTRING 
 \end{align*}
 
-\paragraph{Mapping of Classes} The class is mapped into an table with  automatically created primary key. The primary key is always created with name Id and of the $\mathbb{N^{*}}$ type. The properties and associations are mapped separately.
+\paragraph{Mapping of Classes} The class is mapped into a table with  automatically created primary key. The primary key is always created with name Id and of the $\mathbb{N^{*}}$ type. The properties and associations has to be mapped separately.
 \begin{align*}
 	\mathbf{\rho_{c}} : Class*  \rightarrow Table* \\
 	\rho_{c}(c) = \begin{cases}
@@ -346,7 +365,7 @@ There are defined functions for object-relational mapping used in this paper. Th
 \end{align*}
 
 \subsubsection{Mapping of Properties}
-There are two kinds of properties - the first kind has cardinality equal to one and it is mapped to a column; second kind - a property with cardinality greater than one has to be mapped to a table, thus there are two mapping cases. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. 
+There are two kinds of properties - primitive property with cardinality equal to one is mapped to a column; second kind - collection with cardinality greater than one is mapped to table, thus there are two mapping cases. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. 
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Column* \\ \\
 	\rho_{sp}(p) = \begin{cases}
@@ -363,7 +382,8 @@ There are two kinds of properties - the first kind has cardinality equal to one 
 		}{\begin{gathered}
  	 		column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
 		\end{gathered}}
- 	\end{cases}
+	\end{cases}\\
+	p \lhd Property
 \end{align*}
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Table* \\ \\
@@ -385,7 +405,7 @@ There are two kinds of properties - the first kind has cardinality equal to one 
  	p \lhd Property
 \end{align*}
 
-\paragraph{Mapping of Associations} An association is mapped into database as a foreign key in table representing associating class or as a table in case the association cardinality is one to many or many to many.
+\paragraph{Mapping of Associations} An association is mapped into database as a foreign key in table representing associated class or as a table in case the association cardinality is one to many or many to many. Thus there are two mapping cases as for properties.
 \begin{align*}
 	\mathbf{\rho_a} : Association* \rightarrow ForeignKey* \\
 	\rho_a(a) = \begin{cases}
@@ -417,11 +437,23 @@ There are two kinds of properties - the first kind has cardinality equal to one 
 \end{align*}
 
 \section{Transformation for Models Manipulation}
-The evolution affects both parts of software and as shown in section \ref{sec:evoIntro} it is mapped to transformation specific for application (set $AppOps$ of transformations) and database (set $DbOps$). These sets are defined in this section.
+The evolution affects both parts of software and as shown in section \ref{sec:evoIntro} it is mapped to transformation specific for application (set $AppT$ of transformations) and database (set $DbT$). These sets are defined in this section.
 \subsection{Application Transformation}
-This section provide transformations for manipulating the application layer of a software - the $AppOps$ set. The set contains transformations for model creation, alternation and decomposition.
+This section provide transformations for manipulating the application layer of a software - the $AppT$ set. The set contains not only transformations for model creation, alternation and decomposition, but some operations to obtain information about a model too.
 
-\paragraph{Add Property}Before adding a property into an application structure, the name collision only has to be verified:
+\paragraph{Get Property or Association}
+\begin{align*}
+	\mathbf{propertyByName} : Label \times Label \times Application \rightarrow Property \\
+	propertyByName(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
+	l_c, l_p \in Label, a \lhd Application
+\end{align*}
+\begin{align*}
+	\mathbf{associationByName} : Label \times Label \times Application \rightarrow Association \\
+	associationByName(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
+	l_c, l_a \in Label, a \lhd Application
+\end{align*}
+
+\paragraph{Add Property} The name collision only has to be verified, before adding a property into an application structure:
 \begin{align*}
  	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
 	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
@@ -441,19 +473,6 @@ This section provide transformations for manipulating the application layer of a
 	addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c) \\ \wedge associations(c) = \varnothing }{classes(a) \cup c} \\ \\
 	c \lhd Class, a \lhd Applications
 \end{align*}
-
-\paragraph{Get Property or Association}
-\begin{align*}
-	\mathbf{propertyByName} : Label \times Label \times Application \rightarrow Property \\
-	propertyByName(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
-	l_c, l_p \in Label, a \lhd Application
-\end{align*}
-\begin{align*}
-	\mathbf{associationByName} : Label \times Label \times Application \rightarrow Association \\
-	associationByName(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
-	l_c, l_a \in Label, a \lhd Application
-\end{align*}
-
 
 \paragraph{Remove Property or Association} The property or association can be simply removed from a class:
 \begin{align*}
@@ -560,15 +579,6 @@ The database is composed from two separated parts - database schema and data. Tr
 	 l \in Label, c \lhd Column*,d \lhd Database
 \end{align*}
 
-\paragraph{Copy Column} The transformation creates a copy of a column in a another table in a database. The transformation changes only the structure of database - stored data are not changed.
-\begin{align*}
-	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
-	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{columns(e) \cup c} 
-	\end{cases} \\
-	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \lhd Database
-\end{align*}
-
 \paragraph{Alter Column Name}
 \begin{align*}
 \mathbf{alterColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
@@ -592,6 +602,16 @@ l_c, l_o, l_n \in Label, d \lhd Database
 	 \end{cases}\\ 
 	t = Table*, d \lhd Database
 \end{align*}
+
+\paragraph{Copy Column} The transformation creates a copy of a column in a another table in the database. The transformation changes only the structure of database - stored data are not changed.
+\begin{align*}
+	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
+	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{state(d) \bullet addColumn(l_t, c)} 
+	\end{cases} \\
+	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \lhd Database
+\end{align*}
+
 \paragraph{Insert row} The function allow to insert a row(s) into a database.
 \begin{align*}
 	\mathbf{insertRow} : Row* \times Database \rightarrow Database \\
@@ -602,6 +622,18 @@ l_c, l_o, l_n \in Label, d \lhd Database
 		 \end{cases}	\\
 		 r = Row*,d \lhd Database
 \end{align*}
+
+\paragraph{Insert Value} The function inserts a new pair into an existing row.
+\begin{align*}
+	\mathbf{insertValues} : Row \times Pair* \times Database \rightarrow Daatabase \\
+	insertValues(r, p, d) = \begin{cases}
+ 		\inference{|p| > 1}{insertValues(r, head(p), d)\bullet insertValues(r, tail(p), d)}  \\ \\
+ 		\inference{|p| = 1 \wedge \forall e \in pairs(r) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
+	 	 Inconsistent \; d
+ 		\end{cases} \\
+r \lhd Row, p = Pair*,d \lhd Databases
+\end{align*}
+
 \paragraph{Add Value To Table} The function appends a pair to all rows of a table.
 \begin{align*}
 	\mathbf{addValueToTable} : Label \times Pair \times Database \rightarrow Database \\
@@ -614,17 +646,6 @@ l_c, l_o, l_n \in Label, d \lhd Database
  	l \in Label, p \lhd Pair,  d \lhd Database
 \end{align*}
 
-
-\paragraph{Insert Value} The function inserts a new pair into an existing row.
-\begin{align*}
-	\mathbf{insertValues} : Row \times Pair* \times Database \rightarrow Daatabase \\
-	insertValues(r, p, d) = \begin{cases}
- 		\inference{|p| > 1}{insertValues(r, head(p), d)\bullet insertValues(r, tail(p), d)}  \\ \\
- 		\inference{|p| = 1 \wedge \forall e \in pairs(r) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
-	 	 Inconsistent \; d
- 		\end{cases} \\
-r \lhd Row, p = Pair*,d \lhd Databases
-\end{align*}
 \paragraph{Copy Value} The function copy values from one column in a table to another column in the same or in another table - according to mapping function $f_m$. 
 \begin{align*}
 	\mathbf{copyValue} : Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
@@ -657,41 +678,21 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \end{align*}
 
 
-
-%\begin{align*}
-%	v(l, fm, d) = \begin{cases}
-%	\inference{fm = \varnothing}{d}\\ \\
-%	\inference{|fm| > 1}{v(l, head(fm)) \bullet v(l, tail(fm))}\\ \\
-%	\inference{|fm| = 1 \exists c \in pairs(first(fm)) : reference(c) = l \\ \wedge \exists e \in pairs(second(fm)) : reference(e) = l}{e \cup findPair(l,c)} 
-% \end{cases}
-%\end{align*}
-
-
-
-
 \section{Evolutionaty Transformations}
-The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro} together with sets $AppOps$ and $DbOps$ for evolving various layers of the software. The semantic of transformations in the set $E$ is defined by their interpretation on individual software layers. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
+The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro}. The semantic of transformations in the set $E$ is defined by their interpretation on individual software components. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
 
-The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context (application or database). If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve.  We decide to use following transcription to cover all aspects of transformation definition:
-\begin{align*}
-operation(parameters, context) = \begin{cases}
-  \inference{conditions \; of \; feasibility}{impact \; on \; context}\\ \\
-  \inference{otherwise}{context}
- \end{cases}
-\end{align*}
-The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. We will not state this implicit assumption in the operations definitions to increase theirs readability.
+The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context (application or database). If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve. The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. This implicit assumption is not stated in the transformation definitions to increase theirs readability.
 
 
 \subsection{Software Creation}
-There are defined three transformations which are able to create a software: $newClass$, $addProperty$, $addAssociation$. These three transformations can be used to create a software from a scratch. The first of them has no impact on stored data, whereas the rest of them can in some cases.
+There are defined three transformations which are able to create a software: $addProperty$, $addAssociation$,  $newClass$. These three transformations can be used to create a software from a scratch. The last of them has no impact on stored data, whereas the rest of them can in some cases.
 \begin{align*}
 \mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
 \Psi(s, addProperty(l, p)) = application(s) \circ addProp(l,p) \\
 \Phi(s, addProperty(l, p)) = database(s) \bullet insertProp(l, p) \\
 s \lhd Software, l \in Label, p \in Properties
 \end{align*}
-
-Whereas the $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
+The $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 \begin{align*}
 insertProp(p, d) = \begin{cases}
 \inference{!\:mandatory(p) \vee !\:instantiated(owningClass(p))}{addColumn(l, \rho(p,d), d)} 
@@ -735,13 +736,13 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
  a \in Associations, d \lhd Database
 \end{align*}
 
+\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
 \begin{align*}
 \mathbf{newClass} : Class \times State \rightarrow State \\
 \Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
 \Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d), d) \\ \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, d) \\ \bullet addTable(name(c), \{\forall r \in collections(c) | \rho(r,d)\}, d)  
 \end{align*}
 
-\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
 %\begin{align*}
 %insertClass : Class \times Database \rightarrow Database \\
 %insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
@@ -758,7 +759,7 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 
 \subsection{Software Decomposition}
 \begin{align*}
-RemoveClass: Label \times Software \rightarrow State  \\
+\mathbf{RemoveClass}: Label \times Software \rightarrow State  \\
 \Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
 \Phi RemoveClass(l, s) = database(s) \bullet dropClass(l) \\
 \\ l \in Label, s \in Software 
@@ -768,7 +769,7 @@ dropClass(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \n
 \end{align*}
 
 \begin{align*}
-RemoveProperty: Label \times Label \times State \rightarrow State \\
+\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
 \Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
 \Phi RemoveProperty(l, l_p, s) =  database(s) \bullet dropProp(l, l_p) \end{align*}
 \begin{align*}
@@ -780,7 +781,7 @@ dropProp(p, d) = \begin{cases}
 \end{align*}
 
 \begin{align*}
-RemoveAssociation : Label \times Labels \times State \rightarrow State \\ 
+\mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
 \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
 \Phi RemoveAssociation(l, l_a, s) = database(s) \bullet dropAssoc(l, l_a) \\
 l_c, l_a \in Labels, a \lhd Applications
@@ -802,7 +803,7 @@ dropAssoc(l, l_a, d) =  \begin{cases}
 \subsection{Software Alternation}
 \paragraph{Rename Class}
 \begin{align*}
-RenameClass : Label \times Label \times State \rightarrow State \\ 
+\mathbf{RenameClass} : Label \times Label \times State \rightarrow State \\ 
 \Psi(RenameClass(l_o, l_n), s) = application(s) \circ renClass(l_o, l_n) \\
 \Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterClass(l_o, l_n) \\ \\
 \end{align*}
@@ -816,7 +817,7 @@ l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
 
 \paragraph{Rename Property}
 \begin{align*}
-	RenameProperty : Label \times Label \times Label \times State \rightarrow State \\ \\
+	\mathbf{RenameProperty} : Label \times Label \times Label \times State \rightarrow State \\ \\
 \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
 \Phi(RenameProperty(l_c, l_o, l_n, s)) = \begin{cases}
  	\inference{cardinality(propertyByName(l_c, l_o, application(s))) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
@@ -829,7 +830,7 @@ l_c, l_o, l_n \in Label,  s \lhd Software
 
 \paragraph{Rename Association}
 \begin{align*}
-RenameAssociation : Label \times Label \times Label \times State \rightarrow State \\
+\mathbf{RenameAssociation} : Label \times Label \times Label \times State \rightarrow State \\
 \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
 \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \begin{cases}
 	\inference{\exists a  \in associationByName(application(s)) : \\
@@ -856,9 +857,9 @@ l_c, l_o, l_n \in Label, a \lhd Applications, s \in Sates, d \lhd Database
 
 
 \paragraph{Copy Property}
-All transformations described earlier does change mostly the structure of a application only. Therefore we define  the transformation for copying a property from one class to another. To copy property is the basic way to move data from instances of a class to instance of another class. Note the transformation does not move a single value, but it move the values for all instances in the software.
+All transformations described earlier does change primary the structure of an application. Therefore we define  the transformation for copying a property from one class to another. Copy property is the basic way to move data among instances of different classes. Note the transformation does not move a single value, but it move the values for all instances in the software.
 
-The copy property can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, where the $copyData$ transformation is used.
+The $CopyProperty$ function can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, therefore transformation to update data are used.
 \begin{align*}
 	\mathbf{CopyProperty} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
 	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} \\\\
