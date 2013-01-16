@@ -438,6 +438,7 @@ There are two kinds of properties - primitive property with cardinality equal to
 
 \section{Transformation for Models Manipulation}
 The evolution affects both parts of software and as shown in section \ref{sec:evoIntro} it is mapped to transformation specific for application (set $AppT$ of transformations) and database (set $DbT$). These sets are defined in this section.
+
 \subsection{Application Transformation}
 This section provide transformations for manipulating the application layer of a software - the $AppT$ set. The set contains not only transformations for model creation, alternation and decomposition, but some operations to obtain information about a model too.
 
@@ -603,6 +604,16 @@ l_c, l_o, l_n \in Label, d \lhd Database
 	t = Table*, d \lhd Database
 \end{align*}
 
+\paragraph{Alter Table}
+\begin{align*}
+alterTable:  Label \times Label \times Database \rightarrow Database \\
+alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
+t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
+\end{gathered}}\\
+l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
+\end{align*}
+
+
 \paragraph{Copy Column} The transformation creates a copy of a column in a another table in the database. The transformation changes only the structure of database - stored data are not changed.
 \begin{align*}
 	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
@@ -677,6 +688,22 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	l \in Label, r \lhd Row
 \end{align*}
 
+\paragraph{Remove table}
+\begin{align*}
+	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \not \exists r \in data(d) : owningTable(r) = l \\  \not \exists j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) = l }{ tables(d) \setminus \rho(c)}
+\end{align*}
+
+\paragraph{Remove column}
+\begin{align*}
+	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) \setminus c}\\
+	 l \in Label, d \lhd Database 
+\end{align*}
+
+\paragraph{Remove Foreign Key}
+\begin{align*}
+	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
+	 l \in Label, d \lhd Database 
+\end{align*}
 
 \section{Evolutionaty Transformations}
 The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro}. The semantic of transformations in the set $E$ is defined by their interpretation on individual software components. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
@@ -759,45 +786,31 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 
 \subsection{Software Decomposition}
 \begin{align*}
-\mathbf{RemoveClass}: Label \times Software \rightarrow State  \\
-\Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
-\Phi RemoveClass(l, s) = database(s) \bullet dropClass(l) \\
-\\ l \in Label, s \in Software 
-\end{align*}
-\begin{align*}
-dropClass(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \not \exists r \in data(d) : owningTable(r) = l \\  \not \exists j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) = l }{ tables(d) \setminus \rho(c)}
+	\mathbf{RemoveClass}: Label \times Software \rightarrow State  \\
+	\Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
+	\Phi RemoveClass(l, s) = database(s) \bullet dropTable(l) \\
+	l \in Label, s \in Software 
 \end{align*}
 
 \begin{align*}
-\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
-\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
-\Phi RemoveProperty(l, l_p, s) =  database(s) \bullet dropProp(l, l_p) \end{align*}
-\begin{align*}
-dropProp(p, d) = \begin{cases}
- \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \exists c \in columns(t) : name(c) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p)) }{columns(t) \setminus c
-} \\ \\
-  \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge \not \exists c \in columns(t) : name(c) = name(p) \\ \wedge \exists u \in tables(d) : name(u) = name(p) \\ \wedge \not \exists r \in data(d) : owningTable(r) = name(owningClass(p))}{ tables(d) \setminus u }
- \end{cases}
+	\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
+	\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
+	\Phi RemoveProperty(l, l_p, s) = \begin{cases}
+		 \inference{cardinality(propertyByName(l_p, application(s)) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
+		 \inference{cardinality(propertyByName(l_p, application(s)) >1}{database(s) \bullet dropTable(l)}
+ 	\end{cases}\\
+ 	l, l_p \in Label, s \lhd Software
 \end{align*}
-
+ 
 \begin{align*}
-\mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
-\Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
-\Phi RemoveAssociation(l, l_a, s) = database(s) \bullet dropAssoc(l, l_a) \\
-l_c, l_a \in Labels, a \lhd Applications
+    \mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
+    \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
+    \Phi RemoveAssociation(l, l_a, s) = \begin{cases}
+     	\inference{a = associationByName(l, l_a, application(s)) \\ \wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
+     	\inference{a = associationByName(l, l_a, application(s)) \\ \wedge startCardinality(a) > 1}{database(s) \bullet dropTable(l_a)} 
+     \end{cases}\\
+    l_c, l_a \in Labels, s \lhd Software
 \end{align*}
-\begin{align*}
-dropAssoc(l, l_a, d) =  \begin{cases}
- \inference{\exists t \in tables(d) : name(t) = l
- \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_a
- \\ \wedge \forall r \in data(d) : owningTable(r) \neq t}{ foreignKeys(t) \setminus f }
- \\ \\
- \inference{\exists t \in tables(d) : name(t) = l_a
- \\ \wedge \exists f \in foreignKeys(t) : name(f) = l
- \\ \wedge \forall r \in data(d) : reference(r) \neq t}{ tables(d) \setminus t}
- \end{cases}
-\end{align*}
-
 
 
 \subsection{Software Alternation}
@@ -805,14 +818,7 @@ dropAssoc(l, l_a, d) =  \begin{cases}
 \begin{align*}
 \mathbf{RenameClass} : Label \times Label \times State \rightarrow State \\ 
 \Psi(RenameClass(l_o, l_n), s) = application(s) \circ renClass(l_o, l_n) \\
-\Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterClass(l_o, l_n) \\ \\
-\end{align*}
-\begin{align*}
-alterTable:  Label \times Label \times Database \rightarrow Database \\
-alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
-t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
-\end{gathered}}\\
-l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
+\Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterTable(l_o, l_n) \\ \\
 \end{align*}
 
 \paragraph{Rename Property}
@@ -821,7 +827,7 @@ l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
 \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
 \Phi(RenameProperty(l_c, l_o, l_n, s)) = \begin{cases}
  	\inference{cardinality(propertyByName(l_c, l_o, application(s))) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
- 	\inference{cardinality(propertyByName(l_c, l_o, application(s))) > 1}{alterTable(l_o, l_n, database(s))}
+ 	\inference{cardinality(propertyByName(l_c, l_o, application(s))) > 1}{database(s) \bullet alterTable(l_o, l_n, database(s))}
  \end{cases}\\
 l_c, l_o, l_n \in Label,  s \lhd Software
 \end{align*}
