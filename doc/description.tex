@@ -452,15 +452,15 @@ The evolution affects both parts of software and as shown in section \ref{sec:ev
 \subsection{Application Transformation}
 This section provide transformations for manipulating the application layer of a software - the $AppT$ set. The set contains not only transformations for model creation, alternation and decomposition, but some operations to obtain information about a model too.
 
-\paragraph{Get Property or Association}
+\paragraph{Get Property or Association} Functions $findProperty$ and $findAssociation$ returns a property (association) if it exists in given context - application and class of provided name.
 \begin{align*}
-	\mathbf{propertyByName} : Label \times Label \times Application \rightarrow Property \\
-	propertyByName(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
+	\mathbf{findProperty} : Label \times Label \times Application \rightarrow Property \\
+	findProperty(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
 	l_c, l_p \in Label, a \lhd Application
 \end{align*}
 \begin{align*}
-	\mathbf{associationByName} : Label \times Label \times Application \rightarrow Association \\
-	associationByName(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
+	\mathbf{findAssociation} : Label \times Label \times Application \rightarrow Association \\
+	findAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
 	l_c, l_a \in Label, a \lhd Application
 \end{align*}
 
@@ -541,7 +541,7 @@ The database is composed from two separated parts - database schema and data. Tr
 	l \in Label, d \lhd Database
 \end{align*}
 
-\paragraph{Compare Tables} The need to compare two tables during the evolution results into the comparing operator $\cong$. The operator has to be defined for columns and foreign keys too.
+\paragraph{Compare} The need to compare two tables during the evolution results into the comparing operator $\cong$. The operator has to be defined for columns and foreign keys too.
 \begin{align*}
 	\mathbf{\cong} : Table \times Table \rightarrow Boolean \\
 	t_1 \cong t_2 = \begin{cases}
@@ -568,7 +568,7 @@ The database is composed from two separated parts - database schema and data. Tr
  \end{cases}
 \end{align*}
 
-\paragraph{Find pair}
+\paragraph{Find pair} The function returns a pair corresponding to given column (or key) name in concrete row.
 \begin{align*}
 \mathbf{findPair} : Label \times Row \rightarrow Pair \\
 	findPair(l, r) = \begin{cases}
@@ -614,7 +614,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
 	t = Table*, d \lhd Database
 \end{align*}
 
-\paragraph{Alter Table}
+\paragraph{Alter Table} The $alterTable$ function renames a table in  the database.
 \begin{align*}
 alterTable:  Label \times Label \times Database \rightarrow Database \\
 alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
@@ -678,12 +678,12 @@ r \lhd Row, p = Pair*,d \lhd Databases
  	l_s, l_t, l_{sc}, l_{tc} \in Label, d \lhd Database
 \end{align*}
 
-\paragraph{Copy rows}
+\paragraph{Copy rows} The function $copyRows$ creates a copy of a source table content in another table with the same structure. 
 \begin{align*}
 	\mathbf{copyRows} : Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
 	copyRows(l_s, l_t, f_m, d) = \begin{cases}
  	\inference{|f_m| = \varnothing}{d} \\\\
- 	\inference{|f_m| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{data(d) \cup insertRow(changeRef(l_t, first(f_m)), d)} \\\\
+ 	\inference{|f_m| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{data(d) \cup insertRow(row(l, pairs(first(f_m))), d)} \\\\
  	\inference{|f_m| > 1}{\begin{gathered}
 		 d \bullet copyRows(l_s, l_t, head(f_m)) \bullet copyRows(l_s, l_t, tail(f_m))
 	\end{gathered}}
@@ -691,28 +691,22 @@ r \lhd Row, p = Pair*,d \lhd Databases
   l_s, l_t \in Label, d \lhd Database
 \end{align*}
 
-\paragraph{Change ref}
+\paragraph{Remove table} The function removes a table if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too.
 \begin{align*}
-	\mathbf{changeRef} : Label \times Row \rightarrow Row \\
-	changeRef(l, r) = \inference{}{reference(r) = l } \\
-	l \in Label, r \lhd Row
-\end{align*}
-
-\paragraph{Remove table}
-\begin{align*}
+	\mathbf{dropTable} : Label \times Database \rightarrow Database \\
 	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \not \exists r \in data(d) : owningTable(r) = l \\  \not \exists j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) = l }{ tables(d) \setminus \rho(c)}
 \end{align*}
 
-\paragraph{Remove column}
+\paragraph{Remove column or foreign key} The situation is similar to the $dropTable$ function - there has to be no data in the column or key so it can be safely removed.
 \begin{align*}
+	\mathbf{dropColumn} : Label \times Label \times Database \rightarrow Database \\
 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) \setminus c}\\
-	 l \in Label, d \lhd Database 
+	 l , l_p\in Label, d \lhd Database 
 \end{align*}
-
-\paragraph{Remove Foreign Key}
 \begin{align*}
+	\mathbf{dropKey} : Label \times Label \times Database \rightarrow Database \\
 	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
-	 l \in Label, d \lhd Database 
+	 l, l_p \in Label, d \lhd Database 
 \end{align*}
 
 \section{Evolutionaty Transformations}
@@ -737,28 +731,25 @@ There are defined three transformations which are able to create a software: $ad
 \end{align*}
 
 
+\paragraph{Add association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
+$$f_m : \rightarrow Row \times Row $$
 
+\textbf{TODO: define the features of the $f_m$ function}
 \begin{align*}
 \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
 \Psi(s, addAsociation(l, a, f_m)) = application(s) \circ addAssoc(l, a) \\
 \Phi(s, addAsociation(l, a, f_m)) = database(s) \bullet insertAssoc(l, a, f_m)
 \end{align*}
-
-Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
-$$f_m : \rightarrow Instance \times Instance $$
-
-\textbf{TODO: define the features of the $f_m$ function}
-
 The $insertAssoc$ function is defined as:
 \begin{align*}
 insertAssoc : Association \times Database \times (Row \times Row) \\
-insertAssoc(a, d, f_m) = \begin{cases}
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(a), reference(a)) : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
+insertAssoc(l, a, f_m, d) = \begin{cases}
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
+addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(l, reference(a)) : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
 \end{gathered}
  }
  \\ \\
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = name(owningClass(a)) \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered} addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(owningClass(a), reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ insertRow(row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))]), d)
+\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered} addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(l, reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ insertRow(row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))]), d)
 \end{gathered}
  } 
  \end{cases}\\
@@ -787,35 +778,38 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 
 
 \subsection{Software Decomposition}
+The removal of class, property or association is limited only by the constraints given in application or database transformations. The main constraint is there has to be no data, which can be lost during removal. 
+\paragraph{Remove class}
 \begin{align*}
 	\mathbf{RemoveClass}: Label \times Software \rightarrow State  \\
 	\Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
 	\Phi RemoveClass(l, s) = database(s) \bullet dropTable(l) \\
 	l \in Label, s \in Software 
 \end{align*}
-
+\paragraph{Remove property}
 \begin{align*}
 	\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
 	\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
 	\Phi RemoveProperty(l, l_p, s) = \begin{cases}
-		 \inference{cardinality(propertyByName(l_p, application(s)) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
-		 \inference{cardinality(propertyByName(l_p, application(s)) >1}{database(s) \bullet dropTable(l)}
+		 \inference{cardinality(findProperty(l_p, application(s)) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
+		 \inference{cardinality(findProperty(l_p, application(s)) >1}{database(s) \bullet dropTable(l)}
  	\end{cases}\\
  	l, l_p \in Label, s \lhd Software
 \end{align*}
- 
+\paragraph{Remove association} 
 \begin{align*}
     \mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
     \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
     \Phi RemoveAssociation(l, l_a, s) = \begin{cases}
-     	\inference{a = associationByName(l, l_a, application(s)) \\ \wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
-     	\inference{a = associationByName(l, l_a, application(s)) \\ \wedge startCardinality(a) > 1}{database(s) \bullet dropTable(l_a)} 
+     	\inference{a = findAssociation(l, l_a, application(s)) \\ \wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
+     	\inference{a = findAssociation(l, l_a, application(s)) \\ \wedge startCardinality(a) > 1}{database(s) \bullet dropTable(l_a)} 
      \end{cases}\\
     l_c, l_a \in Labels, s \lhd Software
 \end{align*}
 
 
 \subsection{Software Alternation}
+Alternation of a software is limited to renaming functions in our model.
 \paragraph{Rename Class}
 \begin{align*}
 \mathbf{RenameClass} : Label \times Label \times State \rightarrow State \\ 
@@ -828,8 +822,8 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(owningClass(
 	\mathbf{RenameProperty} : Label \times Label \times Label \times State \rightarrow State \\ \\
 \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
 \Phi(RenameProperty(l_c, l_o, l_n, s)) = \begin{cases}
- 	\inference{cardinality(propertyByName(l_c, l_o, application(s))) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
- 	\inference{cardinality(propertyByName(l_c, l_o, application(s))) > 1}{database(s) \bullet alterTable(l_o, l_n, database(s))}
+ 	\inference{cardinality(findProperty(l_c, l_o, application(s))) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
+ 	\inference{cardinality(findProperty(l_c, l_o, application(s))) > 1}{database(s) \bullet alterTable(l_o, l_n, database(s))}
  \end{cases}\\
 l_c, l_o, l_n \in Label,  s \lhd Software
 \end{align*}
@@ -841,10 +835,10 @@ l_c, l_o, l_n \in Label,  s \lhd Software
 \mathbf{RenameAssociation} : Label \times Label \times Label \times State \rightarrow State \\
 \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
 \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \begin{cases}
-	\inference{\exists a  \in associationByName(application(s)) : \\
+	\inference{\exists a  \in findAssociation(application(s)) : \\
   name(a) = l_c \\ \wedge startCardinality(a) > 1 }{database(s) \bullet alterTable(l_c, l_o, l_n)}
  \\ \\
-  \inference{\exists a  \in associationByName(application(s)) : \\
+  \inference{\exists a  \in findAssociation(application(s)) : \\
   name(a) = l_c \\ \wedge startCardinality(a) \leq 1 }{\begin{gathered}
 database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
 \end{gathered}}
