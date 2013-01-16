@@ -344,10 +344,10 @@ The definition of data allows definition of function $contains$ which verify if 
 \end{align*}
 
 \subsubsection{Database consistency}
-The database consistency is founded on the consistency of structure and consistency between structure and stored values. Each row in a database has to refer to a table in database schema and it has to have the structure corresponding to the one defined by a table, otherwise the database is inconsistent. The consistency of database is then:\begin{align*}
+The database consistency is founded on the consistency of structure and consistency between structure and stored values. The conditions for structure consistency are similar as for application structure. The consistency between structure and data is:  each row in a database  refers to a table in database schema and it has to have the structure corresponding to the one defined by a table, moreover the column and foreign key constrains has to be fulfilled  otherwise the database is inconsistent. The consistency of database is:\begin{align*}
 	\mathbf{consistent} : Database \rightarrow Boolean \\
-	consistent(d) = \begin{cases}
- 		\inference{\forall r \in data(d), \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) : \\ reference(p) = name(u)}{true}
+	state(d) = \begin{cases}
+ 		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \exists t \in tables(d) \wedge name(t) = reference(f) \\ \wedge \forall r \in data(d): ( \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ value(pairByName(name(g), u_1) \neq value(pairByName(name(g), u_2) }{true}
  	\\ \\
  	false
  \end{cases}\end{align*}
