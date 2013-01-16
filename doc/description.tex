@@ -478,7 +478,7 @@ This section provide transformations for manipulating the application layer of a
 	l \in Labels, s \in Associations, a \lhd Applications
 \end{align*}
 
-\paragraph{Add Class} Adding a class is limited to the case when the class has no associations, this is because it simplifies the database migration and because it is a natural way of modeling. Next the transformation $addClass$ has to verify there is no name collision
+\paragraph{Add Class} Adding a class is limited to the case when the class has no associations, this is because it simplifies the database migration. The transformation $addClass$ has to verify there is no name collision
 \begin{align*}
 	\mathbf{addClass} : Class \times Application \rightarrow Application \\ 
 	addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c) \\ \wedge associations(c) = \varnothing }{classes(a) \cup c} \\ \\
@@ -756,7 +756,7 @@ addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(l, reference
  a \in Associations, d \lhd Database
 \end{align*}
 
-\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then it is associations are created.
+\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then its associations are created.
 \begin{align*}
 \mathbf{newClass} : Class \times State \rightarrow State \\
 \Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
