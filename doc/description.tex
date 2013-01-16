@@ -713,28 +713,20 @@ The definition of a transformation consists of two parts - a conditions of trans
 
 \subsection{Software Creation}
 There are defined three transformations which are able to create a software: $addProperty$, $addAssociation$,  $newClass$. These three transformations can be used to create a software from a scratch. The last of them has no impact on stored data, whereas the rest of them can in some cases.
+\paragraph{Add Property} Adding a property to database can change not only structure but stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 \begin{align*}
-\mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
-\Psi(s, addProperty(l, p)) = application(s) \circ addProp(l,p) \\
-\Phi(s, addProperty(l, p)) = database(s) \bullet insertProp(l, p) \\
-s \lhd Software, l \in Label, p \in Properties
+	\mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
+	\Psi(s, addProperty(l, p)) = application(s) \circ addProp(l,p) \\
+	\Phi(s, addProperty(l, p)) = \begin{cases}
+    		\inference{cardinality(p) \leq 1}{database(s) \bullet addColumn(l, \rho(p,d), d)} \\ \\
+	    \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
+   database(s) \bullet addTable(\rho(p,d), d) \\ \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))])) 
+    \end{gathered} } 
+   \end{cases}\\
+	s \lhd Software, l \in Label, p \in Properties
 \end{align*}
-The $insertProp$ on database level can change stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
-\begin{align*}
-insertProp(p, d) = \begin{cases}
-\inference{!\:mandatory(p) \vee !\:instantiated(owningClass(p))}{addColumn(l, \rho(p,d), d)} 
-\\ \\ 
-\inference{ \wedge mandatory(p) \vee instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered} addColumn(l, \rho(p,d), d) \\ \bullet \forall r \in data(d), reference(r) = name(t) : \\ addValueToTable(name(t), [name(p), defaultValue(p)], d)
-\end{gathered}
-} 
-\\ \\
-\inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
-addTable(\rho(p,d), d) \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))]),d) 
-\end{gathered}
-} 
-\end{cases}\\
-p \in Properties, d \in Dataabses
-\end{align*}
+
+
 
 \begin{align*}
 \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
