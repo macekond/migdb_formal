@@ -357,6 +357,17 @@ The database consistency is founded on the consistency of structure and consiste
 \label{sec:orm}
 There are defined functions for object-relational mapping used in this paper. The mapping function itself are not able to create a database from the application as they are mentioned to be used together with evolutionary transformations introduced in section \ref{sec:transformations}.
 
+\paragraph{Mapping of Application} The goal of ORM is usually to determine how an instance is stored in the database. The ORM maps the structure of application classes to database schema. The assumption is a software is evolved continuously and evolutionary transformations produces consistent software, nevertheless to verify consistency of a software we need mapping between an existing application structure and database schema. 
+\begin{align*}
+	\mathbf{\rho_{app}} : Application \rightarrow Database\\
+	\rho_{app}(a) = \inference{state(a) = Consistent a}{\begin{gathered}
+	db(\varnothing) \bullet addTable(classes(a)) \\ 
+	\bullet (\forall c \in classes(a), p \in properties(c) : addProperty(name(c), p) \\
+	\bullet (\forall c \in classes(a), e \in associations(c) : addAssociaiton(name(c), e) 
+\end{gathered}}
+\end{align*}
+
+
 \paragraph{Mapping of Types} The mapping of types assumes a bijection between application types and database types, otherwise there has to be additional information for type mapping. We focus on structural and data change therefore there is only one type of values in both our models. The mapping is then straightforward:
 \begin{align*}
 	\mathbf{\rho_{t}} : AppType \rightarrow DbType  \\
