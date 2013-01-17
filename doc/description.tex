@@ -387,6 +387,8 @@ There are defined functions for object-relational mapping used in this paper. Th
 
 \subsubsection{Mapping of Properties}
 There are two kinds of properties - primitive property with cardinality equal to one is mapped to a column; second kind - collection with cardinality greater than one is mapped to table, thus there are two mapping cases. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. 
+
+There can occur name collision during mapping in case there are more classes with property representing collection. To avoid that the mapping changes the name of the table representing a collection.
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Column* \\ \\
 	\rho_{sp}(p) = \begin{cases}
@@ -414,19 +416,19 @@ There are two kinds of properties - primitive property with cardinality equal to
      	\inference{cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
      		\wedge 	\exists t : t = table(name(owningClass(p)), d)
      		}{\begin{gathered}
-     			table(name(p), primaryKey("Id"), \\ column("value", 			\rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
+     			table(name(t)+name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
     	\end{gathered}}\\ \\
      	\inference{ cardinality(p) > 1 \wedge mandatory(p) \\ 
      		\wedge \exists t : t = table(name(owningClass(p)), d) 
      		}{\begin{gathered}  
-     			table(name(p), primaryKey("Id"), \\ 
+     			table(name(t)+name(p), primaryKey("Id"), \\ 
      			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
     	 \end{gathered}}
  	\end{cases}\\
  	p \lhd Property
 \end{align*}
 
-\paragraph{Mapping of Associations} An association is mapped into database as a foreign key in table representing associated class or as a table in case the association cardinality is one to many or many to many. Thus there are two mapping cases as for properties.
+\paragraph{Mapping of Associations} An association is mapped into database as a foreign key in table representing associated class or as a table in case the association cardinality is one to many or many to many. Thus there are two mapping cases as for properties and the same solution is used to avoid name collisions.
 \begin{align*}
 	\mathbf{\rho_a} : Association* \rightarrow ForeignKey* \\
 	\rho_a(a) = \begin{cases}
@@ -449,9 +451,9 @@ There are two kinds of properties - primitive property with cardinality equal to
 	\rho_a(a) = \begin{cases}
  		\inference{a = \varnothing}{\varnothing}\\
 		\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
-		\inference{  startCardinality > 1 \\ \wedge \rho(owningClass(p)) \in tables(d) \wedge \rho(reference(a)) \in tables(d)
+		\inference{  startCardinality > 1 \\ \wedge \exists t \in tables(d) : name(owningClass(p)) = name(t) \\ \wedge \exists e \in tables(d) : name(reference(a)) = name(e)
   		}{\begin{gathered}  
-		 table(name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
+		 table(name(t)+name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
  	\end{cases}\\
 	 a \lhd Association
@@ -463,29 +465,32 @@ The evolution affects both parts of software and as shown in section \ref{sec:ev
 \subsection{Application Transformation}
 This section provide transformations for manipulating the application layer of a software - the $AppT$ set. The set contains not only transformations for model creation, alternation and decomposition, but some operations to obtain information about a model too.
 
-\paragraph{Get Property or Association} Functions $findProperty$ and $findAssociation$ returns a property (association) if it exists in given context - application and class of provided name.
-\begin{align*}
-	\mathbf{findProperty} : Label \times Label \times Application \rightarrow Property \\
-	findProperty(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
-	l_c, l_p \in Label, a \lhd Application
-\end{align*}
-\begin{align*}
-	\mathbf{findAssociation} : Label \times Label \times Application \rightarrow Association \\
-	findAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
-	l_c, l_a \in Label, a \lhd Application
-\end{align*}
+%\paragraph{Get Property or Association} Functions $findProperty$ and $findAssociation$ returns a property (association) if it exists in given context - application and class of provided name.
+%\begin{align*}
+%	\mathbf{findProperty} : Label \times Label \times Application \rightarrow Property \\
+%	findProperty(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
+%	l_c, l_p \in Label, a \lhd Application
+%\end{align*}
+%\begin{align*}
+%	\mathbf{findAssociation} : Label \times Label \times Application \rightarrow Association \\
+%	findAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
+%	l_c, l_a \in Label, a \lhd Application
+%\end{align*}
 
 \paragraph{Add Property} The name collision only has to be verified, before adding a property into an application structure:
 \begin{align*}
  	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
-	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(p) : name(q) \neq name(p)}{properties(c) \cup p } \\
+	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(c) : name(q) \neq name(p) \\ \wedge \forall e \in associations(c) : name(e) \neq name(p)}{properties(c) \cup p } \\
 	l \in Label, p \lhd Property, a \lhd Applications
 \end{align*}
 
 \paragraph{Add Association} Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the application model.
 \begin{align*}
 	\mathbf{addAssoc} : Label \times Association \times Application \rightarrow Application \\
-	addAssoc(l, s, a) = \inference{\forall f \in associations(a) : name(f) \neq name(s) \\ \wedge \exists c \in classes(a) : name(c) = l \\ \wedge \exists k \in classes(a) : name(k) = reference(s) }{associations(c) \cup s}\\
+	addAssoc(l, s, a) = \inference{
+	\exists c \in classes(a) : name(c) = l \\
+	\wedge \forall f \in associations(c) : name(f) \neq name(s) \\ 	\wedge \forall p \in properties(c) : name(p) \neq name(s) \\ 
+	\wedge \exists k \in classes(a) : name(k) = reference(s)}{associations(c) \cup s}\\
 	l \in Labels, s \in Associations, a \lhd Applications
 \end{align*}
 
@@ -545,12 +550,12 @@ This section provide transformations for manipulating the application layer of a
 \subsection{Database Transformation}
 The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. 
 
-\paragraph{Find Table} The function $findTable$ finds and returns a table in the database according to the provided label.
-\begin{align*}
-	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
-	findTable(l, d) = \inference{\exists t \in tables(d) \wedge name(t) = l}{t}  \\ \\
-	l \in Label, d \lhd Database
-\end{align*}
+%\paragraph{Find Table} The function $findTable$ finds and returns a table in the database according to the provided label.
+%\begin{align*}
+%	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
+%	findTable(l, d) = \inference{\exists t \in tables(d) \wedge name(t) = l}{t}  \\ \\
+%	l \in Label, d \lhd Database
+%\end{align*}
 
 \paragraph{Compare} The need to compare two tables during the evolution results into the comparing operator $\cong$. The operator has to be defined for columns and foreign keys too.
 \begin{align*}
@@ -797,23 +802,31 @@ The removal of class, property or association is limited only by the constraints
 	\Phi RemoveClass(l, s) = database(s) \bullet dropTable(l) \\
 	l \in Label, s \in Software 
 \end{align*}
+
 \paragraph{Remove property}
 \begin{align*}
 	\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
 	\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
 	\Phi RemoveProperty(l, l_p, s) = \begin{cases}
-		 \inference{cardinality(findProperty(l_p, application(s)) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
-		 \inference{cardinality(findProperty(l_p, application(s)) >1}{database(s) \bullet dropTable(l)}
+		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
+		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{database(s) \bullet dropTable(name(owningClass(p)+l)}
  	\end{cases}\\
  	l, l_p \in Label, s \lhd Software
 \end{align*}
+
 \paragraph{Remove association} 
 \begin{align*}
     \mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
     \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
     \Phi RemoveAssociation(l, l_a, s) = \begin{cases}
-     	\inference{a = findAssociation(l, l_a, application(s)) \\ \wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
-     	\inference{a = findAssociation(l, l_a, application(s)) \\ \wedge startCardinality(a) > 1}{database(s) \bullet dropTable(l_a)} 
+     	\inference{\exists c \in classes(application(s)) : name(c) = l \\
+     	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
+     	\wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
+     	\inference{\exists c \in classes(application(s)) : name(c) = l \\
+     	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
+     	\wedge startCardinality(a) > 1}{database(s) \bullet dropTable(name(owningClass(a))+l_a)} 
      \end{cases}\\
     l_c, l_a \in Labels, s \lhd Software
 \end{align*}
@@ -833,8 +846,14 @@ Alternation of a software is limited to renaming functions in our model.
 	\mathbf{RenameProperty} : Label \times Label \times Label \times State \rightarrow State \\ \\
 \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
 \Phi(RenameProperty(l_c, l_o, l_n, s)) = \begin{cases}
- 	\inference{cardinality(findProperty(l_c, l_o, application(s))) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
- 	\inference{cardinality(findProperty(l_c, l_o, application(s))) > 1}{database(s) \bullet alterTable(l_o, l_n, database(s))}
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists p \in properties(c) : name(p) = l_o \\
+ 	cardinality(p) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists p \in properties(c) : name(p) = l_o \\
+ 	cardinality(p) > 1}{\begin{gathered}
+		database(s)\\ \bullet alterTable(name(owningClass(p)+l_o, l_n, database(s))
+\end{gathered}}
  \end{cases}\\
 l_c, l_o, l_n \in Label,  s \lhd Software
 \end{align*}
@@ -846,26 +865,18 @@ l_c, l_o, l_n \in Label,  s \lhd Software
 \mathbf{RenameAssociation} : Label \times Label \times Label \times State \rightarrow State \\
 \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
 \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \begin{cases}
-	\inference{\exists a  \in findAssociation(application(s)) : \\
-  name(a) = l_c \\ \wedge startCardinality(a) > 1 }{database(s) \bullet alterTable(l_c, l_o, l_n)}
- \\ \\
-  \inference{\exists a  \in findAssociation(application(s)) : \\
-  name(a) = l_c \\ \wedge startCardinality(a) \leq 1 }{\begin{gathered}
+	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists a \in associations(c) : name(a) = l_o 
+	\\ \wedge startCardinality(a) > 1 }{\begin{gathered}
+		database(s) \\ \bullet alterTable(name(owningClass(a)) + l_o, l_n)
+\end{gathered}}\\ \\
+  \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists a \in associations(c) : name(a) = l_o 
+	\\ \wedge startCardinality(a) \leq 1 }{\begin{gathered}
 database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
 \end{gathered}}
- \end{cases}
-\\\\
-%	alterAssoc(l_c, l_o, l_n, d) = \begin{cases}
-%?? \inference{\exists t \in tables(a) : name(t) = l_c \\ \wedge \exists f \in fks(t) : name(c) = l_o \\ \wedge \forall e \in fks(t) : name(e) \neq l_n}{\begin{gathered}
-%f.name = l_n 
-%\end{gathered}}
-%\\ \\
-%\inference{\exists t \in tables(a) : name(t) = l_o \\ \wedge \forall e \in tables(t) : name(e) \neq l_n}{\begin{gathered}
-%t.name = l_n 
-%\end{gathered}}
-% \end{cases}
-% \\
-l_c, l_o, l_n \in Label, a \lhd Applications, s \in Sates, d \lhd Database
+ \end{cases} \\
+	l_c, l_o, l_n \in Label, a \lhd Applications, s \in Sates, d \lhd Database
 \end{align*}
 
 
