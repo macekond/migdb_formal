@@ -460,10 +460,10 @@ There can occur name collision during mapping in case there are more classes wit
 \end{align*}
 
 \section{Transformation for Models Manipulation}
-The evolution affects both parts of software and as shown in section \ref{sec:evoIntro} it is mapped to transformation specific for application (set $AppT$ of transformations) and database (set $DbT$). These sets are defined in this section.
+The evolution affects both parts of software and as shown in section \ref{sec:evoIntro}. Evolution of software is mapped to transformation specific for application (set $AppT$ of transformations) and database (set $DbT$), both sets are defined in this section.
 
 \subsection{Application Transformation}
-This section provide transformations for manipulating the application layer of a software - the $AppT$ set. The set contains not only transformations for model creation, alternation and decomposition, but some operations to obtain information about a model too.
+This section provide transformations for manipulating the application layer of a software - the $AppT$ set. The set defines common operation for creation, alternation and decomposition of a model (or code) .
 
 %\paragraph{Get Property or Association} Functions $findProperty$ and $findAssociation$ returns a property (association) if it exists in given context - application and class of provided name.
 %\begin{align*}
@@ -548,7 +548,7 @@ This section provide transformations for manipulating the application layer of a
 \end{align*}
 
 \subsection{Database Transformation}
-The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. 
+The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. Some of presented operations has their origin in SQL queries (especially creation and decomposition), on the other hand some of them cannot be implemented as an SQL query, because of they complexity and conditions verified during theirs execution.
 
 %\paragraph{Find Table} The function $findTable$ finds and returns a table in the database according to the provided label.
 %\begin{align*}
