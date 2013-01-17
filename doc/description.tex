@@ -612,7 +612,7 @@ The definition does not allow to add any default value in case the number of ins
 	addColum(l, c, d) = \begin{cases}
 		\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)} \\ \\
 		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \not \in constraints(c) }{columns(t) \cup c}\\ \\
-		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c}\\ \bullet addValueToTable(l, [name(c), defVal(c)]) \\ \\
+		(\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c})\\ \bullet addValueToTable(l, [name(c), defVal(c)]) \\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
 	 l \in Label, c \lhd Column*,d \lhd Database
@@ -662,7 +662,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
 \begin{align*}
 	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
 	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{state(d) \bullet addColumn(l_t, c)} 
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{d \bullet addColumn(l_t, c)} 
 	\end{cases} \\
 	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \lhd Database
 \end{align*}
@@ -671,7 +671,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
 \begin{align*}
 	\mathbf{insertRow} : Row* \times Database \rightarrow Database \\
 	insertRow(r, d) = \begin{cases}
-			\inference{|r|>1}{insertRow(head(r), d) \bullet insertRow(tail(r), d)} \\ \\
+			\inference{|r|>1}{d \bullet insertRow(head(r), d) \bullet insertRow(tail(r), d)} \\ \\
 		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) \\ \wedge \forall e \in tableData(t, d) : pkValue(e) \neq pkValue(r)}{data(d) \cup r} \\ \\
 			 Inconsistent \; d
 		 \end{cases}	\\
@@ -682,7 +682,10 @@ l_c, l_o, l_n \in Label, d \lhd Database
 \begin{align*}
 	\mathbf{insertValues} : Row \times Pair* \times Database \rightarrow Daatabase \\
 	insertValues(r, p, d) = \begin{cases}
- 		\inference{|p| > 1}{insertValues(r, head(p), d)\bullet insertValues(r, tail(p), d)}  \\ \\
+ 		\inference{|p| > 1}{\begin{gathered}
+			d \bullet insertValues(r, head(p), d) \\ \bullet insertValues(r, tail(p), d)
+	\end{gathered}}
+  \\ \\
  		\inference{|p| = 1 \wedge \forall e \in pairs(r) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} \\ \\
 	 	 Inconsistent \; d
  		\end{cases} \\
@@ -694,7 +697,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	\mathbf{addValueToTable} : Label \times Pair \times Database \rightarrow Database \\
 	addValueToTable(l, p, d) = \begin{cases}
  		\inference{\exists t \in tables(d) : name(t) = l}	{\begin{gathered}
-		insertValue(head(tableData(l, d)), p, d) \\ \bullet addValueToTable(tail(tableData(l, d)), p, d)
+		d \bullet insertValue(head(tableData(l, d)), p, d) \\ \bullet addValueToTable(tail(tableData(l, d)), p, d)
 	\end{gathered}} \\ \\
  		Inconsistent \; d
  	\end{cases}\\ \\
