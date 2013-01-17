@@ -627,11 +627,11 @@ l_c, l_o, l_n \in Label, d \lhd Database
 
 \paragraph{Alter Table} The $alterTable$ function renames a table in  the database.
 \begin{align*}
-alterTable:  Label \times Label \times Database \rightarrow Database \\
-alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
-t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
-\end{gathered}}\\
-l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
+	\mathbf{alterTable} : Label \times Label \times Database \rightarrow Database \\
+	alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
+		t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
+	\end{gathered}}\\
+	l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
 \end{align*}
 
 
