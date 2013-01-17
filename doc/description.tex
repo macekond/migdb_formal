@@ -343,6 +343,7 @@ The definition of data allows definition of function $contains$ which verify if 
 	 c \in classes(application(s)), s \lhd Software 
 \end{align*}
 
+
 \subsubsection{Database consistency}
 The database consistency is founded on the consistency of structure and consistency between structure and stored values. The conditions for structure consistency are similar as for application structure. The consistency between structure and data is:  each row in a database  refers to a table in database schema and it has to have the structure corresponding to the one defined by a table, moreover the column and foreign key constrains has to be fulfilled  otherwise the database is inconsistent. The consistency of database is:\begin{align*}
 	\mathbf{consistent} : Database \rightarrow Boolean \\
@@ -550,6 +551,17 @@ This section provide transformations for manipulating the application layer of a
 \subsection{Database Transformation}
 The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. Some of presented operations has their origin in SQL queries (especially creation and decomposition), on the other hand some of them cannot be implemented as an SQL query, because of they complexity and conditions verified during theirs execution.
 
+\paragraph{Mapping of Instances} The set $M$ which contains all possible mappings between classes, has to be defined to allow several evolutionary operations. Each mapping represents an ordered set of pairs of instances. These pairs can represent one-to-one (or many) relationship or many-to-many relationship between instances.
+\begin{align*}
+	m_{l_1, l_2} =  <(r_1, r_2)*>,\\
+	r_1 \in tableData(l_1, database(s)) \Rightarrow \exists p \in m_{l_1, l_2} \wedge first(p) = r_1 \\
+	r_2 \in tableData(l_2, database(s)) \Rightarrow \exists p \in m_{l_1, l_2} \wedge second(p) = r_2\\
+	l_1, l_2 \in Label, r_1, r_2 \lhd Row
+\end{align*}
+The definition does not allow to add any default value in case the number of instances does not match. It is because the evolution transformations are designed to not affect stored data (instances) by creating a new data which does not origin from the software.
+%The features of both sets allows only pairs from existing instances and it assumes there is always at least one pair for each row from both tables.
+
+
 %\paragraph{Find Table} The function $findTable$ finds and returns a table in the database according to the provided label.
 %\begin{align*}
 %	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
@@ -689,12 +701,12 @@ r \lhd Row, p = Pair*,d \lhd Databases
  	l \in Label, p \lhd Pair,  d \lhd Database
 \end{align*}
 
-\paragraph{Copy Value} The function copy values from one column in a table to another column in the same or in another table - according to mapping function $f_m$. 
+\paragraph{Copy Value} The function copy values from one column in a table to another column in the same or in another table - according to provided mapping. 
 \begin{align*}
 	\mathbf{copyValue} : Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
-	copyValue(l_s, l_t, l_{sc}, l_{tc} f_m, d) = \begin{cases}
+	copyValue(l_s, l_t, l_{sc}, l_{tc} o_{l_s, l_t}, d) = \begin{cases}
 		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
-			insertValues(second(p), \\ [l_{tc},value(findPair(l_{sc}, first(p)))],d)
+		\forall	p \in m_{l_s, l_t} :	d \bullet insertValues(second(p), \\ [l_{tc},value(findPair(l_{sc}, first(p)))])
 		\end{gathered}}
  	\end{cases} \\
  	l_s, l_t, l_{sc}, l_{tc} \in Label, d \lhd Database
@@ -703,14 +715,14 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \paragraph{Copy rows} The function $copyRows$ creates a copy of a source table content in another table with the same structure. 
 \begin{align*}
 	\mathbf{copyRows} : Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
-	copyRows(l_s, l_t, f_m, d) = \begin{cases}
- 	\inference{|f_m| = \varnothing}{d} \\\\
- 	\inference{|f_m| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{data(d) \cup insertRow(row(l, pairs(first(f_m))), d)} \\\\
- 	\inference{|f_m| > 1}{\begin{gathered}
-		 d \bullet copyRows(l_s, l_t, head(f_m)) \bullet copyRows(l_s, l_t, tail(f_m))
+	copyRows(l_s, l_t, m_{l_s, l_t}, d) = \begin{cases}
+ 	\inference{|m_{l_s, l_t}| = \varnothing}{d} \\\\
+ 	\inference{|m_{l_s, l_t}| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{d \bullet insertRow(row(l, pairs(first(m_{l_s, l_t}))), d)} \\\\
+ 	\inference{|m_{l_s, l_t}| > 1}{\begin{gathered}
+		 d \bullet copyRows(l_s, l_t, head(M_{l_s, l_t})) \\ \bullet copyRows(l_s, l_t, tail(m_{l_s, l_t}))
 	\end{gathered}}
   \end{cases} \\
-  l_s, l_t \in Label, d \lhd Database
+  l_s, l_t \in Label, d \lhd Database, m_{l_s, l_t} \in M
 \end{align*}
 
 \paragraph{Remove table} The function removes a table if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too.
@@ -753,32 +765,17 @@ There are defined three transformations which are able to create a software: $ad
 \end{align*}
 
 
-\paragraph{Add association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be connected on the database level via foreign key or connection table. The information about pairing has to be provided by the user in form of set of instances pairs, because the model does not differ between one-to-one and (one)many-to-many relationships, however both cases are distinguished in the model. The set of instances pairs is in this paper called $O_{l_1, l_2, s}$ in case it represents one to one (or many) association or $M_{l_1, l_2, s}$ in case it represents many to many relationship, where $l_1, l_2$ are names of classes which are paired together and $s$ is software which creates the context of instances. 
-\begin{align*}
-	O_{l_1, l_2} = <(r_1, r_2)*>,\\ 
-	r_1 \in tableData(l_1, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge first(p) = r_1 \\
-	r_2 \in tableData(l_2, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge second(p) = r_2\\
-	\forall p_1, p_2 \in O_{l_1, l_2} : first(p_1) = first(p_2) \Rightarrow p_1 = p_2 \\
-	l_1, l_2 \in Label, r_1, r_2 \lhd Row
-\end{align*}
-\begin{align*}
-	M_{l_1, l_2} =  <(r_1, r_2)*>,\\
-	r_1 \in tableData(l_1, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge first(p) = r_1 \\
-	r_2 \in tableData(l_2, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge second(p) = r_2\\
-	l_1, l_2 \in Label, r_1, r_2 \lhd Row
-\end{align*}
-%The features of both sets allows only pairs from existing instances and it assumes there is always at least one pair for each row from both tables.
-
+\paragraph{Add association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be connected on the database level via foreign key or connection table. The information about pairing has to be provided by the user in form of set of instances pairs, because the model does not contain enough information. 
 \begin{align*}
 \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
-\Psi(s, addAsociation(l, a, f_m)) = application(s) \circ addAssoc(l, a) \\
-\Phi(s, addAsociation(l, a, f_m)) = \begin{cases}
-	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cuo columns(t_t) : name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-		database(s) \bullet addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(l, reference(a)) : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
+\Psi(s, addAsociation(l, a, m_{l, reference(a)})) = application(s) \circ addAssoc(l, a) \\
+\Phi(s, addAsociation(l, a, m_{l, reference(a)})) = \begin{cases}
+	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cup columns(t_t) \\: name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
+		database(s) \bullet addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in m_{l, reference(a)} : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
 	\end{gathered}}
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
-	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(l, reference(a)) :\\ insertRow(row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
+	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in m_{l, reference(a)} :\\ insertRow(row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
 	\end{gathered}} 
 \end{cases}\\
 \end{align*}
@@ -790,17 +787,6 @@ There are defined three transformations which are able to create a software: $ad
 \Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d), d) \\ \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, d) \\ \bullet addTable(name(c), \{\forall r \in collections(c) | \rho(r,d)\}, d)  
 \end{align*}
 
-%\begin{align*}
-%insertClass : Class \times Database \rightarrow Database \\
-%insertClass(c, d) = \inference{ \forall t \in tables(d) : name(t) \neq name(\rho(c)) \\
-%	%\forall a \in associations(c), \exists u \in  tables(d) : reference(a) = name(u) \\ 
-%	assocaiations(c) = \varnothing
-%}{
-%\begin{gathered}
-% addTable(\rho(c, d),d) \\ \wedge t \rho(singleProperties(c)) \wedge \rho(collections(c)) \\ 
-%\end{gathered}
-%}
-%\end{align*}
 
 
 
@@ -897,18 +883,18 @@ All transformations described earlier does change primary the structure of an ap
 The $CopyProperty$ function can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, therefore transformation to update data are used.
 \begin{align*}
 	\mathbf{CopyProperty} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
-	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
+	\Psi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
 	\\\\
-	\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = \begin{cases}
+	\Phi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \begin{cases}
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
-			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, l_p, f_m) 
+			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, l_p, m_{l_s, l_t}) 
 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRows(l_s + l_p, l_t + l_p, f_m) 
+			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRows(l_s + l_p, l_t + l_p, m_{l_s, l_t}) 
 			\end{gathered}}
- \end{cases}
+ \end{cases}\\
+ l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \lhd Software
 \end{align*}
-
 With the copy property transformation defined we are able to define advanced evolution scenarios.
 
 %\paragraph{Change Cardinality}
