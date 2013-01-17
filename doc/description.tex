@@ -621,9 +621,9 @@ l_c, l_o, l_n \in Label, d \lhd Database
 \begin{align*}
 	\mathbf{addTable} : Table* \times Database \rightarrow Database \\ 
 	addTable(t, d) = \begin{cases}
-		\inference{|t| > 1}{addTable(head(t),d) \bullet addTable(tail(t), d)}
+		\inference{|t| > 1}{d \bullet addTable(head(t)) \bullet addTable(tail(t))}
 \\ \\	
-		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e) \\ \wedge foreignKeys(t) = \varnothing }{tables(d) \cup t}
+		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e) \\ \wedge \forall f \in foreignKeys(t) : \\ s\exists e \in tables(d) \wedge name(e) = reference(f) }{tables(d) \cup t}
 \\ \\
 		Inconsistent \;d 
 	 \end{cases}\\ 
@@ -896,7 +896,7 @@ The $CopyProperty$ function can be implemented as a transformation composed by o
 	\\\\
 	\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = \begin{cases}
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
-			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, f_m) 
+			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, l_p, f_m) 
 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
 			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRows(l_s + l_p, l_t + l_p, f_m) 
