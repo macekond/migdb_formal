@@ -753,10 +753,22 @@ There are defined three transformations which are able to create a software: $ad
 \end{align*}
 
 
-\paragraph{Add association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be paired. This pairing is provided by the function $f_m$:
-$$f_m : \rightarrow Row \times Row $$
+\paragraph{Add association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be connected on the database level via foreign key or connection table. The information about pairing has to be provided by the user in form of set of instances pairs, because the model does not differ between one-to-one and (one)many-to-many relationships, however both cases are distinguished in the model. The set of instances pairs is in this paper called $O_{l_1, l_2, s}$ in case it represents one to one (or many) association or $M_{l_1, l_2, s}$ in case it represents many to many relationship, where $l_1, l_2$ are names of classes which are paired together and $s$ is software which creates the context of instances. 
+\begin{align*}
+	O_{l_1, l_2} = <(r_1, r_2)*>,\\ 
+	r_1 \in tableData(l_1, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge first(p) = r_1 \\
+	r_2 \in tableData(l_2, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge second(p) = r_2\\
+	\forall p_1, p_2 \in O_{l_1, l_2} : first(p_1) = first(p_2) \Rightarrow p_1 = p_2 \\
+	l_1, l_2 \in Label, r_1, r_2 \lhd Row
+\end{align*}
+\begin{align*}
+	M_{l_1, l_2} =  <(r_1, r_2)*>,\\
+	r_1 \in tableData(l_1, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge first(p) = r_1 \\
+	r_2 \in tableData(l_2, database(s)) \Rightarrow \exists p \in O_{l_1, l_2} \wedge second(p) = r_2\\
+	l_1, l_2 \in Label, r_1, r_2 \lhd Row
+\end{align*}
+%The features of both sets allows only pairs from existing instances and it assumes there is always at least one pair for each row from both tables.
 
-\textbf{TODO: define the features of the $f_m$ function}
 \begin{align*}
 \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
 \Psi(s, addAsociation(l, a, f_m)) = application(s) \circ addAssoc(l, a) \\
