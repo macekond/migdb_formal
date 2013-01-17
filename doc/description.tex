@@ -639,6 +639,12 @@ l_c, l_o, l_n \in Label, d \lhd Database
 	l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
 \end{align*}
 
+\paragraph{Copy Table} The transformation creates a copy of a table in database schema with different name.
+\begin{align*}
+	\mathbf{copyTable} : Label \times Label \times Database \times Database \\
+	copyTable(l_s, l_t, d) = \inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \forall e \in tables(d) : name(e) \neq l_t}{d \bullet addTable(tab(l_t, primaryKey(t), columns(t), foreignKeys(t)))}
+\end{align*}
+
 
 \paragraph{Copy Column} The transformation creates a copy of a column in a another table in the database. The transformation changes only the structure of database - stored data are not changed.
 \begin{align*}
@@ -886,13 +892,14 @@ All transformations described earlier does change primary the structure of an ap
 The $CopyProperty$ function can be implemented as a transformation composed by operations for adding and removing property, nevertheless this composition would not work with instances, therefore transformation to update data are used.
 \begin{align*}
 	\mathbf{CopyProperty} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
-	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} \\\\
+	\Psi(CopyProperty(l_s, l_t, l_p, f_m), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
+	\\\\
 	\Phi(CopyProperty(l_s, l_t, l_p, f_m), s) = \begin{cases}
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
 			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValues(l_s, l_t, l_p, f_m) 
 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			database(s) \bullet copyTable(l_s, l_t, l_p) \\ \bullet copyRows(l_s, l_t, l_p, f_m) 
+			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRows(l_s + l_p, l_t + l_p, f_m) 
 			\end{gathered}}
  \end{cases}
 \end{align*}
