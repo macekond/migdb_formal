@@ -760,22 +760,15 @@ $$f_m : \rightarrow Row \times Row $$
 \begin{align*}
 \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
 \Psi(s, addAsociation(l, a, f_m)) = application(s) \circ addAssoc(l, a) \\
-\Phi(s, addAsociation(l, a, f_m)) = database(s) \bullet insertAssoc(l, a, f_m)
-\end{align*}
-The $insertAssoc$ function is defined as:
-\begin{align*}
-insertAssoc : Association \times Database \times (Row \times Row) \\
-insertAssoc(l, a, f_m, d) = \begin{cases}
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(l, reference(a)) : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
-\end{gathered}
- }
+\Phi(s, addAsociation(l, a, f_m)) = \begin{cases}
+	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cuo columns(t_t) : name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
+		database(s) \bullet addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in f_m(l, reference(a)) : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
+	\end{gathered}}
  \\ \\
-\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge \not \exists f \in foreignKeys(t_t) : name(f) = name(a) \\ startCardinality(a) > 1}{\begin{gathered} addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(l, reference(a)),\\ t \in tables(d) : name(t) = name(a) : \\ insertRow(row(name(a), [name(t_s), \\ value(primaryKey(first(r)))] [name(t_t), \\ value(primaryKey(second(r)))]), d)
-\end{gathered}
- } 
- \end{cases}\\
- a \in Associations, d \lhd Database
+	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
+	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in f_m(l, reference(a)) :\\ insertRow(row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
+	\end{gathered}} 
+\end{cases}\\
 \end{align*}
 
 \paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then its associations are created.
