@@ -704,6 +704,23 @@ r \lhd Row, p = Pair*,d \lhd Databases
  	l \in Label, p \lhd Pair,  d \lhd Database
 \end{align*}
 
+\paragraph{Remove Data and Column} The approach we declare to introduce in this paper was declared to be data and information preserving, nevertheless there are cases when data can be deleted from the database without data lost as they are e.g. already copied in another column as the understanding of data changed in the whole software. 
+\begin{align*}
+	\mathbf{RemoveColumAndData} : Label \times Label* \times Database \rightarrow Database \\
+	RemoveColumnAndData(l_c, ps, d) = \begin{cases}
+ 	\inference{ps = \varnothing}{d}\\
+ 	\inference{|ps| = 1 \\ \wedge \exists t \in tables(d) \\ \wedge \exists c \in columns(t) : name(c) = l_c}{\begin{gathered}
+	 	(\forall r, r \in tableData(d) \wedge reference(r) = l_c, \\ p \in pairs(r) \wedge name(p) = ps : pairs(r) \ ps) \\ \wedge columns(t) \ c  
+\end{gathered}}\\ \\
+	\inference{|ps| >1}{\begin{gathered}
+		d \bullet RemoveColumnAndData(l_c, head(ps), d) \\ \bullet RemoveColumnAndData(l_c, tail(ps), d) 
+\end{gathered}}
+ \end{cases}
+	\\
+	l_c \in Label, ps \lhd Label*, d \in Database
+\end{align*}
+
+
 \paragraph{Copy Value} The function copy values from one column in a table to another column in the same or in another table - according to provided mapping. 
 \begin{align*}
 	\mathbf{copyValue} : Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
@@ -774,7 +791,7 @@ There are defined three transformations which are able to create a software: $ad
 \Psi(s, addAsociation(l, a, m_{l, reference(a)})) = application(s) \circ addAssoc(l, a) \\
 \Phi(s, addAsociation(l, a, m_{l, reference(a)})) = \begin{cases}
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cup columns(t_t) \\: name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-		database(s) \bullet addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in m_{l, reference(a)} : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
+		database(s) \\ \bullet addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in m_{l, reference(a)} : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
 	\end{gathered}}
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
@@ -816,6 +833,22 @@ The removal of class, property or association is limited only by the constraints
  	l, l_p \in Label, s \lhd Software
 \end{align*}
 
+\paragraph{Remove Property and its Data} The $RemovePropertyAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemovePropertyAndData$ should be used carefully.
+\begin{align*}
+	\mathbf{RemovePropertyAndData} : Label \times Label* \times State \rightarrow State \\
+	\Phi(RemovePropertyAndData(L_c, ps), s) = application(s)\\ \circ remProperty(l_s, ps) \\
+	\Psi(RemovePropertyAndData(L_c, ps), s) = \begin{cases}
+		\inference{ps = \varnothing}{d}\\
+		\inference{|ps| > 1}{\begin{gathered}
+			database(s) \\ \bullet RemovePropertyAndData(L_c, head(ps)) \\ \bullet RemovePropertyAndData(L_c, tail(ps))
+	\end{gathered}}\\\\
+ 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet RemoveColumnAndData(l_c, ps)}\\\\
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{database(s) \bullet RemoveTableAndData(l_c, ps)}
+ \end{cases}
+	\\
+	l_c \in Label, ps \lhd Label*, s \lhd Software
+\end{align*}
+
 \paragraph{Remove association} 
 \begin{align*}
     \mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
@@ -829,6 +862,22 @@ The removal of class, property or association is limited only by the constraints
      	\wedge startCardinality(a) > 1}{database(s) \bullet dropTable(name(owningClass(a))+l_a)} 
      \end{cases}\\
     l_c, l_a \in Labels, s \lhd Software
+\end{align*}
+
+\paragraph{Remove Association and its Data} The $RemoveAssociationAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemoveAssociationAndData $ should be used carefully.
+\begin{align*}
+	\mathbf{RemoveAssociationAndData} : Label \times Label* \times State \rightarrow State \\
+	\Phi(RemoveAssociationAndData(L_c, ps), s) = application(s)\\ \circ remAssociation(l_s, ps) \\
+	\Psi(RemoveAssociationAndData(L_c, ps), s) = \begin{cases}
+		\inference{ps = \varnothing}{d}\\
+		\inference{|ps| > 1}{\begin{gathered}
+			database(s) \\ \bullet RemoveAssociationAndData(L_c, head(ps)) \\ \bullet RemoveAssociationAndData(L_c, tail(ps))
+	\end{gathered}}\\\\
+ 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(p) \leq 1}{database(s) \bullet RemoveForeignKeyAndData(reference(a), ps)}\\\\
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(a) > 1}{database(s) \bullet RemoveAssociationAndData(l_c + reference(a), ps)}
+ \end{cases}
+	\\
+	l_c \in Label, ps \lhd Label*, s \lhd Software
 \end{align*}
 
 
@@ -904,13 +953,69 @@ With the copy property transformation defined we are able to define advanced evo
 %$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
 %$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
 
-\section{Refactoring Cases}
+\section{Complex Refactoring Cases}
+The concrete refactoring cases presented in this section were chosen according to the refactoring statistics provided by Eclipse. The refactoring cases, which does not affect data (such as change method signature or encapsulate field) were removed from the set of refactoring cases and form the rest the Move property and Extract/Inline class were chosen to 
 \subsection{Move Property}
+The aim of the move property transformation is to change two classes - one will get a new property, the other will lost a property. An example of such transformation is merging information from one class to another. The implementation of move property transformation is based on copy property transformation:
+\begin{align*}
+	\mathbf{MoveProperty} : Label \times Label \times Label* \times (Row \times Row) \times State \rightarrow State \\
+	s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) = \begin{cases}
+ 	\inference{|ps| = \varnothing}{state(s)}\\\\
+ 	\inference{|ps| = 1}{\begin{gathered} s \oplus CopyProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemovePropertyData(l_s, ps) \\ \oplus RemoveProperty(l_s, ps) 
+\end{gathered}}\\\\
+	\inference{|ps| > 1}{\begin{gathered}
+		s \oplus MoveProperty(l_s, l_t, head(ps), m_{l_s, l_t}) \\ \oplus MoveProperty(l_s, l_t, tail(ps), m_{l_s, l_t}) 
+\end{gathered}}
+ \end{cases}
+	\\\\
+	l_s, l_t \in Label, ps \in Label*,  m_{l_s, l_t} \in M, s \lhd Software
+\end{align*}
+Although the $MoveProperty$ transformation contains the transformation $RemovePropertyData$ its execution preserve data and information as the information has been already copied. 
+
 \subsection{Extract and Inline Class}
+The extract and inline class are two opposite transformations. First of them extract a class from existing class, second of them merges two classes into one.
+\begin{align*}
+	\mathbf{ExtractClass} : Label \times Label* \times Label \times State \rightarrow State \\
+	state(s) \oplus ExtractClass(l_s, ps, l_n) = \begin{cases}
+	\inference{|ps| = 1}{\begin{gathered}
+		s \oplus addClass(cl(l_n, \varnothing, \varnothing)) \\ \oplus MoveProperty(l_s, l_n, ps, \mathbf{X}) \\ \oplus RemovePropertyData(l_s, ps) \\ \oplus RemoveProperty(l_s, ps)  
+\end{gathered}}\\\\
+	\inference{|ps| > 1}{\begin{gathered}
+		s \oplus ExtractClass(l_s, head(ps), l_n) \\\oplus ExtractClass(l_s, tail(ps), l_n)
+\end{gathered}}\\\\
+	\inference{|ps| = \varnothing}{state(s)}	 
+ \end{cases}
+	\\
+	l_s, l_n \in Label, ps \lhd Label* s \lhd Software 
+\end{align*}
 
-\section{Assigment for NII Internship / Future Work}
+\begin{align*}
+	\mathbf{InlineClass} : Label \times Label \times State \rightarrow State \\
+	state(s) \oplus InlineClss(l_s, l_t, m_{l_s, l_t}) = s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemovePropertyData(l_s, ps) \\ \oplus RemoveProperty(l_s, ps)  
+\\
+l_s, l_t \in Label, m_{l_s, l_t} \in M, s \lhd Software, \\ \\
+ps = \inference{\exists c \in classes(applications)) \wedge ps = \varnothing}{\forall p \in properries(p) : ps \cup name(p)}
+\end{align*}
+ 
+
+ 
 \section{Conclusion}
+The evolution of software, which uses object oriented language together with relational database is complicated because of separate definition of evolution for application and database and possibility of data and information lost. The formal description of a framework for easier software evolution was introduced in this paper. 
 
+The main contribution of the paper is definition of connection between application refactoring and database migration. It allows to define the evolution only once for both parts of the software and it is defined in a way it prevents data or information lost. The definition is based on small transformations of each part, which are deigned to preserve data and theirs concatenation into complex evolutionary transformations.
+
+Introduced formal definitions provides an important foundation for development of an evolutionary framework for concrete object-oriented language and relational database.
+
+\newpage
+\appendix
+\section{Assigment for NII Internship}
+The model of evolution in ORM software defined in this paper will be improved and validated during internship at NII. The main objectives of the internship are:
+\begin{enumerate}
+	\item \label{it:1} Verify the model by an implementation in the Maude tool. \emph{(Estimated time: 1 month)}
+	\item \label{it:2} More complex examples of refactoring cases should be examined with existing model.  \emph{(Estimated time: 0.5 month)}
+	\item \label{it:3} The inheritance relationship between classes should be implemented in the model together with inheritance-based refactoring cases. \emph{(Estimated time: 0.5 month)}
+	\item Prepare an article, which will contain topics \ref{it:1}, \ref{it:2} and \ref{it:3}. \emph{(Estimated time: 1 month)}
+\end{enumerate}
 
 
 \end{document}
