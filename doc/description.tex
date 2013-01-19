@@ -133,10 +133,11 @@ A lot of introduced transformations can be applied on an ordered set. The applic
  		\inference{x = \varnothing}{y}\\
  		\inference{|x| > 1}{f(head(x), y) \cup f(tail(x), y}\\\\
  		\inference{|x| = 1}{effect}
+ 		\inference{otherwise}{Inconsistent y}
  \end{cases}\\
  y \lhd Software \vee y \lhd Application \vee y \lhd Database
 \end{align*}
-where $x$ is a set of parameters. The effect of a transformation is provided only in next sections as the repetition of sequential application will be redundant. 
+where $x$ is a set of parameters. The effect of a transformation is provided only in next sections as the repetition of sequential application will be redundant. The $otherwise$ branch is consider implicit for all introduced transformations and thus it is not part of transformation definitions too. 
 
 
 \subsection{Application Model}
@@ -550,7 +551,7 @@ This section provide transformations for manipulating the application layer of a
 	}{\begin{gathered}
 		b.name = l_n 
 	\end{gathered}}
-	l_c, l_o, l_n \in Label, a \lhd Application
+	\\ l_c, l_o, l_n \in Label, a \lhd Application
 \end{align*}
 
 \paragraph{Rename Class} When a class is renamed, the name collisions has to be verified and then all referencing associations has to be updated.
@@ -741,11 +742,34 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \end{align*}
 
 \subsubsection{Database decomposition}
+\paragraph{dropValue}
+\begin{align*}
+	\mathbf{dropValue} : Label \times Row \times Database \rightarrow Database \\
+	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) \setminus p}
+	\\ l \in Label, r \lhd Row \wedge r \in data(d), d \lhd Database
+\end{align*}
+
+\begin{align*}
+	\mathbf{dropRow} :  Row*  \times Database \rightarrow Database\\
+	dropRow(r, d) = \inference{|r|=1}{data(d) \setminus r}
+	\\ l \in Label, r \lhd Row \wedge r \in data(d), d \lhd Database
+\end{align*}
+
+
 \paragraph{Remove table} The function removes a table if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too.
 \begin{align*}
 	\mathbf{dropTable} : Label \times Database \rightarrow Database \\
-	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \not \exists r \in data(d) : owningTable(r) = l \\  \not \exists j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) = l }{ tables(d) \setminus \rho(c)}
+	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \forall r \in data(d) : owningTable(r) \neq l \\  \wedge (\forall j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) \neq l) }{ tables(d) \setminus \rho(c)}
 \end{align*}
+
+\begin{align*}
+	\mathbf{dropTableAndData} : Labe \times Database \rightarrow Database \\
+	dropTableAndData(l, d) = \inference{\exists t \in tables(d) \\ \wedge ! \; associated(t, d)}{\begin{gathered}
+	(\forall r \in tableData(t,d) : dropRow(r, d))\\ \bullet dropTable(t,d)
+\end{gathered}}
+	\\ l \in Label, d \lhd Database
+\end{align*}
+
 
 \paragraph{Remove column or foreign key} The situation is similar to the $dropTable$ function - there has to be no data in the column or key so it can be safely removed.
 \begin{align*}
@@ -754,25 +778,38 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	 l , l_p\in Label, d \lhd Database 
 \end{align*}
 
+\begin{align*}
+	\mathbf{dropKey} : Label \times Label \times Database \rightarrow Database \\
+	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
+	 l, l_p \in Label, d \lhd Database 
+\end{align*}
+
 \paragraph{Remove Data and Column} The approach we declare to introduce in this paper was declared to be data and information preserving, nevertheless there are cases when data can be deleted from the database without data lost as they are e.g. already copied in another column as the understanding of data changed in the whole software. 
 \begin{align*}
-	\mathbf{RemoveColumAndData} : Label \times Label* \times Database \rightarrow Database \\
-	RemoveColumnAndData(l_c, ps, d) = \begin{cases}
+	\mathbf{DropColumnAndData} : Label \times Label* \times Database \rightarrow Database \\
+	DropColumnAndData(l_c, ps, d) = \begin{cases}
  	%\inference{ps = \varnothing}{d}\\
- 	 %\inference{|ps| >1}{\begin{gathered} 	d \bullet RemoveColumnAndData(l_c, head(ps), d) \\ \bullet RemoveColumnAndData(l_c, tail(ps), d) \end{gathered}} \\ \\
- 	\inference{|ps| = 1 \\ \wedge \exists t \in tables(d) \\ \wedge \exists c \in columns(t) : name(c) = l_c}{\begin{gathered}
-	 	(\forall r, r \in tableData(d) \wedge reference(r) = l_c, \\ p \in pairs(r) \wedge name(p) = ps : pairs(r) \ ps) \\ \wedge columns(t) \ c  
-\end{gathered}}
+ 	 %\inference{|ps| >1}{\begin{gathered} 	d \bullet DropColumnAndData(l_c, head(ps), d) \\ \bullet DropColumnAndData(l_c, tail(ps), d) \end{gathered}} \\ \\
+ 	(\inference{|ps| = 1 \\ \wedge \exists t \in tables(d) \\ \wedge \exists c \in columns(t) : name(c) = l_c}{\begin{gathered}
+	 	(\forall r, r \in tableData(d) \wedge reference(r) = l_c: \\d \bullet dropValue(ps, r)) \end{gathered}}) \\ \bullet dropColumn(l_c)  
  \end{cases}
 	\\
 	l_c \in Label, ps \lhd Label*, d \in Database
 \end{align*}
 
 \begin{align*}
-	\mathbf{dropKey} : Label \times Label \times Database \rightarrow Database \\
-	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
-	 l, l_p \in Label, d \lhd Database 
+	\mathbf{DropKeyAndData} : Label \times Label* \times Database \rightarrow Database \\
+	DropKeyAndData(l_f, ps, d) = \begin{cases}
+ 	%\inference{ps = \varnothing}{d}\\
+ 	 %\inference{|ps| >1}{\begin{gathered} 	d \bullet DropColumnAndData(l_c, head(ps), d) \\ \bullet DropColumnAndData(l_c, tail(ps), d) \end{gathered}} \\ \\
+ 	(\inference{|ps| = 1 \\ \wedge \exists t \in tables(d) \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_f}{\begin{gathered}
+	 	(\forall r, r \in tableData(d) \wedge reference(r) = l_f: \\d \bullet dropValue(ps, r)) \end{gathered}}) \\ \bullet dropKey(l_f)  
+ \end{cases}
+	\\
+	l_f \in Label, ps \lhd Label*, d \in Database
 \end{align*}
+
+
 
 \section{Evolutionaty Transformations}
 The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro}. The semantic of transformations in the set $E$ is defined by their interpretation on individual software components. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
@@ -851,7 +888,7 @@ The removal of class, property or association is limited only by the constraints
 	\Psi(RemovePropertyAndData(L_c, ps), s) = \begin{cases}
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered} database(s) \\ \bullet RemovePropertyAndData(L_c, head(ps)) \\ \bullet RemovePropertyAndData(L_c, tail(ps)) 	\end{gathered}}\\\\
- 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet RemoveColumnAndData(l_c, ps)}\\\\
+ 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet DropColumnAndData(l_c, ps)}\\\\
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{database(s) \bullet RemoveTableAndData(l_c, ps)}
  \end{cases}
 	\\
