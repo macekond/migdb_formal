@@ -26,7 +26,7 @@ There are three main goals of our evolutionary framework: 1) provide one source 
 
 This paper provides a formal definition of such a framework, which is based on model driven architecture. There are defined models representing an application and database in this paper, together with transformations which are able to perform an evolution of the whole software and preserve data.
 
-The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:eorm}.
+The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of ORM software and its evolution is discussed, then models of application and database are introduced in Section \ref{sec:appModel} and in Section \ref{sec:dbModel}, the ORM is defined in Section \ref{sec:orm} and the evolutionary transformations are defined in Section \ref{sec:Evolutionaty-Transformations}.
 
 \section{ORM Software}
 \label{sec:evoIntro}
@@ -50,7 +50,7 @@ The software definition above introduce the first type used in this paper. The n
 
 The software has to be in consistent state so its users could have benefit from its usage. The state of the software is defined to communicate the sate of the software to its user. The components of a software (application and database) are transformed likewise, thus the state is defined for them too.
 \begin{align*}
- 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s,  \\	s \lhd Software \vee s \lh Application \vee s \lhd Database
+ 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s,  \\	s \lhd State \vee s \lh Application \vee s \lhd Database
 \end{align*}
 Before the definition of the software consistency is provided, the notation of function transcription has to be introduced. Usually the definition of a function consists of two parts - an effect of the function and conditions when the effect occurs We decide to use following transcription, to simplify the notation and to improve understanding of functions:
 \begin{align*}
@@ -73,7 +73,7 @@ The consistency of application and database is discussed later in this paper. Th
  		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \\ \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
  		\inference{otherwise}{Inconsistent \; s}
  	\end{cases} \\ 
- 	s \lhd Software
+ 	s \lhd State
 \end{align*}
 
 \subsection{Software Evolution}
@@ -105,7 +105,7 @@ The definition of the evolving operator is inspired by the monads (as used e.g. 
  	\inference{! consistent(state(s))}{u} \\ \\
  	\inference{consistent(state(s))}{state(sw(\Psi(s, t), \Phi(s,t))} 
 \end{cases}\\ 
-s \lhd Software, t \in E
+s \lhd State, t \in E
 \end{align*}
 \begin{align*}
  state(a) \circ e = \begin{cases}
@@ -354,7 +354,7 @@ The definition of data allows definition of function $contains$ which verify if 
 	instantiated(c, s) = \begin{cases} \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
   false
  \end{cases} \\ \\
-	 c \in classes(application(s)), s \lhd Software 
+	 c \in classes(application(s)), s \lhd State 
 \end{align*}
 
 
@@ -713,9 +713,8 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	addValueToTable(l, p, d) = \begin{cases}
  		\inference{\exists t \in tables(d) : name(t) = l}	{\begin{gathered}
 		d \bullet insertValue(head(tableData(l, d)), p, d) \\ \bullet addValueToTable(tail(tableData(l, d)), p, d)
-	\end{gathered}} \\ \\
- 		Inconsistent \; d
- 	\end{cases}\\ \\
+	\end{gathered}} 
+ 	\end{cases}\\ 
  	l \in Label, p \lhd Pair,  d \lhd Database
 \end{align*}
 
@@ -742,13 +741,12 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \end{align*}
 
 \subsubsection{Database decomposition}
-\paragraph{dropValue}
+\paragraph{Remove a value}  The approach introduced in this paper has to  preserve data and information, nevertheless there are cases when data can be deleted from the database without data lost as they are e.g. already copied in another column as the understanding of data changed in the whole software, therefore we defined two transformations - one removes a single value from a row, second removes whole row (instance) from the software.
 \begin{align*}
 	\mathbf{dropValue} : Label \times Row \times Database \rightarrow Database \\
 	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) \setminus p}
 	\\ l \in Label, r \lhd Row \wedge r \in data(d), d \lhd Database
 \end{align*}
-
 \begin{align*}
 	\mathbf{dropRow} :  Row*  \times Database \rightarrow Database\\
 	dropRow(r, d) = \inference{|r|=1}{data(d) \setminus r}
@@ -756,7 +754,9 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \end{align*}
 
 
-\paragraph{Remove table} The function removes a table if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too.
+\paragraph{Remove table, column or key} The functions removes a table, column or key if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too in case a table is removed.  There are defined two variants of remove transformations for each model entity - one preserves data, the other removes data too.
+
+
 \begin{align*}
 	\mathbf{dropTable} : Label \times Database \rightarrow Database \\
 	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \forall r \in data(d) : owningTable(r) \neq l \\  \wedge (\forall j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) \neq l) }{ tables(d) \setminus \rho(c)}
@@ -769,9 +769,6 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \end{gathered}}
 	\\ l \in Label, d \lhd Database
 \end{align*}
-
-
-\paragraph{Remove column or foreign key} The situation is similar to the $dropTable$ function - there has to be no data in the column or key so it can be safely removed.
 \begin{align*}
 	\mathbf{dropColumn} : Label \times Label \times Database \rightarrow Database \\
 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) \setminus c}\\
@@ -783,8 +780,6 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
 	 l, l_p \in Label, d \lhd Database 
 \end{align*}
-
-\paragraph{Remove Data and Column} The approach we declare to introduce in this paper was declared to be data and information preserving, nevertheless there are cases when data can be deleted from the database without data lost as they are e.g. already copied in another column as the understanding of data changed in the whole software. 
 \begin{align*}
 	\mathbf{DropColumnAndData} : Label \times Label* \times Database \rightarrow Database \\
 	DropColumnAndData(l_c, ps, d) = \begin{cases}
@@ -812,6 +807,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 
 
 \section{Evolutionaty Transformations}
+\label{sec:Evolutionaty-Transformations}
 The set of all possible data evolution cases $E$ was defined in Section \ref{sec:evoIntro}. The semantic of transformations in the set $E$ is defined by their interpretation on individual software components. This section provides an overview of basic transformations (evolution cases) and theirs interpretation on the application and the database. The section starts with simple transformations as the complex one can be often implemented as theirs concatenation. The transformations are divided into three groups - first group creates the structure of a software, second group removes parts of a software structure and third group is able to alter the structure.
 
 The definition of a transformation consists of two parts - a conditions of transformation feasibility and its impact on the context (application or database). If the conditions of feasibility are not met, the transformation cannot change the context - the software cannot evolve. The second branch of the operation definition is an implicit assumption - if an operation is not feasible in a software, its state become inconsistent. This implicit assumption is not stated in the transformation definitions to increase theirs readability.
@@ -829,7 +825,7 @@ There are defined three transformations which are able to create a software: $ad
    database(s) \bullet addTable(\rho(p,d), d) \\ \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))])) 
     \end{gathered} } 
    \end{cases}\\
-	s \lhd Software, l \in Label, p \in Properties
+	s \lhd State, l \in Label, p \in Properties
 \end{align*}
 
 
@@ -843,7 +839,7 @@ There are defined three transformations which are able to create a software: $ad
 	\end{gathered}}
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
-	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in m_{l, reference(a)} :\\ insertRow(row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
+	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in m_{l, reference(a)} :\\ insertRow(\\ row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
 	\end{gathered}} 
 \end{cases}\\
 \end{align*}
@@ -878,7 +874,7 @@ The removal of class, property or association is limited only by the constraints
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{database(s) \bullet dropTable(name(owningClass(p)+l)}
  	\end{cases}\\
- 	l, l_p \in Label, s \lhd Software
+ 	l, l_p \in Label, s \lhd State
 \end{align*}
 
 \paragraph{Remove Property and its Data} The $RemovePropertyAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemovePropertyAndData$ should be used carefully.
@@ -892,7 +888,7 @@ The removal of class, property or association is limited only by the constraints
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{database(s) \bullet RemoveTableAndData(l_c, ps)}
  \end{cases}
 	\\
-	l_c \in Label, ps \lhd Label*, s \lhd Software
+	l_c \in Label, ps \lhd Label*, s \lhd State
 \end{align*}
 
 \paragraph{Remove association} 
@@ -907,7 +903,7 @@ The removal of class, property or association is limited only by the constraints
      	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
      	\wedge startCardinality(a) > 1}{database(s) \bullet dropTable(name(owningClass(a))+l_a)} 
      \end{cases}\\
-    l_c, l_a \in Labels, s \lhd Software
+    l_c, l_a \in Labels, s \lhd State
 \end{align*}
 
 \paragraph{Remove Association and its Data} The $RemoveAssociationAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemoveAssociationAndData $ should be used carefully.
@@ -917,11 +913,16 @@ The removal of class, property or association is limited only by the constraints
 	\Psi(RemoveAssociationAndData(L_c, ps), s) = \begin{cases}
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered}			database(s) \\ \bullet RemoveAssociationAndData(L_c, head(ps)) \\ \bullet RemoveAssociationAndData(L_c, tail(ps)) \end{gathered}}\\\\
- 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(p) \leq 1}{database(s) \bullet RemoveForeignKeyAndData(reference(a), ps)}\\\\
- 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(a) > 1}{database(s) \bullet RemoveTableAndData(l_c + reference(a), ps)}
+ 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(p) \leq 1}{\begin{gathered}
+	database(s) \\ \bullet RemoveForeignKeyAndData(reference(a), ps)
+\end{gathered}}
+ 		\\\\
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(a) > 1}{\begin{gathered}
+	database(s) \\\bullet RemoveTableAndData(l_c + reference(a), ps)
+\end{gathered}}
  \end{cases}
 	\\
-	l_c \in Label, ps \lhd Label*, s \lhd Software
+	l_c \in Label, ps \lhd Label*, s \lhd State
 \end{align*}
 
 
@@ -948,7 +949,7 @@ Alternation of a software is limited to renaming functions in our model.
 		database(s)\\ \bullet alterTable(name(owningClass(p)+l_o, l_n, database(s))
 \end{gathered}}
  \end{cases}\\
-l_c, l_o, l_n \in Label,  s \lhd Software
+l_c, l_o, l_n \in Label,  s \lhd State
 \end{align*}
 
 
@@ -969,7 +970,7 @@ l_c, l_o, l_n \in Label,  s \lhd Software
 database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
 \end{gathered}}
  \end{cases} \\
-	l_c, l_o, l_n \in Label, a \lhd Applications, s \in Sates, d \lhd Database
+	l_c, l_o, l_n \in Label, a \lhd Applications, s \lhd Sate
 \end{align*}
 
 
@@ -989,7 +990,7 @@ The $CopyProperty$ function can be implemented as a transformation composed by o
 			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRows(l_s + l_p, l_t + l_p, m_{l_s, l_t}) 
 			\end{gathered}}
  \end{cases}\\
- l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \lhd Software
+ l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \lhd State
 \end{align*}
 With the copy property transformation defined we are able to define advanced evolution scenarios.
 
@@ -997,7 +998,7 @@ With the copy property transformation defined we are able to define advanced evo
 %$$\rho_{CcP} : Property \times \mathbb{N^{*}} \times Application \rightarrow Property $$
 %$$\rho_{cardA} : Association \times \mathbb{N^{*}} \times Application \rightarrow Association $$
 
-\section{Complex Refactoring Cases}
+\section{Advanced Refactoring Cases}
 The concrete refactoring cases presented in this section were chosen according to the refactoring statistics provided by Eclipse. The refactoring cases, which does not affect data (such as change method signature or encapsulate field) were removed from the set of refactoring cases and form the rest the Move property and Extract/Inline class were chosen to 
 \subsection{Move Property}
 The aim of the move property transformation is to change two classes - one will get a new property, the other will lost a property. An example of such transformation is merging information from one class to another. The implementation of move property transformation is based on copy property transformation:
@@ -1010,7 +1011,7 @@ The aim of the move property transformation is to change two classes - one will 
 \end{gathered}}\\\\
  \end{cases}
 	\\
-	l_s, l_t \in Label, ps \in Label*,  m_{l_s, l_t} \in M, s \lhd Software
+	l_s, l_t \in Label, ps \in Label*,  m_{l_s, l_t} \in M, s \lhd State
 \end{align*}
 Although the $MoveProperty$ transformation contains the transformation $RemovePropertyData$ its execution preserve data and information as the information has been already copied. 
 
@@ -1020,13 +1021,13 @@ The extract and inline class are two opposite transformations. First of them ext
 	\mathbf{Extract} : Label \times Label* \times Label \times State \rightarrow State \\
 	state(s) \oplus Extract(l_s, ps, l_n) = \begin{cases}
 	\inference{|ps| = 1}{\begin{gathered}
-		s \oplus addClass(cl(l_n, \varnothing, \varnothing)) \\ \oplus MoveProperty(l_s, l_n, ps, \mathbf{X}) \\ \oplus RemovePropertyData(l_s, ps) \\ \oplus RemoveProperty(l_s, ps)  
+		s \oplus addClass(cl(l_n, \varnothing, \varnothing)) \\ \oplus MoveProperty(l_s, l_n, ps, \mathbf{X}) \\ \oplus RemovePropertyData(l_s, ps)   
 \end{gathered}}\\\\
 	%\inference{|ps| > 1}{\begin{gathered} 	s \oplus Extract(l_s, head(ps), l_n) \\\oplus Extract(l_s, tail(ps), l_n) \end{gathered}}\\\\
 	% \inference{|ps| = \varnothing}{state(s)}	 
  \end{cases}
 	\\
-	l_s, l_n \in Label, ps \lhd Label* s \lhd Software 
+	l_s, l_n \in Label, ps \lhd Label* s \lhd State 
 \end{align*}
 
 \begin{align*}
@@ -1035,7 +1036,7 @@ The extract and inline class are two opposite transformations. First of them ext
 	s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemovePropertyAndData(l_s, ps) \\ \oplus RemoveClass(l_s)  
 \end{gathered}
 }\\
-l_s, l_t \in Label, m_{l_s, l_t} \in M, s \lhd Software, \\ \\
+l_s, l_t \in Label, m_{l_s, l_t} \in M, s \lhd State, \\ \\
 ps = \inference{\exists c \in classes(applications)) \wedge ps = \varnothing}{\forall p \in properries(p) : ps \cup name(p)}
 \end{align*}
  
