@@ -1,6 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage{amssymb}
-\usepackage{amsmath}
+\usepackage[fleqn]{amsmath}
 \usepackage{semantic}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -38,19 +38,19 @@ The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of 
 \end{figure}
 A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:appStructure}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software as a triple:
 \begin{align*}
-	\mathbf{software} = < Application, Database, \rho > \\
-	sw : Applications \times Databases \times ORM \rightarrow Software \\ \\
-	\mathbf{application} : Software \rightarrow Application \\
-	application(sw(a, d, \rho)) = a \\ \\
-	\mathbf{database} : Software \rightarrow Database \\
-	database(sw(a, d, \rho)) = d \\
-	a \lhd Application, d \lhd Database
+& \mathbf{software} = < Application, Database, \rho >\\
+& \mathbf{sw} : Applications \times Databases \times ORM \rightarrow  Software \\ \\
+& \mathbf{application} : Software \rightarrow Application \\
+& application(sw(a, d, \rho)) = a \\ \\
+& \mathbf{database} : Software \rightarrow Database \\
+& database(sw(a, d, \rho)) = d \\\\
+& a : Application, d : Database
 \end{align*}
-The software definition above introduce the first type used in this paper. The notation $a \lhd Application$ indicates the variable $a$ has the type $Application$.
 
 The software has to be in consistent state so its users could have benefit from its usage. The state of the software is defined to communicate the sate of the software to its user. The components of a software (application and database) are transformed likewise, thus the state is defined for them too.
 \begin{align*}
- 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s,  \\	s \lhd State \vee s \lh Application \vee s \lhd Database
+& 	\mathbf{state} = Consistent\; s \: | \: Inconsistent \; s,  \\\\
+& 	s : State \vee s \lh Application \vee s : Database
 \end{align*}
 Before the definition of the software consistency is provided, the notation of function transcription has to be introduced. Usually the definition of a function consists of two parts - an effect of the function and conditions when the effect occurs We decide to use following transcription, to simplify the notation and to improve understanding of functions:
 \begin{align*}
@@ -59,21 +59,21 @@ f(x) =   \inference{conditions}{effect}
 
 The function querying the state (it means consistency) of a software is defined as:
 \begin{align*}
- 	\mathbf{consistent} : State \rightarrow Boolean \\
- 	consistent(s) = \begin{cases}
+& 	\mathbf{consistent} : State \rightarrow Boolean \\
+& 	consistent(s) = \begin{cases}
  		\inference{s = Consistent(s)}{true}\\\\
  		\inference{s = Inconsistent(s)}{false}\\
  \end{cases}\\
- s \lhd State
+& s : State
 \end{align*}
 The consistency of application and database is discussed later in this paper. The definition of software state only is provided:
 \begin{align*}
-	\mathbf{state} : Software \rightarrow State \\
-	state(s) = \begin{cases}
+&	\mathbf{state} : Software \rightarrow State \\
+&	state(s) = \begin{cases}
  		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \\ \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
  		\inference{otherwise}{Inconsistent \; s}
  	\end{cases} \\ 
- 	s \lhd State
+& 	s : State
 \end{align*}
 
 \subsection{Software Evolution}
@@ -87,55 +87,57 @@ The evolution of a software is a transformation from one consistent state to ano
 
 The evolution of the whole software has to be processed on the both software components - application and database. It means there is a set of application transformations called $AppT$ and a set of database transformations called $DbT$. Because there are needed different parameters for application and database evolution the evolution of database can not be derived from application evolution only. Thus the set of transformation called $E$ is defined to evolve the whole software together with mappings $\Psi$ between $E$ and $AppT$ and $\Phi$ between $E$ and $DbT$ is defined:
 \begin{align*}
-\Psi : E \rightarrow AppT \\
-\Phi : E \rightarrow DbT
+&	\Psi : E \rightarrow AppT \\
+&	\Phi : E \rightarrow DbT
 \end{align*}
 The set $E$ containing the evolution transformations of a software mets our first goal - a single source of data evolution for the whole software.
 
 The application of a transformation on a software state (evolution) is marked by the $\oplus$ operator:
-$$\oplus : State \times E \rightarrow State $$
+\begin{align*}
+& \oplus : State \times E \rightarrow State
+\end{align*}
 and similarly the $\circ$ and the $\bullet$ operators for evolving application and database:
 \begin{align*}
-\circ : State \times AppT \rightarrow State \\
- \bullet : State \times DbT \rightarrow State
+& \circ : State \times AppT \rightarrow State \\
+& \bullet : State \times DbT \rightarrow State
 \end{align*}
 The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell programming language) so the state of the software can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
 \begin{align*}
- state(s) \oplus t = \begin{cases}
+& state(s) \oplus t = \begin{cases}
  	\inference{! consistent(state(s))}{u} \\ \\
  	\inference{consistent(state(s))}{state(sw(\Psi(s, t), \Phi(s,t))} 
 \end{cases}\\ 
-s \lhd State, t \in E
+& s : State, t \in E
 \end{align*}
 \begin{align*}
- state(a) \circ e = \begin{cases}
+& state(a) \circ e = \begin{cases}
  	\inference{!\;consistent(state(a))}{a} \\ \\
  	\inference{consistent(state(a))}{e(a)} 
 \end{cases}\\ 
-a \lhd Application, e \in AppT
+& a : Application, e \in AppT
 \end{align*}
 \begin{align*}
- state(d) \bullet e = \begin{cases}
+&  state(d) \bullet e = \begin{cases}
  	\inference{!\;consistent(state(d))}{d} \\ \\
  	\inference{consistent(state(d))}{e(d)} 
 \end{cases}\\ 
-d \lhd Application, e \in DbT
+& d : Application, e \in DbT
 \end{align*}
 
 \section{Software Model}
 The model of an ORM software consists of three parts - an application model, a database model and an ORM. The model of application and database creates a type system for both ORM and evolutionary transformations.
 
-The definitions of all parts assume a set $Label$ exists which contains all possible identifiers and each modeled entity is unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. The notation: $Type*$ is used to define an ordered set of values of concrete type (e.g. $C \lhd Class*$ means c is an ordered set of classes). 
+The definitions of all parts assume a set $Label$ exists which contains all possible identifiers and each modeled entity is unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. The notation: $Type*$ is used to define an ordered set of values of concrete type (e.g. $C : Class*$ means c is an ordered set of classes). 
 
 A lot of introduced transformations can be applied on an ordered set. The application proceeds on set consists in sequential application on set elements:
 \begin{align*}
-	f(x, y) = \begin{cases}
+& 	f(x, y) = \begin{cases}
  		\inference{x = \varnothing}{y}\\
  		\inference{|x| > 1}{f(head(x), y) \cup f(tail(x), y}\\\\
- 		\inference{|x| = 1}{effect}
+ 		\inference{|x| = 1}{effect}\\\\
  		\inference{otherwise}{Inconsistent y}
- \end{cases}\\
- y \lhd Software \vee y \lhd Application \vee y \lhd Database
+ \end{cases}\\\\
+&  y : Software \vee y : Application \vee y : Database
 \end{align*}
 where $x$ is a set of parameters. The effect of a transformation is provided only in next sections as the repetition of sequential application will be redundant. The $otherwise$ branch is consider implicit for all introduced transformations and thus it is not part of transformation definitions too. 
 
@@ -146,25 +148,26 @@ The application model represents an application persistent layer created using o
 \subsubsection{Application Structure}
 Each instance in an application is defined according to some class - the class defines the structure of its instances and relationships between them an the rest of the application. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
 \begin{align*}
-  \mathbf{Application} = < Class* > \\ 
-  \mathbf{app} : Class* \rightarrow  Application \\ \\
-  \mathbf{classes} : Application \rightarrow Class* \\
-  classes(app(cs)) = cs  \\\\
-  \mathbf{class} : Label \times Application \rightarrow Class   \\ 
-  class(l, a) = c, c \in classes(a) \wedge name(c) = l \\ \\
-  l \in Label,a \lhd Applications, cs = Class* 
+& \mathbf{Application} = < Class* > \\ 
+& \mathbf{app} : Class* \rightarrow  Application \\ \\
+& \mathbf{classes} : Application \rightarrow Class* \\
+&   classes(app(cs)) = cs  \\\\
+& \mathbf{class} : Label \times Application \rightarrow Class   \\ 
+&  class(l, a) = c, c \in classes(a) \wedge name(c) = l \\ \\
+&  l \in Label,a : Applications, cs = Class* 
 \end{align*}
 
 \paragraph{Class} Class represents a basic structural unit in the application model. It has a unique name, one or more properties and it can be associated to other classes in the application. 
 \begin{align*}
-	\mathbf{Class} = <label, Property*, Association*> \\
-	\mathbf{cl} : Label \times Property* \times Association* \rightarrow Class \\\\
-	\mathbf{name} : Class \rightarrow Label \\
-	name(cl(l, props, assocs)) = l \\ \\
-	\mathbf{properties} : Class \rightarrow Property* \\
-	properties(cl(l, props, assocs)) = props \\ \\
-	\mathbf{associations} : Class \rightarrow Association* \\	associations(cl(l, props, assocs)) = assocs \\ 
-	l \in Label, props \lhd Property*, assocs \lhd Association*
+& 	\mathbf{Class} = <label, Property*, Association*> \\
+& 	\mathbf{cl} : Label \times Property* \times Association* \rightarrow Class \\\\
+& 	\mathbf{name} : Class \rightarrow Label \\
+& 	name(cl(l, props, assocs)) = l \\ \\
+& 	\mathbf{properties} : Class \rightarrow Property* \\
+& 	properties(cl(l, props, assocs)) = props \\ \\
+& 	\mathbf{associations} : Class \rightarrow Association* \\ 
+& 	associations(cl(l, props, assocs)) = assocs \\ 
+& 	l \in Label, props : Property*, assocs : Association*
 \end{align*}
 Three more function are defined to obtain information about a class - function $primitives$ returns all properties of the class which represent a single value, whereas function $collections$ returns all properties representing collection of values. The last function called $associated$ determine if a class is associated by any other class in an application.
 \begin{align*}
@@ -176,7 +179,7 @@ Three more function are defined to obtain information about a class - function $
   	}{ true } \\\\
  		false
  	\end{cases} \\ \\
-	l \in Label, props = Property*, assocs = Association*,a \lhd Applications
+	l \in Label, props = Property*, assocs = Association*,a : Applications
 \end{align*}
 	 
 \paragraph{Property} Property represents a feature of a class which is represented as a primitive type. The property can be mandatory, can have a default value and according to its cardinality it can represent a single value or a collection of values. The $owningClass$ function returns the class in the model which owns the property.
@@ -193,7 +196,7 @@ Three more function are defined to obtain information about a class - function $
 	mandatory(prop(l, t, val, n, m)) = m  \\ \\
 	\mathbf{owningClass} : Property \times Application \rightarrow Class  \\ 	
 	owningClass(p, a) = \inference{\exists c \in classes(a) \wedge p \in properties(c)}{c}  \\ \\
-	l \in Label, t \lhd AppType, val \in Values, n \in \mathbb{N^{*}}, m \in Boolean 
+	l \in Label, t : AppType, val \in Values, n \in \mathbb{N^{*}}, m \in Boolean 
 \end{align*}
 
 \paragraph {Association} Associtation represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of both association ends.
@@ -210,7 +213,7 @@ Three more function are defined to obtain information about a class - function $
 	endCardinality(assoc(l, ref, n_1, n_2)) = n_2 \\ \\
 	\mathbf{owningClass} : Association \times Application \rightarrow Class  \\
 	owningClass(as, a) = \inference{\exists c \in classes(a) \wedge as \in associations(c)}{c}  \\ \\	
-	l, ref \in Label,  n_1, n_2 \in \mathbb{N}, as \lhd Association
+	l, ref \in Label,  n_1, n_2 \in \mathbb{N}, as : Association
 \end{align*}
 
 
@@ -228,7 +231,7 @@ The application consistency is based on the structural consistency of its model.
 	\inference{\forall c_1, c_2 \in classes(a) : name(c_1) \neq name(c_2) \\ \wedge \forall p_1, p_2 \in properties(c_1) : name(p_1) \neq name(p_2) \\ \wedge \forall a_1, a_2 \in associations(c_1) : name(a_1) \neq name (a_2) \\ \wedge \forall a \in associations(c_1) : \exists c \in classes(a) \wedge name(c) = reference(a) }{Consistent \; a}\\\\
  	Inconsistent \; a
  	\end{cases}\\
-	a \lhd Application
+	a : Application
 \end{align*}
 
 
@@ -242,7 +245,7 @@ The relational database consists of database schema which defines the structure 
 	tables(db(tabs, rs)) = tabs \\ \\
 	\mathbf{rows} : Database \rightarrow Rows \\
 	rows(db(tabs, rs)) = rs \\ \\
-	tabs = Table*, rs = Row*, l \in Label,d \lhd Database
+	tabs = Table*, rs = Row*, l \in Label,d : Database
 \end{align*}
 \paragraph{Table} Table represents a basic concept of database schema. It has a unique name, one or more columns and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
 \begin{align*}
@@ -256,7 +259,7 @@ The relational database consists of database schema which defines the structure 
 	columns(tab(l, pk, cols, fks)) = cols \\ \\
 	\mathbf{foreignKeys} : Table \rightarrow ForeignKeys  \\
 	foreignKeys(tab(l, pk, cols, fks)) = fks \\ \\
-l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
+l \in Label, pk : PrimaryKey, cols = Column*, fks = ForeignKey*
 \end{align*}
 
 \paragraph{Column} Column defines data values and types which can be part of a table record.
@@ -271,7 +274,7 @@ l \in Label, pk \lhd PrimaryKey, cols = Column*, fks = ForeignKey*
 	constraints(col(l, t, val, cons)) = cons  \\ \\
 	\mathbf{owningTable} : Column \times Database \rightarrow Table  \\
 	owningTable(c, d) = \inference{\exists tab \in tables(d) \wedge c \in columns(tab)}{tab} \\ \\
-l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraint*, c \lhd Column,d \lhd Database
+l \in Label, t : DbType, val \in Values,\\ cons : Constraint*, c : Column,d : Database
 \end{align*}
 
 \paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
@@ -286,7 +289,7 @@ l \in Label, t \lhd DbType, val \in Values,\\ cons \lhd Constraint*, c \lhd Colu
 	constaints(fk(l, tRef, cons)) = cons  \\ \\
 	\mathbf{owningTable} : ForeignKey \times Database \rightarrow Table  \\
 	owningTable(fk, d) = \inference{\exists tab \in tables(d) \wedge fk \in foreignKeys(tab)}{tab}\\\\
-	l, tRef \in Label, cons \lhd Constraint*,d \lhd Database, fk \lhd ForeignKey
+	l, tRef \in Label, cons : Constraint*,d : Database, fk : ForeignKey
 \end{align*}
 
 
@@ -337,7 +340,7 @@ The definition of data allows definition of function $contains$ which verify if 
 			\inference{\exists r \in data(d) : refTable(r) = name(t) }{true} \\ \\
 		 	false
  		\end{cases} \\ \\
- l \in Label, ps = Pair*, t \in tables(d), d \lhd Database
+ l \in Label, ps = Pair*, t \in tables(d), d : Database
 \end{align*}
 \begin{align*}
 	\mathbf{tableData} : Label \times Row* \rightarrow Row* \\
@@ -347,14 +350,14 @@ The definition of data allows definition of function $contains$ which verify if 
  		\inference{|r| = 1 \wedge refTable(r) = l}{r}\\\\
  		\inference{|r| = 1 \wedge refTable(r) \neq l}{\varnothing}
  \end{cases} \\ \\
-	r \lhd Row*, l \in Label
+	r : Row*, l \in Label
 \end{align*}
 \begin{align*}
 	\mathbf{instantiated} : Class \times Software \rightarrow Boolean \\
 	instantiated(c, s) = \begin{cases} \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
   false
  \end{cases} \\ \\
-	 c \in classes(application(s)), s \lhd State 
+	 c \in classes(application(s)), s : State 
 \end{align*}
 
 
@@ -396,7 +399,7 @@ There are defined functions for object-relational mapping used in this paper. Th
 		%\inference{c = \varnothing}{\varnothing}\\\\
 		%\inference{|c| > 1}{\rho_c(head(c)) \cup \rho_c(tail(c))} \\ \\
 		\inference{|c| = 1}{table(name(c), primaryKey("Id"), \varnothing, \varnothing)}  \end{cases}   \\ 	
- c \lhd Class
+ c : Class
 \end{align*}
 
 \subsubsection{Mapping of Properties}
@@ -420,7 +423,7 @@ There can occur name collision during mapping in case there are more classes wit
  	 		column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
 		\end{gathered}}
 	\end{cases}\\
-	p \lhd Property
+	p : Property
 \end{align*}
 \begin{align*}
 	\mathbf{\rho_p} : Property* \rightarrow Table* \\ \\
@@ -439,7 +442,7 @@ There can occur name collision during mapping in case there are more classes wit
      			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
     	 \end{gathered}}
  	\end{cases}\\
- 	p \lhd Property
+ 	p : Property
 \end{align*}
 
 \paragraph{Mapping of Associations} An association is mapped into database as a foreign key in table representing associated class or as a table in case the association cardinality is one to many or many to many. Thus there are two mapping cases as for properties and the same solution is used to avoid name collisions.
@@ -458,7 +461,7 @@ There can occur name collision during mapping in case there are more classes wit
 		foreignKey(name(a), name(t),  NOTNULL)
 	}
 	 \end{cases}\\
-	 a \lhd Association
+	 a : Association
 \end{align*}
 \begin{align*} 
 	\mathbf{\rho_a} : Association* \rightarrow Table* \\
@@ -470,7 +473,7 @@ There can occur name collision during mapping in case there are more classes wit
 		 table(name(t)+name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
  	\end{cases}\\
-	 a \lhd Association
+	 a : Association
 \end{align*}
 
 \section{Transformation for Models Manipulation}
@@ -483,19 +486,19 @@ This section provide transformations for manipulating the application layer of a
 %\begin{align*}
 %	\mathbf{findProperty} : Label \times Label \times Application \rightarrow Property \\
 %	findProperty(l_c, l_p, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p}{p} \\
-%	l_c, l_p \in Label, a \lhd Application
+%	l_c, l_p \in Label, a : Application
 %\end{align*}
 %\begin{align*}
 %	\mathbf{findAssociation} : Label \times Label \times Application \rightarrow Association \\
 %	findAssociation(l_c, l_a, a) = \inference{\exists c \in classes(a): name(c) = l_c \\ \wedge \exists o \in associations(c) : name(o) = l_a}{o} \\
-%	l_c, l_a \in Label, a \lhd Application
+%	l_c, l_a \in Label, a : Application
 %\end{align*}
 
 \paragraph{Add Property} The name collision only has to be verified, before adding a property into an application structure:
 \begin{align*}
  	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
 	addProp(l, p, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge \forall q \in  properties(c) : name(q) \neq name(p) \\ \wedge \forall e \in associations(c) : name(e) \neq name(p)}{properties(c) \cup p } \\
-	l \in Label, p \lhd Property, a \lhd Applications
+	l \in Label, p : Property, a : Applications
 \end{align*}
 
 \paragraph{Add Association} Adding an association into an application structure has to verify if there is no name collision and if there is the associated class present in the application model.
@@ -505,14 +508,14 @@ This section provide transformations for manipulating the application layer of a
 	\exists c \in classes(a) : name(c) = l \\
 	\wedge \forall f \in associations(c) : name(f) \neq name(s) \\ 	\wedge \forall p \in properties(c) : name(p) \neq name(s) \\ 
 	\wedge \exists k \in classes(a) : name(k) = reference(s)}{associations(c) \cup s}\\
-	l \in Labels, s \in Associations, a \lhd Applications
+	l \in Labels, s \in Associations, a : Applications
 \end{align*}
 
 \paragraph{Add Class} Adding a class is limited to the case when the class has no associations, this is because it simplifies the database migration. The transformation $addClass$ has to verify there is no name collision
 \begin{align*}
 	\mathbf{addClass} : Class \times Application \rightarrow Application \\ 
 	addClass(c, a) = \inference{\forall s \in classes(a) : name(s) \neq name(c) \\ \wedge associations(c) = \varnothing }{classes(a) \cup c} \\ \\
-	c \lhd Class, a \lhd Applications
+	c : Class, a : Applications
 \end{align*}
 
 \paragraph{Remove Property or Association} The property or association can be simply removed from a class:
@@ -520,12 +523,12 @@ This section provide transformations for manipulating the application layer of a
  	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
  	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
 	}{properties(c) \setminus p }\\
-	l_c, l_p \in Label, a \lhd Applications 
+	l_c, l_p \in Label, a : Applications 
 \end{align*}
 \begin{align*}
 	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
 	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
-	l_c, l_a \in Labels, a \lhd Applications
+	l_c, l_a \in Labels, a : Applications
 \end{align*}
 
 \paragraph{Remove Class} The class can be removed only in case it is not referenced by any association existing in the application.
@@ -533,7 +536,7 @@ This section provide transformations for manipulating the application layer of a
 	\mathbf{remClass} : Label \times Application \rightarrow Application \\
 	remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge !\: associated(c)
 	} {classes(a) \setminus c }\\
-	l \in Label,a \lhd Applications
+	l \in Label,a : Applications
 \end{align*}
 
 \paragraph{Rename Property and Association} Both renaming operations can change a name of the property, association respectively if there are no name collisions:
@@ -543,7 +546,7 @@ This section provide transformations for manipulating the application layer of a
 	}{\begin{gathered}
 		p.name = l_n 
 	\end{gathered}}\\
-	l_c, l_o, l_n \in Label, a \lhd Application
+	l_c, l_o, l_n \in Label, a : Application
 \end{align*}
 \begin{align*}
 	\mathbf{renAssoc} : Label \times Label \times Label \times Application \rightarrow Application \\
@@ -551,7 +554,7 @@ This section provide transformations for manipulating the application layer of a
 	}{\begin{gathered}
 		b.name = l_n 
 	\end{gathered}}
-	\\ l_c, l_o, l_n \in Label, a \lhd Application
+	\\ l_c, l_o, l_n \in Label, a : Application
 \end{align*}
 
 \paragraph{Rename Class} When a class is renamed, the name collisions has to be verified and then all referencing associations has to be updated.
@@ -571,7 +574,7 @@ The database is composed from two separated parts - database schema and data. Tr
 	m_{l_1, l_2} =  <(r_1, r_2)*>,\\
 	r_1 \in tableData(l_1, database(s)) \Rightarrow \exists p \in m_{l_1, l_2} \wedge first(p) = r_1 \\
 	r_2 \in tableData(l_2, database(s)) \Rightarrow \exists p \in m_{l_1, l_2} \wedge second(p) = r_2\\
-	l_1, l_2 \in Label, r_1, r_2 \lhd Row
+	l_1, l_2 \in Label, r_1, r_2 : Row
 \end{align*}
 The definition does not allow to add any default value in case the number of instances does not match. It is because the evolution transformations are designed to not affect stored data (instances) by creating a new data which does not origin from the software.
 %The features of both sets allows only pairs from existing instances and it assumes there is always at least one pair for each row from both tables.
@@ -581,7 +584,7 @@ The definition does not allow to add any default value in case the number of ins
 %\begin{align*}
 %	\mathbf{findTable} : Label \times Database \rightarrow Table  \\
 %	findTable(l, d) = \inference{\exists t \in tables(d) \wedge name(t) = l}{t}  \\ \\
-%	l \in Label, d \lhd Database
+%	l \in Label, d : Database
 %\end{align*}
 
 \paragraph{Comparison of tables} The need to compare two tables during the evolution results into the comparing operator $\cong$. The operator has to be defined for columns and foreign keys too.
@@ -591,7 +594,7 @@ The definition does not allow to add any default value in case the number of ins
  		\inference{|columns(t_1)| = |columns(t_2)| \\ \wedge |foreignKeys(t_1)| = |foreignKeys(t_2)| \\ \wedge \forall c \in columns(t_1) \exists e \in columns(t_2) : c = e \\ \wedge \forall f \in foreignKeys(t_1) \exists g \in foreignKeys(t_2) : f = g }{true}\\\\
  false
  \end{cases}\\
- t_1 \lhd Table, t_2 \lhd Table
+ t_1 : Table, t_2 : Table
 \end{align*}
 \begin{align*}
 	\mathbf{\cong} : Column \times Column \rightarrow Boolean \\
@@ -600,7 +603,7 @@ The definition does not allow to add any default value in case the number of ins
  		\\ \\
 		false
  \end{cases}\\
- c_1 \lhd Column, c_2 \lhd Column
+ c_1 : Column, c_2 : Column
 \end{align*}
 \begin{align*}
 	\mathbf{\cong} : ForeignKey \times ForeignKey \rightarrow Boolean \\
@@ -609,7 +612,7 @@ The definition does not allow to add any default value in case the number of ins
  		\\ \\
 		false
  \end{cases}\\
- f_1 \lhd ForeignKey, f_2 \lhd ForeignKey
+ f_1 : ForeignKey, f_2 : ForeignKey
 \end{align*}
 
 \paragraph{Find pair} The function returns a pair corresponding to given column (or key) name in concrete row.
@@ -619,7 +622,7 @@ The definition does not allow to add any default value in case the number of ins
 		\inference{\exists p \in pairs(r) : reference(p) = l}{p} \\ \\
 			\varnothing
 		\end{cases}\\
-		l \in Label, r \lhd Row
+		l \in Label, r : Row
 \end{align*}
 \subsubsection{Database Schema Creation}
 \paragraph{Add Column} A new column can be add into a table if there are no name collisions. If the column has the $NOTNULL$ constraint, then the default value has to be added to all rows in the table.
@@ -631,7 +634,7 @@ The definition does not allow to add any default value in case the number of ins
 		(\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c})\\ \bullet addValueToTable(l, [name(c), defVal(c)]) 
 %		\\ \\ Inconsistent \;d 
 	 \end{cases}\\ 
-	 l \in Label, c \lhd Column*,d \lhd Database
+	 l \in Label, c : Column*,d : Database
 \end{align*}
 
 \paragraph{Add Table} The transformation creates a new table in the database. The new table should not contain any foreign keys.
@@ -643,7 +646,7 @@ The definition does not allow to add any default value in case the number of ins
 		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e) \\ \wedge \forall f \in foreignKeys(t) : \\ s\exists e \in tables(d) \wedge name(e) = reference(f) }{tables(d) \cup t}
 % \\ \\ 	Inconsistent \;d 
 	 \end{cases}\\ 
-	t = Table*, d \lhd Database
+	t = Table*, d : Database
 \end{align*}
 
 
@@ -656,7 +659,7 @@ The definition does not allow to add any default value in case the number of ins
 c.name = l_n 
 \end{gathered}}
  \\
-l_c, l_o, l_n \in Label, d \lhd Database
+l_c, l_o, l_n \in Label, d : Database
 \end{align*}
 
 \paragraph{Alter Table} The $alterTable$ function renames a table in  the database.
@@ -665,7 +668,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
 	alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
 		t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
 	\end{gathered}}\\
-	l_o, l_n \in Label, s \in States, a \lhd Applications, d \lhd Database
+	l_o, l_n \in Label, s \in States, a : Applications, d : Database
 \end{align*}
 
 \paragraph{Copy Column} The transformation creates a copy of a column in a another table in the database. The transformation changes only the structure of database - stored data are not changed.
@@ -674,7 +677,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
 	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
  		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{d \bullet addColumn(l_t, c)} 
 	\end{cases} \\
-	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \lhd Database
+	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d : Database
 \end{align*}
 
 \paragraph{Copy Table} The transformation creates a copy of a table in database schema with different name.
@@ -693,7 +696,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
 		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) \\ \wedge \forall e \in tableData(t, d) : pkValue(e) \neq pkValue(r)}{data(d) \cup r} 
 		 	%\\ \\	 Inconsistent \; d
 		 \end{cases}	\\
-		 r = Row*,d \lhd Database
+		 r = Row*,d : Database
 \end{align*}
 
 \paragraph{Insert Value} The function inserts a new pair into an existing row.
@@ -704,7 +707,7 @@ l_c, l_o, l_n \in Label, d \lhd Database
  		\inference{|p| = 1 \wedge \forall e \in pairs(r) : reference(e) \neq reference(p) \\ \wedge \exists t \in tables(d) : name(t) = refernces(r), \\ \wedge \exists c \in columns(t) : reference(p) = name(c)}{pairs(r) \cup p} 
  		%\\ \\ Inconsistent \; d
  		\end{cases} \\
-r \lhd Row, p = Pair*,d \lhd Databases
+r : Row, p = Pair*,d : Databases
 \end{align*}
 
 \paragraph{Add Value To Table} The function appends a pair to all rows of a table.
@@ -715,7 +718,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 		d \bullet insertValue(head(tableData(l, d)), p, d) \\ \bullet addValueToTable(tail(tableData(l, d)), p, d)
 	\end{gathered}} 
  	\end{cases}\\ 
- 	l \in Label, p \lhd Pair,  d \lhd Database
+ 	l \in Label, p : Pair,  d : Database
 \end{align*}
 
 \paragraph{Copy Value} The function copy values from one column in a table to another column in the same or in another table - according to provided mapping. 
@@ -726,7 +729,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 		\forall	p \in m_{l_s, l_t} :	d \bullet insertValues(second(p), \\ [l_{tc},value(findPair(l_{sc}, first(p)))])
 		\end{gathered}}
  	\end{cases} \\
- 	l_s, l_t, l_{sc}, l_{tc} \in Label, d \lhd Database
+ 	l_s, l_t, l_{sc}, l_{tc} \in Label, d : Database
 \end{align*}
 
 \paragraph{Copy rows} The function $copyRows$ creates a copy of a source table content in another table with the same structure. 
@@ -737,7 +740,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
  	%\inference{|m_{l_s, l_t}| > 1}{\begin{gathered} d \bullet copyRows(l_s, l_t, head(M_{l_s, l_t})) \\ \bullet copyRows(l_s, l_t, tail(m_{l_s, l_t})) \end{gathered}}
  	\inference{|m_{l_s, l_t}| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{d \bullet insertRow(row(l, pairs(first(m_{l_s, l_t}))), d)} \\\\
   \end{cases} \\
-  l_s, l_t \in Label, d \lhd Database, m_{l_s, l_t} \in M
+  l_s, l_t \in Label, d : Database, m_{l_s, l_t} \in M
 \end{align*}
 
 \subsubsection{Database decomposition}
@@ -745,12 +748,12 @@ r \lhd Row, p = Pair*,d \lhd Databases
 \begin{align*}
 	\mathbf{dropValue} : Label \times Row \times Database \rightarrow Database \\
 	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) \setminus p}
-	\\ l \in Label, r \lhd Row \wedge r \in data(d), d \lhd Database
+	\\ l \in Label, r : Row \wedge r \in data(d), d : Database
 \end{align*}
 \begin{align*}
 	\mathbf{dropRow} :  Row*  \times Database \rightarrow Database\\
 	dropRow(r, d) = \inference{|r|=1}{data(d) \setminus r}
-	\\ l \in Label, r \lhd Row \wedge r \in data(d), d \lhd Database
+	\\ l \in Label, r : Row \wedge r \in data(d), d : Database
 \end{align*}
 
 
@@ -767,18 +770,18 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	dropTableAndData(l, d) = \inference{\exists t \in tables(d) \\ \wedge ! \; associated(t, d)}{\begin{gathered}
 	(\forall r \in tableData(t,d) : dropRow(r, d))\\ \bullet dropTable(t,d)
 \end{gathered}}
-	\\ l \in Label, d \lhd Database
+	\\ l \in Label, d : Database
 \end{align*}
 \begin{align*}
 	\mathbf{dropColumn} : Label \times Label \times Database \rightarrow Database \\
 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) \setminus c}\\
-	 l , l_p\in Label, d \lhd Database 
+	 l , l_p\in Label, d : Database 
 \end{align*}
 
 \begin{align*}
 	\mathbf{dropKey} : Label \times Label \times Database \rightarrow Database \\
 	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in tableData(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
-	 l, l_p \in Label, d \lhd Database 
+	 l, l_p \in Label, d : Database 
 \end{align*}
 \begin{align*}
 	\mathbf{DropColumnAndData} : Label \times Label* \times Database \rightarrow Database \\
@@ -789,7 +792,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	 	(\forall r, r \in tableData(d) \wedge reference(r) = l_c: \\d \bullet dropValue(ps, r)) \end{gathered}}) \\ \bullet dropColumn(l_c)  
  \end{cases}
 	\\
-	l_c \in Label, ps \lhd Label*, d \in Database
+	l_c \in Label, ps : Label*, d \in Database
 \end{align*}
 
 \begin{align*}
@@ -801,7 +804,7 @@ r \lhd Row, p = Pair*,d \lhd Databases
 	 	(\forall r, r \in tableData(d) \wedge reference(r) = l_f: \\d \bullet dropValue(ps, r)) \end{gathered}}) \\ \bullet dropKey(l_f)  
  \end{cases}
 	\\
-	l_f \in Label, ps \lhd Label*, d \in Database
+	l_f \in Label, ps : Label*, d \in Database
 \end{align*}
 
 
@@ -825,7 +828,7 @@ There are defined three transformations which are able to create a software: $ad
    database(s) \bullet addTable(\rho(p,d), d) \\ \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))])) 
     \end{gathered} } 
    \end{cases}\\
-	s \lhd State, l \in Label, p \in Properties
+	s : State, l \in Label, p \in Properties
 \end{align*}
 
 
@@ -874,7 +877,7 @@ The removal of class, property or association is limited only by the constraints
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{database(s) \bullet dropTable(name(owningClass(p)+l)}
  	\end{cases}\\
- 	l, l_p \in Label, s \lhd State
+ 	l, l_p \in Label, s : State
 \end{align*}
 
 \paragraph{Remove Property and its Data} The $RemovePropertyAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemovePropertyAndData$ should be used carefully.
@@ -888,7 +891,7 @@ The removal of class, property or association is limited only by the constraints
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{database(s) \bullet RemoveTableAndData(l_c, ps)}
  \end{cases}
 	\\
-	l_c \in Label, ps \lhd Label*, s \lhd State
+	l_c \in Label, ps : Label*, s : State
 \end{align*}
 
 \paragraph{Remove association} 
@@ -903,7 +906,7 @@ The removal of class, property or association is limited only by the constraints
      	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
      	\wedge startCardinality(a) > 1}{database(s) \bullet dropTable(name(owningClass(a))+l_a)} 
      \end{cases}\\
-    l_c, l_a \in Labels, s \lhd State
+    l_c, l_a \in Labels, s : State
 \end{align*}
 
 \paragraph{Remove Association and its Data} The $RemoveAssociationAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemoveAssociationAndData $ should be used carefully.
@@ -922,7 +925,7 @@ The removal of class, property or association is limited only by the constraints
 \end{gathered}}
  \end{cases}
 	\\
-	l_c \in Label, ps \lhd Label*, s \lhd State
+	l_c \in Label, ps : Label*, s : State
 \end{align*}
 
 
@@ -949,7 +952,7 @@ Alternation of a software is limited to renaming functions in our model.
 		database(s)\\ \bullet alterTable(name(owningClass(p)+l_o, l_n, database(s))
 \end{gathered}}
  \end{cases}\\
-l_c, l_o, l_n \in Label,  s \lhd State
+l_c, l_o, l_n \in Label,  s : State
 \end{align*}
 
 
@@ -970,7 +973,7 @@ l_c, l_o, l_n \in Label,  s \lhd State
 database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
 \end{gathered}}
  \end{cases} \\
-	l_c, l_o, l_n \in Label, a \lhd Applications, s \lhd Sate
+	l_c, l_o, l_n \in Label, a : Applications, s : Sate
 \end{align*}
 
 
@@ -990,7 +993,7 @@ The $CopyProperty$ function can be implemented as a transformation composed by o
 			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRows(l_s + l_p, l_t + l_p, m_{l_s, l_t}) 
 			\end{gathered}}
  \end{cases}\\
- l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \lhd State
+ l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s : State
 \end{align*}
 With the copy property transformation defined we are able to define advanced evolution scenarios.
 
@@ -1011,7 +1014,7 @@ The aim of the move property transformation is to change two classes - one will 
 \end{gathered}}\\\\
  \end{cases}
 	\\
-	l_s, l_t \in Label, ps \in Label*,  m_{l_s, l_t} \in M, s \lhd State
+	l_s, l_t \in Label, ps \in Label*,  m_{l_s, l_t} \in M, s : State
 \end{align*}
 Although the $MoveProperty$ transformation contains the transformation $RemovePropertyData$ its execution preserve data and information as the information has been already copied. 
 
@@ -1027,7 +1030,7 @@ The extract and inline class are two opposite transformations. First of them ext
 	% \inference{|ps| = \varnothing}{state(s)}	 
  \end{cases}
 	\\
-	l_s, l_n \in Label, ps \lhd Label* s \lhd State 
+	l_s, l_n \in Label, ps : Label* s : State 
 \end{align*}
 
 \begin{align*}
@@ -1036,7 +1039,7 @@ The extract and inline class are two opposite transformations. First of them ext
 	s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemovePropertyAndData(l_s, ps) \\ \oplus RemoveClass(l_s)  
 \end{gathered}
 }\\
-l_s, l_t \in Label, m_{l_s, l_t} \in M, s \lhd State, \\ \\
+l_s, l_t \in Label, m_{l_s, l_t} \in M, s : State, \\ \\
 ps = \inference{\exists c \in classes(applications)) \wedge ps = \varnothing}{\forall p \in properries(p) : ps \cup name(p)}
 \end{align*}
  
