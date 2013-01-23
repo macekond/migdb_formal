@@ -1,0 +1,18 @@
+\documentclass[11pt]{article}
+
+\begin{document}
+\section{Related Work}
+There are proposed several metrics for classification of impact of a change on the conceptual schema in \cite{Wedemeijer:ConceptualMetrics}. These metrics can help us to describe the impact of proposed transformation on a software which is represent as two models (application and database). Only some metrics could be used for describing transformations as the others describe the state of conceptual schema. The universe (domain) is the application as all changes origins on this level.
+
+The first metric "\textbf{Justified change}" means (in our context) that for each change of database exists a change of application. In case the evolution of the software was based on transformations proposed in this paper the metric is equal to one - each change is justified.
+
+The metric "\textbf{Proportional change}" which compares the size and severity of change between application and database level can be used to describe complexity of transformations. The terms size of change and complexity of change has to be defined in order to use the metric. The size of change is equal to the number of entities in the model and instances which are affected by a change. The complexity of change is measured by number of atomic operations on each level needed to fulfill the evolution. This metrics is used to classify every single transformation.
+
+The metric "\textbf{Impact on Complexity}" determines how the complexity of software or its components  changed. The metric can be used to evaluate each single transformations
+
+\paragraph{Prediction of database change impact}The analysis technique for identifying the impact of relational database change upon object oriented application is proposed in \cite{Maule:ImpactAnalysis}. The technique focus on relational database and its change which impact on application is predicted. The analysis technique is able to identify changes in application structure (new attributes) as well as changes in database queries used in application. In contrast approach proposed in this paper does not consider database queries and theirs change and it is not mentioned to predict the impact of a change, but to  
+process the change in the whole software, although it can be used for simulation of a change on formal level.
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
