@@ -36,10 +36,11 @@ The paper is organized as follows: in Section \ref{sec:evoIntro} the concept of 
 	\caption{The model of one generation of an ORM system consists of application persistent layer and relational database for storing instances.}
 \label{fig:appStructure}
 \end{figure}
-A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:appStructure}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software as a triple:
+A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:appStructure}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM (we will use $\rho$ as a symbol for ORM), therefore we define a software as a triple consisting of an application and a database which are connected together by an ORM:
 \begin{align*}
 & \mathbf{software} = < Application, Database, \rho >\\
-& \mathbf{sw} \in Applications \times Databases \times ORM \rightarrow  Software \\ \\
+& \mathbf{sw} : Applications \times Databases \times ORM \rightarrow  Software \\ 
+\\
 & \mathbf{application} \in Software \rightarrow Application \\
 & application(sw(a, d, \rho)) = a \\ \\
 & \mathbf{database} \in Software \rightarrow Database \\
@@ -60,20 +61,20 @@ f(x) =   \inference{conditions}{effect}
 The function querying the state (it means consistency) of a software is defined as:
 \begin{align*}
 & 	\mathbf{consistent} \in State \rightarrow Boolean \\
-& 	consistent(s) = \begin{cases}
- 		\inference{s = Consistent(s)}{true}\\\\
- 		\inference{s = Inconsistent(s)}{false}\\
+& 	consistent(state(s)) = \begin{cases}
+ 		\inference{s = Consistent \; s}{true}\\\\
+ 		\inference{s = Inconsistent \; s}{false}\\
  \end{cases}\\
-& s \in State
+& s \in Software
 \end{align*}
 The consistency of application and database is discussed later in this paper. The definition of software state only is provided:
 \begin{align*}
-&	\mathbf{state} \in Software \rightarrow State \\
+&	\mathbf{state} : Software \rightarrow State \\
 &	state(s) = \begin{cases}
  		\inference{consistent(application(s)) \wedge \\ consistent(database(s)) \\ \wedge \rho(application(s)) = database(s)}{Consistent \; s}\\ \\
  		\inference{otherwise}{Inconsistent \; s}
  	\end{cases} \\ 
-& 	s \in State
+& 	s \in Software
 \end{align*}
 
 \subsection{Software Evolution}
@@ -104,21 +105,21 @@ and similarly the $\circ$ and the $\bullet$ operators for evolving application a
 The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell programming language) so the state of the software can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
 \begin{align*}
 & state(s) \oplus t = \begin{cases}
- 	\inference{! consistent(state(s))}{Inconsistent s} \\ \\
+ 	\inference{! consistent(state(s))}{Inconsistent \; s} \\ \\
  	\inference{consistent(state(s))}{state(sw(\Psi(s, t), \Phi(s,t))} 
 \end{cases}\\ 
-& s \in State, t \in E
+& s \in Software, t \in E
 \end{align*}
 \begin{align*}
 & state(a) \circ e = \begin{cases}
- 	\inference{!\;consistent(state(a))}{a} \\ \\
+ 	\inference{!\;consistent(state(a))}{Inconsistent \; a} \\ \\
  	\inference{consistent(state(a))}{e(a)} 
 \end{cases}\\ 
 & a \in Application, e \in AppT
 \end{align*}
 \begin{align*}
 &  state(d) \bullet e = \begin{cases}
- 	\inference{!\;consistent(state(d))}{d} \\ \\
+ 	\inference{!\;consistent(state(d))}{Inconsistent \; d} \\ \\
  	\inference{consistent(state(d))}{e(d)} 
 \end{cases}\\ 
 & d \in Database, e \in DbT
@@ -127,9 +128,9 @@ The definition of the evolving operator is inspired by the monads (as used e.g. 
 \section{Software Model}
 The model of an ORM software consists of three parts - an application model, a database model and an ORM. The model of application and database creates a type system for both ORM and evolutionary transformations.
 
-The definitions of all parts assume a set $Label$ exists which contains all possible identifiers and each modeled entity is unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. The notation: $Type*$ is used to define an ordered set of values of concrete type (e.g. $C \in Class*$ means c is an ordered set of classes). 
+The definitions of all parts assume a set $Label$ exists which contains all possible identifiers and each modeled entity is unambiguously identified in the model. Next there is a set $Values$ containing all possible values, which can be used in the model. 
 
-A lot of introduced transformations can be applied on an ordered set. The application proceeds on set consists in sequential application on set elements:
+A lot of introduced transformations can be applied on an ordered sets. The application proceeds on set consists in sequential application on set elements:
 \begin{align*}
 & 	f(x, y) = \begin{cases}
  		\inference{x = \varnothing}{y}\\
@@ -137,7 +138,8 @@ A lot of introduced transformations can be applied on an ordered set. The applic
  		\inference{|x| = 1}{effect}\\\\
  		\inference{otherwise}{Inconsistent y}
  \end{cases}\\\\
-&  y \in Software \vee y \in Application \vee y \in Database
+& y \in Software \vee y \in Application \vee y \in Database \\
+& x \in Type* 
 \end{align*}
 where $x$ is a set of parameters. The effect of a transformation is provided only in next sections as the repetition of sequential application will be redundant. The $otherwise$ branch is consider implicit for all introduced transformations and thus it is not part of transformation definitions too. 
 
@@ -286,7 +288,7 @@ The relational database consists of database schema which defines the structure 
 
 \paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
 \begin{align*}
-&	\mathbf{ForeignKey} = <label, tableRef, Constraint*> \\ 
+&	\mathbf{ForeignKey} = < Label, Label, Constraint*> \\ 
 &	\mathbf{fk} : Label \times Label \times Constraints \rightarrow ForeignKey \\ \\
 &	\mathbf{name} : ForeignKey \rightarrow Label \\
 &	name(fk(l, tRef, cons)) = lab  \\ \\
@@ -321,7 +323,7 @@ The relational database consists of database schema which defines the structure 
 
 \paragraph{Stored Data} A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete value of concrete column. Each row contains a name of a table it belongs to.
 \begin{align*}
-&	\mathbf{Row} = < refTable, pkValue, pair* > \\
+&	\mathbf{Row} = < Label, N, Pair* > \\
 &	\mathbf{row} : Label \times Pairs \rightarrow Row \\ \\
 &	\mathbf{refTable} : Row \rightarrow Label \\
 &	refTable(row(l, n, ps) = l \\ \\
@@ -333,7 +335,7 @@ The relational database consists of database schema which defines the structure 
 \end{align*}
 The value stored in concrete column of the row is represented by a pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
 \begin{align*}
-&	\mathbf{Pair} = < refCol, value > \\
+&	\mathbf{Pair} = < Label, Value > \\
 &	[Label \times Value] \rightarrow Pair\\ \\
 &	\mathbf{reference} : Pair \rightarrow Label \\
 &	reference([l,val]) = l \\ \\
@@ -365,7 +367,7 @@ The definition of data allows definition of function $contains$ which verify if 
 &	instantiated(c, s) = \begin{cases} \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
   false
  \end{cases} \\ \\
-&	 c \in classes(application(s)), s \in State 
+&	 c \in classes(application(s)), s \in Software 
 \end{align*}
 
 
@@ -373,7 +375,7 @@ The definition of data allows definition of function $contains$ which verify if 
 The database consistency is founded on the consistency of structure and consistency between structure and stored values. The conditions for structure consistency are similar as for application structure. The consistency between structure and data is:  each row in a database  refers to a table in database schema and it has to have the structure corresponding to the one defined by a table, moreover the column and foreign key constrains has to be fulfilled  otherwise the database is inconsistent. The consistency of database is:\begin{align*}
 &	\mathbf{consistent} \in Database \rightarrow Boolean \\
 &	state(d) = \begin{cases}
-&		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \exists t \in tables(d) \wedge name(t) = reference(f) \\ \wedge \forall r \in data(d): ( \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ value(pairByName(name(g), u_1) \neq value(pairByName(name(g), u_2) }{true}
+&		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \exists t \in tables(d) \wedge name(t) = reference(f) \\ \wedge \forall r \in data(d): ( \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \\ \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ value(pairByName(name(g), u_1) \neq value(pairByName(name(g), u_2) }{true}
  	\\ \\
  	false
  \end{cases}\\
@@ -389,8 +391,8 @@ There are defined functions for object-relational mapping used in this paper. Th
 &	\mathbf{\rho_{app}} \in Application \rightarrow Database\\
 &	\rho_{app}(a) = \inference{state(a) = Consistent \; a}{\begin{gathered}
    db(\varnothing) \bullet addTable(classes(a)) \\ 
-	\bullet (\forall c \in classes(a), p \in properties(c) : addProperty(name(c), p) \\
-	\bullet (\forall c \in classes(a), e \in associations(c) : addAssociaiton(name(c), e) 
+	\bullet (\forall c \in classes(a), p \in properties(c) : \\ addProperty(name(c), p) \\
+	\bullet (\forall c \in classes(a), e \in associations(c) : \\ addAssociaiton(name(c), e) 
 \end{gathered}}\\
 & a \in Application
 \end{align*}
@@ -405,11 +407,12 @@ There are defined functions for object-relational mapping used in this paper. Th
 \paragraph{Mapping of Classes} The class is mapped into a table with  automatically created primary key. The primary key is always created with name Id and of the $\mathbb{N^{*}}$ type. The properties and associations has to be mapped separately.
 \begin{align*}
 &	\mathbf{\rho_{c}} : Class*  \rightarrow Table* \\
-&	\rho_{c}(c) = \begin{cases}
+&	\rho_{c}(c) = %\begin{cases}
 		%\inference{c = \varnothing}{\varnothing}\\\\
 		%\inference{|c| > 1}{\rho_c(head(c)) \cup \rho_c(tail(c))} \\ \\
-		\inference{|c| = 1}{table(name(c), primaryKey("Id"), \varnothing, \varnothing)}  \end{cases}   \\ 	
-& c \in Class
+		\inference{|c| = 1}{table(name(c), primaryKey("Id"), \varnothing, \varnothing)} % \end{cases} 
+\\ 	
+& c \in Class*
 \end{align*}
 
 \subsubsection{Mapping of Properties}
@@ -421,12 +424,12 @@ There can occur name collision during mapping in case there are more classes wit
 &	\rho_{sp}(p) = \begin{cases}
 		%\inference{p = \varnothing}{\varnothing}\\
 		%\inference{|p| > 1}{\rho_{sp}(head(p)) \cup \rho_{sp}(tail(p))}\\\\
- 		\inference{cardinality(p) = 1 \wedge !\;mandatory(p)
+ 		\inference{|p| = 1 \wedge cardinality(p) = 1 \wedge !\;mandatory(p)
  			\\ \wedge \exists t : t = table(name(owningClass(p)), d) 
 		 }{\begin{gathered}
 	  		column(name(p), \rho_t(type(p)), \varnothing )
 		\end{gathered}} \\ \\
-  		\inference{cardinality(p) = 1 \wedge mandatory(p)
+  		\inference{|p| = 1 \wedge cardinality(p) = 1 \wedge mandatory(p)
 			 \\ \wedge \exists t : t = table(name(owningClass(p)), d)
 			\\ \wedge \not instanciated(owningClass(p))
 		}{\begin{gathered}
@@ -440,12 +443,12 @@ There can occur name collision during mapping in case there are more classes wit
 &	\rho_{cp}(p) = \begin{cases}
 		%\inference{p = \varnothing}{\varnothing}\\
 		%\inference{|p| > 1}{\rho_{cp}(head(p)) \cup \rho_{cp}(tail(p))}\\\\
-     	\inference{cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
+     	\inference{|p| = 1 \wedge cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
      		\wedge 	\exists t : t = table(name(owningClass(p)), d)
      		}{\begin{gathered}
      			table(name(t)+name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
     	\end{gathered}}\\ \\
-     	\inference{ cardinality(p) > 1 \wedge mandatory(p) \\ 
+     	\inference{|p| = 1 \wedge  cardinality(p) > 1 \wedge mandatory(p) \\ 
      		\wedge \exists t : t = table(name(owningClass(p)), d) 
      		}{\begin{gathered}  
      			table(name(t)+name(p), primaryKey("Id"), \\ 
@@ -461,28 +464,30 @@ There can occur name collision during mapping in case there are more classes wit
 &	\rho_a(a) = \begin{cases}
 		%\inference{a = \varnothing}{\varnothing}\\
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
-		\inference{ startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
+		\inference{|a| = 1 \wedge  startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
 		}{
 			foreignKey(name(a), name(t),  \varnothing) 
 	 	}
   \\ \\
- 	 \inference{ startCardinality(a) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
+ 	 \inference{|a| = 1 \wedge  startCardinality(a) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
  	 }{ 
 		foreignKey(name(a), name(t),  NOTNULL)
-	}
-	 \end{cases}\\
+	}	 \end{cases}
+\\
 &	 a \in Association
 \end{align*}
 \begin{align*} 
 &	\mathbf{\rho_a} : Association* \rightarrow Table* \\
-&	\rho_a(a) = \begin{cases}
+&	\rho_a(a) =
+% 	  \begin{cases}
  		%\inference{a = \varnothing}{\varnothing}\\
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
-		\inference{  startCardinality > 1 \\ \wedge \exists t \in tables(d) : name(owningClass(p)) = name(t) \\ \wedge \exists e \in tables(d) : name(reference(a)) = name(e)
+		\inference{|a| = 1 \wedge   startCardinality > 1 \\ \wedge \exists t \in tables(d) : name(owningClass(p)) = name(t) \\ \wedge \exists e \in tables(d) : name(reference(a)) = name(e)
   		}{\begin{gathered}  
 		 table(name(t)+name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
- 	\end{cases}\\
+ 	%\end{cases}
+\\
 &	 a \in Association
 \end{align*}
 
@@ -651,12 +656,14 @@ The definition does not allow to add any default value in case the number of ins
 \paragraph{Add Table} The transformation creates a new table in the database. The new table should not contain any foreign keys.
 \begin{align*}
 &	\mathbf{addTable} : Table* \times Database \rightarrow Database \\ 
-&	addTable(t, d) = \begin{cases}
+&	addTable(t, d) =
+		% \begin{cases}
 		%\inference{|t| > 1}{d \bullet addTable(head(t)) \bullet addTable(tail(t))}
-\\ \\	
-		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e) \\ \wedge \forall f \in foreignKeys(t) : \\ s\exists e \in tables(d) \wedge name(e) = reference(f) }{tables(d) \cup t}
+% \\ \\	
+		\inference{|t| = 1 \wedge \forall e \in tables(d) \wedge name(t) \neq name(e) \\ \wedge \forall f \in foreignKeys(t) : \\ \exists e \in tables(d) \wedge name(e) = reference(f) }{tables(d) \cup t}
 % \\ \\ 	Inconsistent \;d 
-	 \end{cases}\\ 
+	 %\end{cases}
+	 \\ 
 &	t = \{x | x \in Table\}, d \in Database
 \end{align*}
 
