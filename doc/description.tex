@@ -895,11 +895,13 @@ There are defined three transformations which are able to create a software: $ad
 & \Phi(s, addAsociation(l, a, m_{l_1, l_2})) = \\
 & =\begin{cases}
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cup columns(t_t) \\: name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-		database(s) \\ \bullet addForeignKey(name(t_s), \rho(a,d), d) \\ \bullet \forall r \in m_{l_1, l_2} : \\ insertRow(row(name(t_s), [name(a), \\ value(primaryKey(first(r)))]), d)
+		database(s) \\ \bullet addForeignKey(name(t_t), \rho(a,d), d) \\ \bullet \forall r \in m_{l_1, l_2} : \\
+		insertValue(name(t_t), value(primaryKey(second(r))), [name(a), value(primaryKey(first(r)))])
 	\end{gathered}}
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
-	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in m_{l, reference(a)} :\\ insertRow(\\ row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
+	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in m_{l, reference(a)} :
+	\\ insertRow(\\ row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
 	\end{gathered}} 
 \end{cases}\\
 & s \in Software, l_1, l_2 \in Label, m_{l, reference(a)} \wedge l_2 = reference(a)
@@ -1168,9 +1170,9 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
 \end{align*}
 The first evolution step is to create the address class for $Person$ and $LegalPerson$, then the temporary class can be merged together and finally the temporary class has to be renamed to $Address$:
@@ -1242,9 +1244,9 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
 \end{align*}
 
@@ -1275,9 +1277,9 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"]) \\
 & row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"] )\\
@@ -1310,9 +1312,9 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"]) \\
 & row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"] )\\
@@ -1346,9 +1348,9 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 &  ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"]) \\
 & row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"] )\\
@@ -1381,9 +1383,9 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"]) \\
 & row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"] )\\
@@ -1416,9 +1418,9 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["zip", 90003]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]) \\
 & row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]) )\\
@@ -1447,9 +1449,9 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 \begin{align*}
 r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]) \\
 & row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]) )\\
@@ -1476,21 +1478,72 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
 & fk("address", "Person", \varnothing))\\
 ) 
 \end{align*}
 \begin{align*}
 r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 1], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 2], ["businessName", "Doe"], \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]) )\\
+& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
+& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
 \}
 \end{align*}
+
+\newpage
+\begin{align*}
+& Extract("LegalPerson", "Address_tmp2", "street", "city", "zip")  \\
+& \oplus AddAssociation("LegalPerson", assoc("address", "Address_tmp1", 1, 1),\\ 
+& \{(x,y)| x \in instances("LegalPerson", database(S)), \\
+& y \in instances("Address_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
+\end{align*}
+\hline
+\begin{align*}
+a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+& assoc("address", "Address_tmp1", 1, 1)), \\ 
+& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing),\\
+& assoc("address", "Address_tmp2", 1, 1)), \\
+& cl("Address_tmp1", pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
+& cl("Address_tmp2", pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& )
+\end{align*}
+\begin{align*}
+t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
+& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
+& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
+& fk("address", "Person", \varnothing))\\
+& tab("Address_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
+& fk("address", "LegalPerson", \varnothing))\\
+) 
+\end{align*}
+\begin{align*}
+r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+& row("person", ["Id", 2], ["surname", "Doe"]), \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
+& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\ 
+& ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
+& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
+& row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], \\
+& ["city", "NY"], ["zip", 10001], ["LegalPerson", 10]) \\
+& row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["LegalPerson", 20]) )\\
+\}
+\end{align*}
+\newpage
+
+
 
 
 \end{document}
