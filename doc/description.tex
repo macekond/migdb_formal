@@ -1122,12 +1122,18 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 & ps = \{x | x \in \forall c \in classes(application(s)) : \forall p \in properries(c) : name(p))\}
 \end{align*}
 
-\paragraph{Merge of Classes} There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) corresponds, the transformation does not change the structure, it only moves data. 
+\paragraph{Merge of Classes} There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) is equals. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
 \begin{align*}
 &	\mathbf{merge} : Label \times Label \times Label \times State \rightarrow State \\
-&	\Phi(s, merge(l_1, l_2, l_n) = \inference{equals(c_1, c_2)}{application(s) \circ copyClassStructure(l_1, l_n)} \\\\
+&	\Phi(s, merge(l_1, l_2, l_n) = \inference{
+		\exists c_1, c_2 \in classes(application(s)) \wedge 
+		equals(c_1, c_2)}{\begin{gathered}
+			application(s) \circ addClass(cl(ln, \varnothing, \varnothing)\\ \circ (\forall p \in properties(c_1) : addProperty(l_n, p)) \\ \circ (\forall a \in associations(c_1): addAssociation(l_n, a))
+		\end{gathered}} \\\\
 &	\Psi(s, merge(l_1, l_2, l_n) = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\
-\wedge ! \: referenced(t_1, d) \wedge ! \: referenced(t_2, d) }{database(s) \bullet mergeTables(l_1, l_2)}\\
+\wedge ! \: referenced(t_1, d) \wedge ! \: referenced(t_2, d) }{\begin{gathered}
+	 database(s) \bullet addTable(l_n, \mathbf{X}, \varnothing, \varnothing) \\ \bullet (\forall c \in columns(t_1) : addColumn(l_n, c)) \\ \bullet (\forall f \in foreignKeys(t_1) : addForeignKey(l_n, f)) \\ \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ insertRow(l_n, row(l_n, next(seq(key(l_n))), pairs(r)))) 
+\end{gathered}}\\
 & l_1, l_2, l_n \in Label, s \in State
 \end{align*}
 
@@ -1166,11 +1172,18 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 The first evolution step is to create the address class for $Person$ and $LegalPerson$, then the temporary class can be merged together and finally the temporary class has to be renamed to $Address$:
 \begin{align*}
 & state(S) \oplus Extract("Person", "Address_tmp1", "street", "city", "zip") \\
+& \oplus AddAssociation("Person", assoc("address", "Address_tmp1", 1, 1),\\ 
+& \{(x,y)| x \in instances("Person", database(S)), \\
+& y \in instances("Address_tmp1", database(S)) : pkVal(x) = pkVal(y) \}) \\
 & \oplus Extract("LegalPerson", "Address_tmp2", "street", "city", "zip")  \\
-& \oplus Merge("Address_tmp1", "Address_tmp2") \\
-& \oplus Rename("Address_tmp2", "Address")
+& \oplus AddAssociation("LegalPerson", assoc("address", "Address_tmp1", 1, 1),\\ 
+& \{(x,y)| x \in instances("LegalPerson", database(S)), \\
+& y \in instances("Address_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
+& \oplus Merge("Address_tmp1", "Address_tmp2", "Address") \\
+& \oplus RemoveTableAndData("Address_tmp1") \\
+& \oplus RemoveTableAndData("Address_tmp2")
 \end{align*}
-The software state after second extraction is:
+The software state after adding the second association is:
 
 
 
@@ -1217,7 +1230,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
-& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing),
+& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab("Address_tmp1", pk("Id"), \varnothing, \varnothing)) 
 \end{align*}
 \begin{align*}
@@ -1238,8 +1251,8 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)),
-& cl("Address_tmp1", & pr(street, APPSTRING, \varnothing) , \varnothing)
+& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1248,7 +1261,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
-& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing),
+& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab("Address_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
 & \varnothing)) 
 \end{align*}
