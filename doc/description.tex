@@ -1177,17 +1177,23 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 \end{align*}
 The first evolution step is to create the address class for $Person$ and $LegalPerson$, then the temporary class can be merged together and finally the temporary class has to be renamed to $Address$:
 \begin{align*}
-& state(S) \oplus Extract("Person", "Address_tmp1", "street", "city", "zip") \\
-& \oplus AddAssociation("Person", assoc("address", "Address_tmp1", 1, 1),\\ 
+& state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
+& \oplus AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1),\\ 
 & \{(x,y)| x \in instances("Person", database(S)), \\
-& y \in instances("Address_tmp1", database(S)) : pkVal(x) = pkVal(y) \}) \\
-& \oplus Extract("LegalPerson", "Address_tmp2", "street", "city", "zip")  \\
-& \oplus AddAssociation("LegalPerson", assoc("address", "Address_tmp1", 1, 1),\\ 
+& y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \}) \\
+& \oplus Extract("LegalPerson", "Address\_tmp2", "street", "city", "zip")  \\
+& \oplus AddAssociation("LegalPerson", assoc("residentialAddress", "Address\_tmp2", 1, 1),\\ 
 & \{(x,y)| x \in instances("LegalPerson", database(S)), \\
-& y \in instances("Address_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
-& \oplus Merge("Address_tmp1", "Address_tmp2", "Address") \\
-& \oplus RemoveTableAndData("Address_tmp1") \\
-& \oplus RemoveTableAndData("Address_tmp2")
+& y \in instances("Address\_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
+%
+& \oplus AddAssociation("Person", \\
+& assoc("address", "Address\_tmp2", 1, 1), \varnothing) \\
+& \oplus AddAssociation("LegalPerson", \\
+& assoc("residentialAddress", "Address\_tmp1", 1, 1),\varnothing) \\
+%
+& \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
+& \oplus RemoveTableAndData("Address\_tmp1") \\
+& \oplus RemoveTableAndData("Address\_tmp2")
 \end{align*}
 The software state after adding the second association is:
 
@@ -1218,8 +1224,11 @@ The model of evolution in ORM software defined in this paper will be improved an
 	\item Prepare an article, which will contain topics \ref{it:1}, \ref{it:2} and \ref{it:3}. \emph{(Estimated time: 1 month)}
 \end{enumerate}
 
+%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+\section{Case Study}
 ExtactClass = addClass
+\hline
 \begin{align*}
 a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1227,7 +1236,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)),
-& cl("Address_tmp1", \varnothing, \varnothing)
+& cl("Address\_tmp1", \varnothing, \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1237,7 +1246,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), \varnothing, \varnothing)) 
+& tab("Address\_tmp1", pk("Id"), \varnothing, \varnothing)) 
 \end{align*}
 \begin{align*}
 r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
@@ -1250,8 +1259,10 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
 \end{align*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 ExtactClass = copyProperty("street"
+\hline
 \begin{align*}
 a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1259,7 +1270,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1269,7 +1280,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
 & \varnothing)) 
 \end{align*}
 \begin{align*}
@@ -1286,6 +1297,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \}
 \end{align*}
 
+%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 ExtactClass = dropPropertyAndData("street"
 \begin{align*}
@@ -1294,7 +1306,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1304,7 +1316,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
 & \varnothing)) 
 \end{align*}
 \begin{align*}
@@ -1321,6 +1333,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \}
 \end{align*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 ExtactClass = copyProperty("city"
 \begin{align*}
@@ -1329,7 +1342,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1339,7 +1352,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing)
 & \varnothing)) 
 \end{align*}
@@ -1357,6 +1370,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \}
 \end{align*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 ExtactClass = dropPropertyAndData("city"
 \begin{align*}
@@ -1365,7 +1379,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1374,7 +1388,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing)
 & \varnothing)) 
 \end{align*}
@@ -1392,6 +1406,8 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \}
 \end{align*}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 ExtactClass = CopyProperty("zip"
 \begin{align*}
@@ -1400,7 +1416,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1409,7 +1425,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)
 & \varnothing)) 
 \end{align*}
@@ -1427,6 +1443,8 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \}
 \end{align*}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 ExtactClass = DropPopertyAndData("zip"
 \begin{align*}
@@ -1434,7 +1452,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing))), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
 & )
 \end{align*}
 \begin{align*}
@@ -1442,7 +1460,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)
 & \varnothing)) 
 \end{align*}
@@ -1458,17 +1476,17 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 \}
 \end{align*}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-$AddAssociation("Person", assoc("address", "Address_tmp1", 1, 1), 
- \{(x,y)| x \in instances("Person", database(S)), y \in instances("Address_tmp1", database(S)) : pkVal(x) = pkVal(y) \})$
+$AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1), 
+ \{(x,y)| x \in instances("Person", database(S)), y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \})$
 \begin{align*}
 a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
-& assoc("address", "Address_tmp1", 1, 1)), \\ 
+& assoc("address", "Address\_tmp1", 1, 1)), \\ 
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing), \\
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
 & )
 \end{align*}
@@ -1477,9 +1495,9 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("address", "Person", \varnothing))\\
+& fk("person\_address", "Person", \varnothing))\\
 ) 
 \end{align*}
 \begin{align*}
@@ -1489,27 +1507,30 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
-& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
+& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\
+& ["city", "NY"], ["zip", 10001], ["person\_address", 1]) \\
+& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["person\_address", 2]) )\\
 \}
 \end{align*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \begin{align*}
-& Extract("LegalPerson", "Address_tmp2", "street", "city", "zip")  \\
-& \oplus AddAssociation("LegalPerson", assoc("address", "Address_tmp1", 1, 1),\\ 
+& Extract("LegalPerson", "Address\_tmp2", "street", "city", "zip")  \\
+& \oplus AddAssociation("LegalPerson", assoc("address", "Address\_tmp1", 1, 1),\\ 
 & \{(x,y)| x \in instances("LegalPerson", database(S)), \\
-& y \in instances("Address_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
+& y \in instances("Address\_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
 \end{align*}
 \hline
 \begin{align*}
 a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
-& assoc("address", "Address_tmp1", 1, 1)), \\ 
+& assoc("address", "Address\_tmp1", 1, 1)), \\ 
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing),\\
-& assoc("address", "Address_tmp2", 1, 1)), \\
-& cl("Address_tmp1", pr(street, APPSTRING, \varnothing), \\
+& assoc("address", "Address\_tmp2", 1, 1)), \\
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
-& cl("Address_tmp2", pr(street, APPSTRING, \varnothing), \\
+& cl("Address\_tmp2", pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
 & )
 \end{align*}
@@ -1518,12 +1539,57 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("address", "Person", \varnothing))\\
-& tab("Address_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& fk("person\_address", "Person", \varnothing))\\
+& tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("address", "LegalPerson", \varnothing))\\
+& fk("legalPerson\_address", "LegalPerson", \varnothing))\\
+) 
+\end{align*}
+\begin{align*}
+r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+& row("person", ["Id", 2], ["surname", "Doe"]), \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
+& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\ 
+& ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
+& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
+& row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], \\
+& ["city", "NY"], ["zip", 10001], ["LegalPerson\_address", 10]) \\
+& row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["LegalPerson\_address", 20]) )\\
+\}
+\end{align*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\begin{align*}
+& \oplus AddAssociation("Person", \\
+& assoc("address", "Address\_tmp2", 1, 1), \varnothing) \\
+\end{align*}
+\hline
+\begin{align*}
+a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+& assoc("address", "Address\_tmp1", 1, 1), assoc("address", "Address\_tmp2", 1, 1)), \\ 
+& cl(LegalPerson, pr(businessName, APPSTRING, \varnothing),\\
+& assoc("address", "Address\_tmp2", 1, 1), assoc(\mathbf{"address"}, "Address\_tmp1", 1, 1)), \\
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
+& cl("Address\_tmp2", pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& )
+\end{align*}
+\begin{align*}
+t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing)) \\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
+& fk("address", "Person", \varnothing), fk("address", "LegalPerson", \varnothing))\\
+& tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
+& fk("LegalPerson\_address", "LegalPerson", \varnothing), fk("Person\_address", "Person", \varnothing))\\
 ) 
 \end{align*}
 \begin{align*}
@@ -1541,7 +1607,52 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & ["city", "LA"], ["zip", 90003], ["LegalPerson", 20]) )\\
 \}
 \end{align*}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+\begin{align*}
+& \oplus AddAssociation("LegalPerson", \\
+& assoc("address", "Address\_tmp1", 1, 1),\varnothing) \\
+\end{align*}
+\hline
+\begin{align*}
+a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+& assoc("address", "Address\_tmp1", 1, 1)), \\ 
+& cl(LegalPerson, pr(businessName, APPSTRING, \varnothing),\\
+& assoc("address", "Address\_tmp2", 1, 1), assoc(\mathbf{"address"}, "Address\_tmp1", 1, 1)), \\
+& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
+& cl("Address\_tmp2", pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& )
+\end{align*}
+\begin{align*}
+t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing)) \\
+& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
+& fk("Person\_address", "Person", \varnothing), fk("LegalPerson\_address", "LegalPerson", \varnothing))\\
+& tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
+& fk("LegalPerson\_address", "LegalPerson", \varnothing))\\
+) 
+\end{align*}
+\begin{align*}
+r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+& row("person", ["Id", 2], ["surname", "Doe"]), \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
+& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\ 
+& ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
+& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
+& row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], \\
+& ["city", "NY"], ["zip", 10001], ["LegalPerson", 10]) \\
+& row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"], \\
+& ["city", "LA"], ["zip", 90003], ["LegalPerson", 20]) )\\
+\}
+\end{align*}
 
 
 
