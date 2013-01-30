@@ -1142,7 +1142,8 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 			reference(a) = l_n) \\
 			\circ renClass(l_1) \circ renClass(l_2) \end{gathered}}
  \\\\
-&	\Psi(s, merge(l_1, l_2, l_n)) = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\ \wedge columns(t_1) = columns(t_2)}{\begin{gathered}
+&	\Psi(s, merge(l_1, l_2, l_n)) = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\ \wedge columns(t_1) = columns(t_2)\\
+\forall f \in (foreignKeys(t_1) \cup foreignKey(t_2)) \\ \setminus (foreignKey(t_1) \cap foreignKey(t_2)) \\ : NOTNULL \not \in constraints(f)  }{\begin{gathered}
 	 database(s) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1)) \\ 
 \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ n =  row(l_n, next(seq(key(l_n))), pairs(r)), insertRow(l_n, n) \\ 
 \bullet (\forall k \in data(database(s)), f \in foreignKeys(k) \\ \wedge reference(f) = reference(r) \\ \wedge value(findPair(name(f), k)) = pkValue(r) : \\value(findPair(name(f), k)) = pkValue(n))) \\  \bullet dropTableAndData(l_1) \bullet dropTableAndData(l_2)
@@ -1159,15 +1160,19 @@ To improve the design of code the class Address has to be created which associat
 \begin{figure}
 \begin{subfigure}[b]{0.5\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_app_1}
+	\caption{The application model.}
 \end{subfigure}
 \begin{subfigure}[b]{0.5\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_db_1}
+	\caption{The database model.}
 \end{subfigure}
+	\caption{The initial state of the example used in the case study. There is a repetition of information structure in the $Person$ and $LegalPerson$ class.}
+	\label{fig:case1}
 \end{figure}
 
-The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalPerson$. Temporary classes has to be connected with the origin classes by an association.
+The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalPerson$. Temporary classes has to be connected with the origin classes by an association. The result is shown in Figure \ref{fig:case2}.
 \begin{align*}
-& state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
+S_1 &= state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
 & \oplus AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1),\\ 
 & \{(x,y)| x \in instances("Person", database(S)), \\
 & y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \}) \\
@@ -1180,13 +1185,17 @@ The first  step of is to extract two temporary classes representing address of a
 \begin{figure}
 \begin{subfigure}[b]{0.5\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_app_5}
+	\caption{The application model.}
 \end{subfigure}
 \begin{subfigure}[b]{0.5\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_db_5}
+	\caption{The database model.}
 \end{subfigure}
+	\caption{The state of the software after the information are extracted into separated classes and associations are created.}
+	\label{fig:case2}
 \end{figure}
 %Next two evolution steps are bit intuitive but necessary for the next evolution.  then the temporary class can be merged together and finally the temporary class has to be renamed to $Address$:
-The two temporary classes can be merged together as they have the same structure. All associations pointing to one of the temporary classes are redirected to the newly created class. Finally the associations are renamed.
+The two temporary classes can be merged together as they have the same structure. All associations pointing to one of the temporary classes are redirected to the newly created class.
 \begin{align*}
 %
 %& \oplus AddAssociation("Person", \\
@@ -1194,22 +1203,27 @@ The two temporary classes can be merged together as they have the same structure
 %& \oplus AddAssociation("LegalPerson", \\
 %& assoc("residentialAddress", "Address\_tmp1", 1, 1),\varnothing) \\
 %
-& \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
+S_2 &= S_1 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
 \end{align*}
 Finally the associations are renamed and the evolution end.
 \begin{align*}
-& \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
+S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 & \oplus RenameAssociation("LegalPerson", "Address\_tmp2". "Address")\\
 \end{align*}
 
 \begin{figure}
 \begin{subfigure}[b]{0.5\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_app_9}
+	\caption{The application model.}
 \end{subfigure}
 \begin{subfigure}[b]{0.5\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_db_8}
+	\caption{The database model.}
 \end{subfigure}
+	\caption{The final state of the case study example. There is one class containing information about address for the whole software and data were migrated.}
 \end{figure}
+
+The scenario was completed successfully, because there were no constraints defined in the database and the data was suitable for the evolution there were no complication. The example of evolution presented in case study shows the possibilities of defined transformation. The example itself is not large, nevertheless it shows advanced refactoring cases, which are very often used in real software development. We believe that composition of proposed transformation can be used even in case of large data evolution cases. It is obvious that usage of proposed set of transformations only will cause very large scripts describing data evolution, therefore a mechanism for creating templates (reusable evolution scripts).
 
  
  
