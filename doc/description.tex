@@ -188,7 +188,7 @@ Three more function are defined to obtain information about a class - function $
 	 
 \paragraph{Property} Property represents a feature of a class which is represented as a primitive type. The property can be mandatory, can have a default value and according to its cardinality it can represent a single value or a collection of values. 
 \begin{align*}
-&	\mathbf{Property} = <label, AppType, DefaultValue, Cardinality, Mandatory> \\
+&	\mathbf{Property} = (label, AppType, DefaultValue, Cardinality, Mandatory) \\
 &	\mathbf{prop} : Label \times AppType \times String \times \mathbb{N^{*}} \times Boolean \rightarrow Property \\ \\
 &	\mathbf{name} : Property \rightarrow Label \\
 &	name(prop(l, t, val, n, m)) = l \\ \\
@@ -203,7 +203,7 @@ Three more function are defined to obtain information about a class - function $
 
 \paragraph {Association} Associtation represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of both association ends.
 \begin{align*}
-&	\mathbf{Association} = <label, classRef, startCardinality, endCardinality> \\
+&	\mathbf{Association} = (label, classRef, startCardinality, endCardinality) \\
 &	\mathbf{assoc} : Label \times Label \times \mathbb{N} \times \mathbb{N} \rightarrow Association\\ \\
 &	\mathbf{name} : Association \rightarrow Label \\
 &	name(assoc(l, ref, n_1, n_2)) = l\\ \\
@@ -316,7 +316,7 @@ The relational database consists of database schema which defines the structure 
 
 \paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
 \begin{align*}
-&	\mathbf{ForeignKey} = < Label, Label, Constraint*> \\ 
+&	\mathbf{ForeignKey} = (Label, Label, Constraint*) \\ 
 &	\mathbf{fk} : Label \times Label \times Constraints \rightarrow ForeignKey \\ \\
 &	\mathbf{name} : ForeignKey \rightarrow Label \\
 &	name(fk(l, tRef, cons)) = lab  \\ \\
@@ -358,7 +358,7 @@ The sequence generates values of primary key. The new value of a key is obtained
 \subsubsection{Stored Data} 
 A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete value of concrete column or key. Each row contains a name of a table it belongs to.
 \begin{align*}
-&	\mathbf{Row} = < Label, N, Pair* > \\
+&	\mathbf{Row} = (Label, N, Pair*) \\
 &	\mathbf{row} : Label \times Pairs \rightarrow Row \\ \\
 &	\mathbf{refTable} : Row \rightarrow Label \\
 &	refTable(row(l, n, ps) = l \\ \\
@@ -370,7 +370,7 @@ A database consists not only from schema but also from data which are represente
 \end{align*}
 The value stored in concrete column of the row is represented by a pair, where the $refCol$ is a name of the column, a foreign key or its primary key and $value$ represents concrete value .
 \begin{align*}
-&	\mathbf{Pair} = < Label, Value > \\
+&	\mathbf{Pair} = (Label, Value) \\
 &	[Label \times Value] \rightarrow Pair\\ \\
 &	\mathbf{reference} : Pair \rightarrow Label \\
 &	reference([l,val]) = l \\ \\
@@ -572,12 +572,12 @@ This section provide transformations for manipulating the application layer of a
 \begin{align*}
 &	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
 & 	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
-	}{properties(c) \setminus p }\\
+	}{properties(c) =- \; p }\\
 &	l_c, l_p \in Label, a \in Application 
 \end{align*}
 \begin{align*}
 &	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
-&	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
+&	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) =- \; f} \\
 &	l_c, l_a \in Labels, a \in Application
 \end{align*}
 
@@ -585,7 +585,7 @@ This section provide transformations for manipulating the application layer of a
 \begin{align*}
 &	\mathbf{remClass} : Label \times Application \rightarrow Application \\
 &	remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge !\: associated(c)
-	} {classes(a) \setminus c }\\
+	} {classes(a) =- \; c }\\
 &	l \in Label,a \in Application
 \end{align*}
 
@@ -804,12 +804,12 @@ c.name = l_n
 \paragraph{Remove a value}  The approach introduced in this paper has to  preserve data and information, nevertheless there are cases when data can be deleted from the database without data lost as they are e.g. already copied in another column as the understanding of data changed in the whole software, therefore we defined two transformations - one removes a single value from a row, second removes whole row (instance) from the software.
 \begin{align*}
 &	\mathbf{dropValue} : Label \times Row \times Database \rightarrow Database \\
-&	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) \setminus p}\\ 
+&	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) =- \; p}\\ 
 & l \in Label, r : Row \wedge r \in data(d), d \in Database
 \end{align*}
 \begin{align*}
 &	\mathbf{dropRow} :  Row*  \times Database \rightarrow Database\\
-&	dropRow(r, d) = \inference{|r|=1}{data(d) \setminus r}	\\ 
+&	dropRow(r, d) = \inference{|r|=1}{data(d) =- \; r}	\\ 
 & l \in Label, r \in Row \wedge r \in data(d), d \in Database
 \end{align*}
 
@@ -817,7 +817,7 @@ c.name = l_n
 \paragraph{Remove table, column or key} The functions removes a table, column or key if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too in case a table is removed.  There are defined two variants of remove transformations for each model entity - one preserves data, the other removes data too.
 \begin{align*}
 &	\mathbf{dropTable} : Label \times Database \rightarrow Database \\
-&	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \forall r \in data(d) : owningTable(r) \neq l \\  \wedge (\forall j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) \neq l) }{ tables(d) \setminus \rho(c)}\\
+&	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \forall r \in data(d) : owningTable(r) \neq l \\  \wedge (\forall j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) \neq l) }{ tables(d) =- \; \rho(c)}\\
 & l \in Label, d \in Database
 \end{align*}
 \begin{align*}
@@ -830,7 +830,7 @@ c.name = l_n
 
 \begin{align*}
 &	\mathbf{dropColumn} : Label \times Label \times Database \rightarrow Database \\
-& 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) \setminus c}\\
+& 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) =- \; c}\\
 &	 l , l_p\in Label, d \in Database 
 \end{align*}
 \begin{align*}
@@ -848,7 +848,7 @@ c.name = l_n
 
 \begin{align*}
 &	\mathbf{dropKey} : Label \times Label \times Database \rightarrow Database \\
-&	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) \setminus c}\\
+&	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) =- \; c}\\
 &	 l, l_p \in Label, d \in Database 
 \end{align*}
 \begin{align*}
@@ -874,7 +874,7 @@ It is important to notice that each instance of the software has different data 
 
 
 \subsection{Software Creation}
-There are defined three transformations which are able to create a software: $addProperty$, $addAssociation$,  $newClass$. These three transformations can be used to create a software from a scratch. The last of them has no impact on stored data, whereas the rest of them can in some cases.
+There are defined three transformations which are able to create a software: $addProperty$, $addAssociation$,  $addClass$. These three transformations can be used to create a software from a scratch. The last of them has no impact on stored data, whereas the rest of them can in some cases.
 \paragraph{Add Property} Adding a property to database can change not only structure but stored data too, because a mandatory property can be added into a class with already existing instances, then a default value has to be added to all existing instances.
 \begin{align*}
 &	\mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
@@ -895,10 +895,10 @@ There are defined three transformations which are able to create a software: $ad
 & \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
 & \Psi(s, addAsociation(l, a, m_{l_1, l_2})) = application(s) \circ addAssoc(l, a) \\
 & \Phi(s, addAsociation(l, a, m_{l_1, l_2})) = \\
-& =\begin{cases}
+& = \begin{cases}
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cup columns(t_t) \\: name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
 		database(s) \\ \bullet addForeignKey(name(t_t), \rho(a,d), d) \\ \bullet \forall r \in m_{l_1, l_2} : \\
-		insertValue(name(t_t), value(primaryKey(second(r))), [name(a), value(primaryKey(first(r)))])
+		insertValue(name(t_t), value(primaryKey(second(r))), \\ [name(a), value(primaryKey(first(r)))])
 	\end{gathered}}
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
@@ -907,13 +907,13 @@ There are defined three transformations which are able to create a software: $ad
 	\end{gathered}} 
 \end{cases}\\
 & s \in Software, l_1, l_2 \in Label, m_{l, reference(a)} \wedge l_2 = reference(a)
-\end{align*}
+\end{align*} 
 
-\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $newClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then its associations are created.
+\paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $addClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then its associations are created.
 \begin{align*}
-& \mathbf{newClass} : Class \times State \rightarrow State \\
-& \Psi(s, newClass(c)) = application(s) \circ addClass(c) \\
-& \Phi(s, newClass(c)) = database(s)  \bullet addTable(\rho(c,d)) \\ 
+& \mathbf{addClass} : Class \times State \rightarrow State \\
+& \Psi(s, addClass(c)) = application(s) \circ addClass(c) \\
+& \Phi(s, addClass(c)) = database(s)  \bullet addTable(\rho(c,d)) \\ 
 & \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, database(s)) \\
 & \bullet addTable(name(c), \{\forall r \in collections(c) | \rho(r,database(s))\})  \\
 & s \in Software, c \in Class
