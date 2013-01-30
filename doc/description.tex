@@ -1130,51 +1130,25 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 
 \paragraph{Merge of Classes} There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) is equals. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
 \begin{align*}
-&	\mathbf{merge} : Label \times Label \times Label \times State \rightarrow State \\
-&	\Phi(s, merge(l_1, l_2, l_n) = \inference{
+&	\mathbf{Merge} : Label \times Label \times Label \times State \rightarrow State \\
+&	\Phi(s, Merge(l_1, l_2, l_n) = \inference{
 		\exists c_1, c_2 \in classes(application(s)) \wedge 
 		equals(c_1, c_2)}{\begin{gathered}
-			application(s) \circ addClass(cl(ln, \varnothing, \varnothing)\\ \circ (\forall p \in properties(c_1) : addProperty(l_n, p)) \\ \circ (\forall a \in associations(c_1): addAssociation(l_n, a))
+			application(s) \\ \circ addClass(cl(ln, properties(c_1), associations(c_1)) \\
+			\circ (\forall c \in classes (application(s)), a \in associations(c) \\
+			reference(a) = c_1 \vee reference(a) = c_2 : \\
+			reference(a) = l_n
 		\end{gathered}} \\\\
-&	\Psi(s, merge(l_1, l_2, l_n) = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\
-\wedge ! \: referenced(t_1, d) \wedge ! \: referenced(t_2, d) }{\begin{gathered}
-	 database(s) \bullet addTable(l_n, \mathbf{X}, \varnothing, \varnothing) \\ \bullet (\forall c \in columns(t_1) : addColumn(l_n, c)) \\ \bullet (\forall f \in foreignKeys(t_1) : addForeignKey(l_n, f)) \\ \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ insertRow(l_n, row(l_n, next(seq(key(l_n))), pairs(r)))) 
-\end{gathered}}\\
-& l_1, l_2, l_n \in Label, s \in State
+&	\Psi(s, merge(l_1, l_2, l_n) = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2}{\begin{gathered}
+	 database(s) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1)) \\ 
+	 \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ n =  row(l_n, next(seq(key(l_n))), pairs(r)), insertRow(l_n, n) \\ 
+	\bullet (\forall k \in data(database(s)), f \in foreignKeys(k) \\ \wedge reference(f) = reference(r) \\ \wedge value(findPair(name(f), k)) = pkValue(r) : \\value(findPair(name(f), k) = pkValue(n)) \end{gathered}} \\
+	& l_1, l_2, l_n \in Label, s \in State
 \end{align*}
 
  
 \section{Case Study}
-The case study demonstrates how the transformation helps with data evolution in real example of software evolution. There are two classes in our software $Person$ and $LegalPerson$ both of them contains information about address (street, city and zip code). To improve the design of code the class Address has to be created which associated with both original classes and contains the data already stored in the software. The initial situation:
-\begin{align*}
-&	S = sw(a, db(t,r))
-\end{align*}
-\begin{align*}
-a &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
-& pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
-& pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing))
-\end{align*}
-\begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
-& col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
-& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
-& col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
-& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing)) 
-\end{align*}
-\begin{align*}
-r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-& ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
-\end{align*}
+The case study demonstrates how the transformation helps with data evolution in real example of software evolution. There are two classes in our software $Person$ and $LegalPerson$ both of them contains information about address (street, city and zip code). To improve the design of code the class Address has to be created which associated with both original classes and contains the data already stored in the software. This cen be done with following evolution:
 The first evolution step is to create the address class for $Person$ and $LegalPerson$, then the temporary class can be merged together and finally the temporary class has to be renamed to $Address$:
 \begin{align*}
 & state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
@@ -1195,6 +1169,8 @@ The first evolution step is to create the address class for $Person$ and $LegalP
 & \oplus RemoveTableAndData("Address\_tmp1") \\
 & \oplus RemoveTableAndData("Address\_tmp2")
 \end{align*}
+States of the evolution are shown in figures, although it could be described formally (for formal description see appendix \ref{sec:caseStudy}) the graphical illustrations are more illustrative.
+The initial situation is :
 The software state after adding the second association is:
 
 
@@ -1227,6 +1203,40 @@ The model of evolution in ORM software defined in this paper will be improved an
 %%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Case Study}
+\label{sec:caseStudy}
+Initial State
+\hline
+\begin{align*}
+&	S = sw(a, db(t,r))
+\end{align*}
+\begin{align*}
+a &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+& pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
+& pr(street, APPSTRING, \varnothing), \\
+& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing))
+\end{align*}
+\begin{align*}
+t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
+& col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
+& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
+& col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
+& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing)) 
+\end{align*}
+\begin{align*}
+r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
+& ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
+& row("person", ["Id", 2], ["surname", "Doe"], \\
+& ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
+& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
+& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
+\end{align*}
+\newpage
+
 ExtactClass = addClass
 \hline
 \begin{align*}
