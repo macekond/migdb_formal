@@ -261,8 +261,9 @@ The $owningClass$ function returns the class in the model which owns the propert
 The application consistency is based on the structural consistency of its model. Violation of structural consistency are name collisions and non-existing references in associations. The state of an application is:
 \begin{align*}
 &	\mathbf{consistent} : Application \rightarrow Boolean \\
-&	consistent(a) = \begin{cases}
-	\inference{\forall c_1, c_2 \in classes(a) : name(c_1) \neq name(c_2) \\ \wedge \forall p_1, p_2 \in properties(c_1) : name(p_1) \neq name(p_2) \\ \wedge \forall a_1, a_2 \in associations(c_1) : name(a_1) \neq name (a_2) \\ \wedge \forall a \in associations(c_1) : \exists c \in classes(a) \wedge name(c) = reference(a)\\
+&	consistent(a)= \\
+=&\begin{cases}
+	\inference{\forall c_1, c_2 \in classes(a) : name(c_1) \neq name(c_2) \\ \wedge \forall p_1, p_2 \in properties(c_1) : name(p_1) \neq name(p_2) \\ \wedge \forall a_1, a_2 \in associations(c_1) : name(a_1) \neq name (a_2) \\ \wedge \forall a \in associations(c_1) : \exists c \in classes(a) \\ \wedge name(c) = reference(a)\\
 	\wedge \forall p \in properties(c_1), a \in associations(c_1) : name(p) \neq name(a) }{true}\\\\
  	flase
  	\end{cases}\\
@@ -399,7 +400,8 @@ The definition of data allows definition of function $contains$ which verify if 
 \end{align*}
 \begin{align*}
 &	\mathbf{instantiated} : Class \times Software \rightarrow Boolean \\
-&	instantiated(c, s) = \begin{cases} \inference{\exists t \in tables(database(s)) : name(t) = name(c) \\ \wedge contains(t, database(s))}{true} \\ \\
+&	instantiated(c, s) =\\
+& \;\;\;\;\;\; = \begin{cases} \inference{\exists t \in tables(database(s)) : \\ name(t) = name(c)  \wedge contains(t, database(s))}{true} \\ \\
   false
  \end{cases} \\ \\
 &	 c \in classes(application(s)), s \in Software 
@@ -409,8 +411,9 @@ The definition of data allows definition of function $contains$ which verify if 
 \subsubsection{Database consistency}
 The database consistency is founded on the consistency of structure and consistency between structure and stored values. The conditions for structure consistency are similar as for application structure. The consistency between structure and data is:  each row in a database  refers to a table in database schema and it has to have the structure corresponding to the one defined by a table, moreover the column and foreign key constrains has to be fulfilled  otherwise the database is inconsistent. The consistency of database is:\begin{align*}
 &	\mathbf{consistent} \in Database \rightarrow Boolean \\
-&	consistent(d) = \begin{cases}
-&		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \exists t \in tables(d) \wedge name(t) = reference(f) \\ \wedge \forall r \in data(d): ( \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \\ \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ value(pairByName(name(g), u_1) \neq value(pairByName(name(g), u_2) }{true}
+&	consistent(d) = \\
+& \;\;\;\;\;\; =\begin{cases}
+		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \exists t \in tables(d) \wedge name(t) = reference(f) \\ \wedge \forall r \in data(d): ( \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \\ \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ value(pairByName(name(g), u_1) \neq value(pairByName(name(g), u_2) }{true}
  	\\ \\
  	false
  \end{cases}\\
@@ -439,6 +442,10 @@ There are defined functions for object-relational mapping used in this paper. Th
 & 	\rho_{t}(APPSTRING) = DBSTRING 
 \end{align*}
 
+\paragraph{Mapping of Names} There can occur situations when a consistent application could be mapped into an inconsistent database because of name collisions or the name can collide with some internal database construct (which are not right now implemented in the model).
+
+
+
 \paragraph{Mapping of Classes} The class is mapped into a table with  automatically created primary key. The primary key is always created with name Id and of the $\mathbb{N^{*}}$ type. The properties and associations has to be mapped separately.
 \begin{align*}
 &	\mathbf{\rho_{c}} : Class*  \rightarrow Table* \\
@@ -450,7 +457,7 @@ There are defined functions for object-relational mapping used in this paper. Th
 & c \in Class*
 \end{align*}
 
-\subsubsection{Mapping of Properties}
+\paragraph{Mapping of Properties}
 There are two kinds of properties - primitive property with cardinality equal to one is mapped to a column; second kind - collection with cardinality greater than one is mapped to table, thus there are two mapping cases. When the property is mandatory the $NOTNULL$ constraint is added to the column with property value. 
 
 There can occur name collision during mapping in case there are more classes with property representing collection. To avoid that the mapping changes the name of the table representing a collection.
@@ -466,7 +473,7 @@ There can occur name collision during mapping in case there are more classes wit
 		\end{gathered}} \\ \\
   		\inference{|p| = 1 \wedge cardinality(p) = 1 \wedge mandatory(p)
 			 \\ \wedge \exists t : t = table(name(owningClass(p)), d)
-			\\ \wedge \not instanciated(owningClass(p))
+			\\ \wedge ! instanciated(owningClass(p))
 		}{\begin{gathered}
  	 		column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
 		\end{gathered}}
@@ -475,7 +482,8 @@ There can occur name collision during mapping in case there are more classes wit
 \end{align*}
 \begin{align*}
 &	\mathbf{\rho_p} : Property* \rightarrow Table* \\ \\
-&	\rho_{cp}(p) = \begin{cases}
+&	\rho_{cp}(p) = \\
+& \;\;\;\;\;\; =\begin{cases}
 		%\inference{p = \varnothing}{\varnothing}\\
 		%\inference{|p| > 1}{\rho_{cp}(head(p)) \cup \rho_{cp}(tail(p))}\\\\
      	\inference{|p| = 1 \wedge cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
@@ -519,7 +527,7 @@ There can occur name collision during mapping in case there are more classes wit
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
 		\inference{|a| = 1 \wedge   startCardinality > 1 \\ \wedge \exists t \in tables(d) : name(owningClass(p)) = name(t) \\ \wedge \exists e \in tables(d) : name(reference(a)) = name(e)
   		}{\begin{gathered}  
-		 table(name(t)+name(a), pk("Id"), \varnothing, \\ foreignKey(owningClass(a),owningClass(a), NOTNULL) \\ foreignkey(reference(a), reference(a), NOTNULL)) 
+		 table(name(t)+name(a), pk("Id"), \varnothing, \\ fk(name(owningClass(a)), name(owningClass(a)), NOTNULL) \\ fk(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
  	%\end{cases}
 \\
@@ -572,12 +580,12 @@ This section provide transformations for manipulating the application layer of a
 \begin{align*}
 &	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
 & 	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
-	}{properties(c) =- \; p }\\
+	}{properties(c) - \; p }\\
 &	l_c, l_p \in Label, a \in Application 
 \end{align*}
 \begin{align*}
 &	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
-&	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) =- \; f} \\
+&	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) - \; f} \\
 &	l_c, l_a \in Labels, a \in Application
 \end{align*}
 
@@ -585,7 +593,7 @@ This section provide transformations for manipulating the application layer of a
 \begin{align*}
 &	\mathbf{remClass} : Label \times Application \rightarrow Application \\
 &	remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge !\: associated(c)
-	} {classes(a) =- \; c }\\
+	} {classes(a) - \; c }\\
 &	l \in Label,a \in Application
 \end{align*}
 
@@ -716,7 +724,7 @@ c.name = l_n
 \begin{align*}
 &	\mathbf{alterTable} : Label \times Label \times Database \rightarrow Database \\
 &	alterTable(l_o, l_n, d) = \inference{\exists t \in tables(d) : name(d) = l_o \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered}
-		t.name = l_n \\ \wedge \forall e \in tables(a) \wedge \forall (f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
+		t.name = l_n \wedge \forall e \in tables(a) \\ \wedge ( \forall f \in fks(e) \wedge reference(f) = l_o ) \\ : f.reference = l_n 
 	\end{gathered}}\\
 &	l_o, l_n \in Label, s \in States, a \in Application, d \in Database
 \end{align*}
@@ -744,7 +752,8 @@ c.name = l_n
 \paragraph{Insert row} The function allow to insert a row or rows into the database.
 \begin{align*}
 &	\mathbf{insertRow} : Row* \times Database \rightarrow Database \\
-&	insertRow(r, d) = \begin{cases}
+&	insertRow(r, d) = \\
+& \;\;\;\;\;\; =\begin{cases}
 			%\inference{|r|>1}{d \bullet insertRow(head(r), d) \bullet insertRow(tail(r), d)} \\ \\
 		 	\inference{|r|=1 \wedge \exists t \in tables(d) : name(t) = reference(r) \\ \wedge \forall e \in instances(t, d) : idnetifier(e) \neq idnetifier(r)}{data(d) \cup r} 
 		 	%\\ \\	 Inconsistent \; d
@@ -755,7 +764,8 @@ c.name = l_n
 \paragraph{Insert Value} The function inserts a new pair or pairs into an existing row.
 \begin{align*}
 &	\mathbf{insertValue} : Label \times N \times Pair* \times Database \rightarrow Daatabase \\
-&	insertValue(l, n, p, d) = \begin{cases}
+&	insertValue(l, n, p, d) =\\
+& \;\;\;\;\;\; =\begin{cases}
  		%\inference{|p| > 1}{\begin{gathered} 	d \bullet insertValue(r, head(p), d) \\ \bullet insertValue(r, tail(p), d)\end{gathered}}   \\ \\
  		\inference{|p| = 1 \wedge 
  		\\ \wedge \exist r \in instances(l, d) : value(findPair("Id", r)) = n
@@ -770,7 +780,8 @@ c.name = l_n
 \paragraph{Add Value To Table} The function appends a pair to all rows of a table with given name.
 \begin{align*}
 &	\mathbf{addValueToTable} : Label \times Pair \times Database \rightarrow Database \\
-&	addValueToTable(l, p, d) = \begin{cases}
+&	addValueToTable(l, p, d) = \\
+&= \;\;\;\;\;\;\begin{cases}
  		\inference{\exists t \in tables(d) : name(t) = l}	{\begin{gathered}
 		d \bullet (\forall r \in instances(l, d) \\ : insetValue(reference(r), keyValue(r), p) \\ \bullet addValueToTable(tail(instances(l, d)), p, d))
 	\end{gathered}} 
@@ -781,22 +792,23 @@ c.name = l_n
 \paragraph{Copy Value} The function copy value from one column in a table to another column in the same or in another table - according to provided mapping. First argument of the transformation is the name of the source table, the second one is the target table, then there are names of source column and target column, finally the mapping between rows (stored instances) has to be provided.
 \begin{align*}
 &	\mathbf{copyValue} : Label \times Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
-&	copyValue(l_s, l_t, l_{sc}, l_{tc} o_{l_s, l_t}, d) = \begin{cases}
-		\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
+&	copyValue(l_s, l_t, l_{sc}, l_{tc} o_{l_s, l_t}, d) = \\
+& \;\;\;\;\;\; =	\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
 		\forall	p \in m_{l_s, l_t} :	d \bullet insertValue(name(second(p)), keyValue(second(p)), \\ [l_{tc},value(findPair(l_{sc}, first(p)))])
-		\end{gathered}}
- 	\end{cases} \\
+		\end{gathered}}\\
 & 	l_s, l_t, l_{sc}, l_{tc} \in Label, d \in Database
 \end{align*}
 
 \paragraph{Copy rows} The function $copyRow$ creates a copy of a source table content in another table with the same structure. 
 \begin{align*}
 &	\mathbf{copyRow} : Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
-&	copyRow(l_s, l_t, m_{l_s, l_t}, d) = \begin{cases}
+&	copyRow(l_s, l_t, m_{l_s, l_t}, d) = \\
+& \;\;\;\;\;\; =%\begin{cases}
  	%\inference{|m_{l_s, l_t}| = \varnothing}{d} \\\\
  	%\inference{|m_{l_s, l_t}| > 1}{\begin{gathered} d \bullet copyRow(l_s, l_t, head(M_{l_s, l_t})) \\ \bullet copyRow(l_s, l_t, tail(m_{l_s, l_t})) \end{gathered}}
  	\inference{|m_{l_s, l_t}| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{d \bullet insertRow(row(l, pairs(first(m_{l_s, l_t}))), d)} \\\\
-  \end{cases} \\
+%  \end{cases} 
+\\
 &  l_s, l_t \in Label, d \in Database, m_{l_s, l_t} \in M
 \end{align*}
 
@@ -804,12 +816,12 @@ c.name = l_n
 \paragraph{Remove a value}  The approach introduced in this paper has to  preserve data and information, nevertheless there are cases when data can be deleted from the database without data lost as they are e.g. already copied in another column as the understanding of data changed in the whole software, therefore we defined two transformations - one removes a single value from a row, second removes whole row (instance) from the software.
 \begin{align*}
 &	\mathbf{dropValue} : Label \times Row \times Database \rightarrow Database \\
-&	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) =- \; p}\\ 
+&	dropValue(l, r, d) = \inference{\exists p \in pairs(r) : reference(p) = l}{pairs(r) - \; p}\\ 
 & l \in Label, r : Row \wedge r \in data(d), d \in Database
 \end{align*}
 \begin{align*}
 &	\mathbf{dropRow} :  Row*  \times Database \rightarrow Database\\
-&	dropRow(r, d) = \inference{|r|=1}{data(d) =- \; r}	\\ 
+&	dropRow(r, d) = \inference{|r|=1}{data(d) - \; r}	\\ 
 & l \in Label, r \in Row \wedge r \in data(d), d \in Database
 \end{align*}
 
@@ -817,7 +829,8 @@ c.name = l_n
 \paragraph{Remove table, column or key} The functions removes a table, column or key if there are no stored data. This is because the data lost is undesirable in case of evolution. The consistency of foreign keys references has to be verified too in case a table is removed.  There are defined two variants of remove transformations for each model entity - one preserves data, the other removes data too.
 \begin{align*}
 &	\mathbf{dropTable} : Label \times Database \rightarrow Database \\
-&	dropTable(l,d) = \inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \forall r \in data(d) : owningTable(r) \neq l \\  \wedge (\forall j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) \neq l) }{ tables(d) =- \; \rho(c)}\\
+&	dropTable(l,d) = \\
+& \;\;\;\;\;\; =\inference{ \exists t \in tables(d) : name(t) = l  \\ \wedge \forall r \in data(d) : owningTable(r) \neq l \\  \wedge (\forall j \in tables(d) \wedge f \in foreignKeys(j) : reference(f) \neq l) }{ tables(d) - \; \rho(c)}\\
 & l \in Label, d \in Database
 \end{align*}
 \begin{align*}
@@ -830,31 +843,31 @@ c.name = l_n
 
 \begin{align*}
 &	\mathbf{dropColumn} : Label \times Label \times Database \rightarrow Database \\
-& 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) =- \; c}\\
+& 	dropColumn(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in columns(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{columns(t) - \; c}\\
 &	 l , l_p\in Label, d \in Database 
 \end{align*}
 \begin{align*}
 &	\mathbf{DropColumnAndData} : Label \times Label* \times Database \rightarrow Database \\
 &	DropColumnAndData(l_c, ps, d) = \\
-&= \begin{cases}
+& \;\;\;\;\;\; =%\begin{cases}
  	%\inference{ps = \varnothing}{d}\\
  	 %\inference{|ps| >1}{\begin{gathered} 	d \bullet DropColumnAndData(l_c, head(ps), d) \\ \bullet DropColumnAndData(l_c, tail(ps), d) \end{gathered}} \\ \\
  	(\inference{|ps| = 1 \\ \wedge \exists t \in tables(d) \\ \wedge \exists c \in columns(t) : name(c) = l_c}{\begin{gathered}
-	 	(\forall r, r \in instances(d) \wedge reference(r) = l_c: \\d \bullet dropValue(ps, r)) \end{gathered}}) \\ \bullet dropColumn(l_c)  
- \end{cases}
+	 	(\forall r, r \in instances(d) \wedge reference(r) = l_c: \\d \bullet dropValue(ps, r)) \end{gathered}})  \bullet dropColumn(l_c)  
+% \end{cases}
 	\\
 &	l_c \in Label, ps = \{ x | x \in Label\}, d \in Database
 \end{align*}
 
 \begin{align*}
 &	\mathbf{dropKey} : Label \times Label \times Database \rightarrow Database \\
-&	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) =- \; c}\\
+&	dropKey(l, l_p, d) = \inference{ \exists t \in tables(d) : name(t) = l \\ \wedge \exists c \in foreignKeys(t) : name(c) = l_p \\ \wedge \forall e \in  pairs(r), r \in instances(t, d) : \\ reference(e) \neq l_p \vee value(e) = \varnothing  }{foreignKeys(t) - \; c}\\
 &	 l, l_p \in Label, d \in Database 
 \end{align*}
 \begin{align*}
 &	\mathbf{DropKeyAndData} : Label \times Label* \times Database \rightarrow Database \\
 &	DropKeyAndData(l_f, ps, d) = \\
-& = \begin{cases}
+& \;\;\;\;\;\; = \begin{cases}
  	%\inference{ps = \varnothing}{d}\\
  	 %\inference{|ps| >1}{\begin{gathered} 	d \bullet DropColumnAndData(l_c, head(ps), d) \\ \bullet DropColumnAndData(l_c, tail(ps), d) \end{gathered}} \\ \\
  	(\inference{|ps| = 1 \\ \wedge \exists t \in tables(d) \\ \wedge \exists f \in foreignKeys(t) : name(f) = l_f}{\begin{gathered}
@@ -880,7 +893,7 @@ There are defined three transformations which are able to create a software: $ad
 &	\mathbf{addProperty} : Label \times Property \times State \rightarrow State \\
 &	\Psi(s, addProperty(l, p)) = application(s) \circ addProp(l,p) \\
 &	\Phi(s, addProperty(l, p)) = \\
-& = \begin{cases}
+& \;\;\;\;\;\; = \begin{cases}
     		\inference{cardinality(p) \leq 1}{database(s) \bullet addColumn(l, \rho(p,d), d)} \\ \\
 	    \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
    database(s) \bullet addTable(\rho(p,d), d) \\ \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))])) 
@@ -895,7 +908,7 @@ There are defined three transformations which are able to create a software: $ad
 & \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
 & \Psi(s, addAsociation(l, a, m_{l_1, l_2})) = application(s) \circ addAssoc(l, a) \\
 & \Phi(s, addAsociation(l, a, m_{l_1, l_2})) = \\
-& = \begin{cases}
+& \;\;\;\;\;\; = \begin{cases}
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cup columns(t_t) \\: name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
 		database(s) \\ \bullet addForeignKey(name(t_t), \rho(a,d), d) \\ \bullet \forall r \in m_{l_1, l_2} : \\
 		insertValue(name(t_t), value(primaryKey(second(r))), \\ [name(a), value(primaryKey(first(r)))])
@@ -937,7 +950,7 @@ The removal of class, property or association is limited only by the constraints
 &	\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
 &	\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
 &	\Phi RemoveProperty(l, l_p, s) = \\
-& \begin{cases}
+& \;\;\;\;\;\; =\begin{cases}
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
@@ -952,7 +965,7 @@ The removal of class, property or association is limited only by the constraints
 &	\Phi(RemovePropertyAndData(L_c, ps), s) = application(s)\\ 
 &  \circ remProperty(l_s, ps) \\
 &	\Psi(RemovePropertyAndData(L_c, ps), s) = \\
-& = \begin{cases}
+& \;\;\;\;\;\; = \begin{cases}
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered} database(s) \\ \bullet RemovePropertyAndData(L_c, head(ps)) \\ \bullet RemovePropertyAndData(L_c, tail(ps)) 	\end{gathered}}\\\\
  		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet DropColumnAndData(l_c, ps)}\\\\
@@ -967,7 +980,7 @@ The removal of class, property or association is limited only by the constraints
 &    \mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
 &    \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
 &    \Phi RemoveAssociation(l, l_a, s) = \\
-&= s\begin{cases}
+& \;\;\;\;\;\; =\begin{cases}
      	\inference{\exists c \in classes(application(s)) : name(c) = l \\
      	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
      	\wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
@@ -984,7 +997,7 @@ The removal of class, property or association is limited only by the constraints
 &	\Phi(RemoveAssociationAndData(L_c, ps), s) = application(s)\\ 
 & \circ remAssociation(l_s, ps) \\
 &	\Psi(RemoveAssociationAndData(L_c, ps), s) = \\
-&=  \begin{cases}
+& \;\;\;\;\;\; = \begin{cases}
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered}			database(s) \\ \bullet RemoveAssociationAndData(L_c, head(ps)) \\ \bullet RemoveAssociationAndData(L_c, tail(ps)) \end{gathered}}\\\\
  		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(p) \leq 1}{\begin{gathered}
@@ -1013,14 +1026,15 @@ Alternation of a software is limited to renaming functions in our model.
 \begin{align*}
 &	\mathbf{RenameProperty} : Label \times Label \times Label \times State \rightarrow State \\ \\
 & \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
-& \Phi(RenameProperty(l_c, l_o, l_n, s)) = \begin{cases}
+& \Phi(RenameProperty(l_c, l_o, l_n, s)) = \\
+& \;\;\;\;\;\; =\begin{cases}
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l_o \\
  	cardinality(p) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l_o \\
  	cardinality(p) > 1}{\begin{gathered}
-		database(s)\\ \bullet alterTable(name(owningClass(p)+l_o, l_n, database(s))
+		database(s)\\ \bullet alterTable(name(owningClass(p)+l_o, \\l_n, database(s))
 \end{gathered}}
  \end{cases}\\
 & l_c, l_o, l_n \in Label,  s \in State
@@ -1032,7 +1046,8 @@ Alternation of a software is limited to renaming functions in our model.
 \begin{align*}
 & \mathbf{RenameAssociation} : Label \times Label \times Label \times State \rightarrow State \\
 & \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
-& \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \begin{cases}
+& \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \\
+& \;\;\;\;\;\; =\begin{cases}
 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists a \in associations(c) : name(a) = l_o 
 	\\ \wedge startCardinality(a) > 1 }{\begin{gathered}
@@ -1054,9 +1069,11 @@ All transformations described earlier does change primary the structure of an ap
 There are two possible implementation of transformation for copying property, first implementation $CopyPropertyStructure$ copies only the structure of a property on the database level, the second implementation $CopyProperty $ copies both structure and data of the property.
 \begin{align*}
 &	\mathbf{CopyPropertyStructure} : Label \times Label \times Label \times State \rightarrow State \\
-&	\Psi(CopyPropertyStructure(l_s, l_t, l_p, s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
+&	\Psi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
+& \;\;\;\;\;\; =\inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
 	\\\\
-&	\Phi(CopyPropertyStructure(l_s, l_t, l_p, s) = \begin{cases}
+&	\Phi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
+& \;\;\;\;\;\; =\begin{cases}
     \inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
 			database(s) \bullet copyColumn(l_s, l_t, l_p) 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
@@ -1119,7 +1136,8 @@ The extract and inline class are two opposite transformations. First of them ext
 The opposite transformation $Inline$ gets the name of a class to inline and the name of target class. The result of the transformation is a merge of information from two classes in the target class, the source class is removed. The important condition of feasibility is there is no name collision among properties in both classes.
 \begin{align*}
 &	\mathbf{Inline} : Label \times Label \times (Row \times Row) \times State \rightarrow State \\
-&	s \oplus Inline(l_s, l_t, m_{l_s, l_t}) = \inference{\exists c_s \in classes(application(s)) : name(c_s) = l_s \\
+&	s \oplus Inline(l_s, l_t, m_{l_s, l_t}) = \\
+& \;\;\;\;\;\; =\inference{\exists c_s \in classes(application(s)) : name(c_s) = l_s \\
 \wedge \exists c_t \in classes(application(s)) : name(c_t) = l_t \\
 \wedge \forall p_s \in properties(c_s), p_t \in properties(c_t) : name(ps) \neq name(p_t) \\
 \wedge !\:associated(l_s, s)   }{\begin{gathered}
@@ -1192,12 +1210,13 @@ To improve the design of code the class Address has to be created which associat
 
 The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalPerson$. Temporary classes has to be connected with the origin classes by an association. The result is shown in Figure \ref{fig:case2}.
 \begin{align*}
-S_1 &= state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
+S_1 & = state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
 & \oplus AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1),\\ 
 & \{(x,y)| x \in instances("Person", database(S)), \\
 & y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \}) \\
 & \oplus Extract("LegalPerson", "Address\_tmp2", "street", "city", "zip")  \\
-& \oplus AddAssociation("LegalPerson", assoc("residentialAddress", "Address\_tmp2", 1, 1),\\ 
+& \oplus AddAssociation("LegalPerson", \\ 
+& assoc("residentialAddress", "Address\_tmp2", 1, 1),\\ 
 & \{(x,y)| x \in instances("LegalPerson", database(S)), \\
 & y \in instances("Address\_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
 \end{align*}
@@ -1211,7 +1230,7 @@ S_1 &= state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip
 	\includegraphics[width=\textwidth]{./images/case_db_5}
 	\caption{The database model.}
 \end{subfigure}
-\begin{subfigure}[b]{\textwidth}
+\begin{subfigure}[b]{0.5\textwidth}
 	\centering
 	\begin{tabular}{| c | l |}
 	 	\hline
@@ -1220,6 +1239,16 @@ S_1 &= state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip
 		12 & Clooney  \\ \hline
 	\end{tabular}
 	\caption{Data stored in the table $Person$.}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\textwidth}
+	\centering
+	\begin{tabular}{| c | l |}
+	 	\hline
+		Id &  BusinessName  \\ \hline  
+		100 & Tools \& Machines  \\ \hline
+		200 & AI Robotics \\ \hline
+	\end{tabular}
+	\caption{Data stored in the table $LegalPerson$.}
 \end{subfigure}
 \begin{subfigure}[b]{\textwidth}
 	\centering
@@ -1230,16 +1259,6 @@ S_1 &= state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip
 		12 & Orange Ave & Orlando & 320 24 & 12 \\ \hline
 	\end{tabular}
 	\caption{Data stored in the table $Address\_tmp1$.}
-\end{subfigure}
-\begin{subfigure}[b]{\textwidth}
-	\centering
-	\begin{tabular}{| c | l |}
-	 	\hline
-		Id &  BusinessName  \\ \hline  
-		100 & Tools \& Machines  \\ \hline
-		200 & AI Robotics \\ \hline
-	\end{tabular}
-	\caption{Data stored in the table $LegalPerson$.}
 \end{subfigure}
 \begin{subfigure}[b]{\textwidth}
 	\centering
@@ -1265,11 +1284,11 @@ The two temporary classes can be merged together as they have the same structure
 %& \oplus AddAssociation("LegalPerson", \\
 %& assoc("residentialAddress", "Address\_tmp1", 1, 1),\varnothing) \\
 %
-S_2 &= S_1 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
+S_2 & \;\;\;\;\;\; =S_1 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
 \end{align*}
 Finally the associations are renamed and the evolution end.
 \begin{align*}
-S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
+S_3 & \;\;\;\;\;\; =S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 & \oplus RenameAssociation("LegalPerson", "Address\_tmp2". "Address")\\
 \end{align*}
 
@@ -1283,7 +1302,7 @@ S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 	\caption{The database model.}
 \end{subfigure}
 
-\begin{subfigure}[b]{\textwidth}
+\begin{subfigure}[b]{0.5\textwidth}
 	\centering
 	\begin{tabular}{| c | l |}
 	 	\hline
@@ -1293,7 +1312,7 @@ S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 	\end{tabular}
 	\caption{Data stored in the table $Person$.}
 \end{subfigure}
-\begin{subfigure}[b]{\textwidth}
+\begin{subfigure}[b]{0.5\textwidth}
 	\centering
 	\begin{tabular}{| c | l |}
 	 	\hline
@@ -1377,8 +1396,12 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
 \end{align*}
 \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ExtactClass = addClass
+\begin{align*}
+& state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") = \\
+&=
+\end{align*}
 \hline
 \begin{align*}
 a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
@@ -1386,9 +1409,9 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)),
+& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)),\\
 & cl("Address\_tmp1", \varnothing, \varnothing)
-& )
+ )
 \end{align*}
 \begin{align*}
 t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
@@ -1404,7 +1427,8 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+& row("legalPerson", ["Id", 10], \\
+& ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
@@ -1415,7 +1439,7 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 ExtactClass = copyProperty("street"
 \hline
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
@@ -1425,7 +1449,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
@@ -1435,7 +1459,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
@@ -1452,7 +1476,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \newpage
 ExtactClass = dropPropertyAndData("street"
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1461,7 +1485,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
 & col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
@@ -1471,7 +1495,7 @@ t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing),
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["city", "LA"], ["zip", 90003]), \\
@@ -1488,7 +1512,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \newpage
 ExtactClass = copyProperty("city"
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1497,7 +1521,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
 & col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
@@ -1508,7 +1532,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 &  ["city", "LA"], ["zip", 90003]), \\
@@ -1525,7 +1549,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \newpage
 ExtactClass = dropPropertyAndData("city"
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1534,7 +1558,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
@@ -1544,7 +1568,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["zip", 90003]), \\
@@ -1562,7 +1586,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \newpage
 ExtactClass = CopyProperty("zip"
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & pr(zip, APPSTRING, \varnothing)), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1571,7 +1595,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
@@ -1581,7 +1605,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["zip", 90003]), \\
@@ -1599,7 +1623,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"], \\
 \newpage
 ExtactClass = DropPopertyAndData("zip"
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing))), \\
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing))), \\
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
@@ -1607,7 +1631,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing))), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
@@ -1616,7 +1640,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
 & row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
@@ -1632,7 +1656,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 $AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1), 
  \{(x,y)| x \in instances("Person", database(S)), y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \})$
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
 & assoc("address", "Address\_tmp1", 1, 1)), \\ 
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
@@ -1642,7 +1666,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
@@ -1652,7 +1676,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 ) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
 & row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
@@ -1675,7 +1699,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 \end{align*}
 \hline
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
 & assoc("address", "Address\_tmp1", 1, 1)), \\ 
 & cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing),\\
 & assoc("address", "Address\_tmp2", 1, 1)), \\
@@ -1686,7 +1710,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
@@ -1699,7 +1723,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 ) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
 & row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
 & row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
@@ -1722,7 +1746,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 \end{align*}
 \hline
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
 & assoc("address", "Address\_tmp1", 1, 1), assoc("address", "Address\_tmp2", 1, 1)), \\ 
 & cl(LegalPerson, pr(businessName, APPSTRING, \varnothing),\\
 & assoc("address", "Address\_tmp2", 1, 1), assoc(\mathbf{"address"}, "Address\_tmp1", 1, 1)), \\
@@ -1733,7 +1757,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing)) \\
 & tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
@@ -1744,7 +1768,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 ) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
 & row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
 & row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
@@ -1768,7 +1792,7 @@ r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 \end{align*}
 \hline
 \begin{align*}
-a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
 & assoc("address", "Address\_tmp1", 1, 1)), \\ 
 & cl(LegalPerson, pr(businessName, APPSTRING, \varnothing),\\
 & assoc("address", "Address\_tmp2", 1, 1), assoc(\mathbf{"address"}, "Address\_tmp1", 1, 1)), \\
@@ -1779,7 +1803,7 @@ a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
 & )
 \end{align*}
 \begin{align*}
-t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing)) \\
 & tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
@@ -1790,7 +1814,7 @@ t &= db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), 
 ) 
 \end{align*}
 \begin{align*}
-r &= \{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
 & row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
 & row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
