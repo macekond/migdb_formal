@@ -1201,7 +1201,7 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 			\circ (\forall c \in classes (application(s)), a \in associations(c) \\
 			reference(a) = c_1 \vee reference(a) = c_2 : \\
 			reference(a) = l_n) \\
-			\circ renClass(l_1) \circ renClass(l_2) \end{gathered}}
+			\circ remClass(l_1) \circ remClass(l_2) \end{gathered}}
  \\\\
 &	\Psi(s, merge(l_1, l_2, l_n)) = \\
 & \;\;\;\;\;\; = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\ \wedge columns(t_1) = columns(t_2)\\
@@ -1215,7 +1215,7 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 
  
 \section{Case Study}
-The case study demonstrates how the transformation helps with data evolution in real example of software evolution. There are two classes in our software $Person$ and $LegalPerson$ both of them contains information about address (street, city and zip code). The situation in software is in Figure \ref{fig:case1}, where the whole software is shown. 
+The case study demonstrates how the transformation helps with data evolution in real example of software evolution. There are two classes in our software $Person$ and $LegalParty$ both of them contains information about address (street, city and zip code). The situation in software is in Figure \ref{fig:case1}, where the whole software is shown. 
 
 To improve the design of code the class Address has to be created which associated with both original classes and contains the data already stored in the software. The evolution is defined in following text together with graphical illustrations of its processing. The whole evolution processing can be found in the appendix \ref{sec:caseStudy}.
 
@@ -1247,26 +1247,27 @@ To improve the design of code the class Address has to be created which associat
 		100 & Tools \& Machines & Olive ave. & New York & 100 01 \\ \hline
 		200 & AI Robotics & Pine ave. & LA & 900 03  \\ \hline
 	\end{tabular}
-	\caption{Data stored in the table $LegalPerson$.}
+	\caption{Data stored in the table $LegalParty$.}
 \end{subfigure}
-	\caption{The initial state of the example used in the case study. There is a repetition of information structure in the $Person$ and $LegalPerson$ class.}
+	\caption{The initial state of the example used in the case study. There is a repetition of information structure in the $Person$ and $LegalParty$ class.}
 	\label{fig:case1}
 \end{figure}
 
-The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalPerson$. Temporary classes has to be connected with the origin classes by an association. The result is shown in Figure \ref{fig:case2}.
+The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalParty$. Temporary classes has to be connected with the origin classes by an association. The result is shown in Figure \ref{fig:case2}.
 \begin{align*}
 S_1 & = state(S) \\
-& \;\;\;\;\;\; \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
+& \;\;\;\;\;\; \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip",\\ 
+& \;\;\;\;\;\; \;\;\;\;\;\;  \{(x,x) | x \in instances("Person", database(S))\}) \\
 & \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
 & \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
 & \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
 & \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
 & \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) \\
-&\;\;\;\;\;\; \oplus Extract("LegalPerson", "Address\_tmp2", "street", \\
+&\;\;\;\;\;\; \oplus Extract("LegalParty", "Address\_tmp2", "street", \\
 & \;\;\;\;\;\;\;\;\;\;\;\; "city", "zip")  \\
-& \;\;\;\;\;\; \oplus AddAssociation("LegalPerson", \\ 
-& \;\;\;\;\;\;\;\;\;\;\;\; assoc("residentialAddress", "Address\_tmp2", 1, 1),\\ 
-& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("LegalPerson", database(S)), \\
+& \;\;\;\;\;\; \oplus AddAssociation("LegalParty", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp2", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("LegalParty", database(S)), \\
 & \;\;\;\;\;\;\;\;\;\;\;\; y \in instances("Address\_tmp2", database(S)) : \\
 & \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) \\
 \end{align*}
@@ -1298,13 +1299,13 @@ S_1 & = state(S) \\
 		100 & Tools \& Machines  \\ \hline
 		200 & AI Robotics \\ \hline
 	\end{tabular}
-	\caption{Data stored in the table $LegalPerson$.}
+	\caption{Data stored in the table $LegalParty$.}
 \end{subfigure}
 \begin{subfigure}[b]{\textwidth}
 	\centering
 	\begin{tabular}{| c | l | l | l | l |}
 	 	\hline
-		Id & Street & City & ZIP & Person \\ \hline  
+		Id & Street & City & ZIP & Person\_Address \\ \hline  
 		11 & Central Park St & New York & 100 01 & 11  \\ \hline
 		12 & Orange Ave & Orlando & 320 24 & 12 \\ \hline
 	\end{tabular}
@@ -1314,7 +1315,7 @@ S_1 & = state(S) \\
 	\centering
 	\begin{tabular}{| c | l | l | l | l |}
 	 	\hline
-		Id & Street & City & ZIP & LegalPerson\\ \hline  
+		Id & Street & City & ZIP & LegalParty\_Address\\ \hline  
 		100 & Olive ave. & New York & 100 01 & 100 \\ \hline
 		200 & Pine ave. & LA & 900 03 & 200  \\ \hline
 	\end{tabular}
@@ -1331,17 +1332,11 @@ The two temporary classes can be merged together as they have the same structure
 %
 %& \oplus AddAssociation("Person", \\
 %& assoc("address", "Address\_tmp2", 1, 1), \varnothing) \\
-%& \oplus AddAssociation("LegalPerson", \\
+%& \oplus AddAssociation("LegalParty", \\
 %& assoc("residentialAddress", "Address\_tmp1", 1, 1),\varnothing) \\
 %
 S_2 &= S_1 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
 \end{align*}
-Finally the associations are renamed and the evolution end.
-\begin{align*}
-S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
-& \oplus RenameAssociation("LegalPerson", "Address\_tmp2". "Address")\\
-\end{align*}
-
 \begin{figure}
 \begin{subfigure}[b]{0.45\textwidth}
 	\centering
@@ -1373,13 +1368,13 @@ S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 		100 & Tools \& Machines  \\ \hline
 		200 & AI Robotics \\ \hline
 	\end{tabular}
-	\caption{Data stored in the table $LegalPerson$.}
+	\caption{Data stored in the table $LegalParty$.}
 \end{subfigure}
 \begin{subfigure}[b]{\textwidth}
 	\centering
 	\begin{tabular}{| c | l | l | l | l | l |}
 	 	\hline
-		Id & Street & City & ZIP & Person & LegalPerson\\ \hline  
+		Id & Street & City & ZIP & Person\_Address & LegalParty\_Address\\ \hline  
 		1 & Olive ave. & New York & 100 01 & & 100 \\ \hline
 		2 & Pine ave. & LA & 900 03 & & 200  \\ \hline
 		3 & Central Park St & New York & 100 01 & 11 &  \\ \hline
@@ -1390,7 +1385,6 @@ S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 
 	\caption{The final state of the case study example. There is one class containing information about address for the whole software and data were migrated.}
 \end{figure}
-
 The scenario was completed successfully, because there were no constraints defined in the database and the data was suitable for the evolution there were no complication. The example of evolution presented in case study shows the possibilities of defined transformation. The example itself is not large, nevertheless it shows advanced refactoring cases, which are very often used in real software development. We believe that composition of proposed transformation can be used even in case of large data evolution cases. It is obvious that usage of proposed set of transformations only will cause very large scripts describing data evolution, therefore a mechanism for creating templates (reusable evolution scripts).
 
  
@@ -1407,9 +1401,9 @@ Introduced formal definitions provides an important foundation for development o
 \section{Assigment for NII Internship}
 The model of evolution in ORM software defined in this paper will be improved and validated during internship at NII. The main objectives of the internship are:
 \begin{enumerate}
-	\item \label{it:1} Verify the model by an implementation in the Maude tool. \emph{(Estimated time: 1 month)}
-	\item \label{it:2} More complex examples of refactoring cases should be examined with existing model.  \emph{(Estimated time: 0.5 month)}
-	\item \label{it:3} The inheritance relationship between classes should be implemented in the model together with inheritance-based refactoring cases. \emph{(Estimated time: 0.5 month)}
+	\item \label{it:1} The inheritance relationship between classes should be implemented in the model together with inheritance-based refactoring cases. \emph{(Estimated time: 0.5 month)}
+	\item \label{it:2} Verify the model by an implementation in the Maude tool. \emph{(Estimated time: 1 month)}
+	\item \label{it:3} More complex examples of refactoring cases should be examined with existing model.  \emph{(Estimated time: 0.5 month)}
 	\item Prepare an article, which will contain topics \ref{it:1}, \ref{it:2} and \ref{it:3}. \emph{(Estimated time: 1 month)}
 \end{enumerate}
 
@@ -1417,7 +1411,29 @@ The model of evolution in ORM software defined in this paper will be improved an
 \newpage
 \section{Case Study}
 \label{sec:caseStudy}
-Initial State
+The first part of the evolution case study extract a new temporary class and then creates an association.
+\begin{align*}
+S_1 &= state(S) \\
+& \;\;\;\;\;\; \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip",\\ 
+& \;\;\;\;\;\; \;\;\;\;\;\;  \{(x,x) | x \in instances("Person", database(S)\}) \\
+& \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) = \\
+& \;\;\;\;\;\; =  state(S) \oplus addClass(cl("Address\_tmp1", \varnothing, \varnothing)) \\
+& \oplus MoveProperty("Person", "Address\_tmp1", "street", "city", "zip", \\
+& \;\;\;\;\;\; \;\;\;\;\;\;    \{(x,x) | x \in instances("Person", database(S))\}) \\
+& \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \})
+\end{align*}
+
+\newpage
+Initial state of the software:
+\medskip
 \hline
 \begin{align*}
 &	S = sw(a, db(t,r))
@@ -1426,7 +1442,7 @@ Initial State
 a &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
+& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing))
 \end{align*}
@@ -1434,7 +1450,7 @@ a &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
+& tab(LegalParty, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing)) 
 \end{align*}
@@ -1443,444 +1459,441 @@ r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
 & ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
 & row("person", ["Id", 2], ["surname", "Doe"], \\
 & ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
+& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
 \end{align*}
+
+
+
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{align*}
-& state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") = \\
-&=
+S_1 &= state(S) \oplus \mathbf{addClass}(cl("Address\_tmp1", \varnothing, \varnothing)) \\
+& \oplus MoveProperty("Person", "Address\_tmp1", "street", "city", "zip", \\
+& \;\;\;\;\;\; \;\;\;\;\;\;    \{(x,x) | x \in instances("Person", database(S))\}) \\
+& \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \})
 \end{align*}
 \hline
 \begin{align*}
 a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
+& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)),\\
-& cl("Address\_tmp1", \varnothing, \varnothing)
+& \mathbf{cl("Address\_tmp1", \varnothing, \varnothing)}
  )
 \end{align*}
 \begin{align*}
 t &= db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
+& tab(LegalParty, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), \varnothing, \varnothing)) 
+& \mathbf{tab("Address\_tmp1", pk("Id"), \varnothing, \varnothing)}) 
 \end{align*}
-\begin{align*}
-r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-& ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], \\
-& ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
-\end{align*}
+%\begin{align*}
+%r &= row("person", ["Id", 1], ["surname", "Griffin"], \\
+%& ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("person", ["Id", 2], ["surname", "Doe"], \\
+%& ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
+%& row("LegalParty", ["Id", 10], \\
+%& ["businessName", "Tools and Machines ltd."], \\
+%& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
+%& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003]))
+%\end{align*}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-ExtactClass = copyProperty("street"
+The $MoveProperty$ transforms the software in three steps (one for each property to move). First each property and its data are copied from the instances of an old class to the new one, then the copied property and its data are removed.
+\begin{align*}
+	S_2 &= state(S_1) \oplus \mathbf{MoveProperty}("Person", "Address\_tmp1", \\ 
+& \;\;\;\;\;\; \;\;\;\;\;\; "street", "city", "zip", \\
+& \;\;\;\;\;\; \;\;\;\;\;\;    \{(x,x) | x \in instances("Person", database(S))\}) \\
+&  \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) = \\
+& = state(S_1) \oplus \mathbf{CopyProperty}("Person", "Address\_tmp1" , "street", \\
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,x) | x \in instances("Person", database(S))\}) \\
+& \;\;\;\;\;\; \oplus RemovePropertyAndData("Person", "street") \\
+& \;\;\;\;\;\; \oplus MoveProperty("Person", "Address\_tmp1", \\ 
+& \;\;\;\;\;\; \;\;\;\;\;\; "street", "city", "zip", \\
+& \;\;\;\;\;\; \;\;\;\;\;\;    \{(x,x) | x \in instances("Person", database(S))\}) \\
+&  \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+\end{align*}
+
 \hline
 \begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+a' &=app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
+& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
+& cl("Address\_tmp1", \mathbf{pr(street, APPSTRING, \varnothing)} , \varnothing)
 & )
 \end{align*}
 \begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
+t &=db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
+& tab(LegalParty, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
 & col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
 & col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
+& tab("Address\_tmp1", pk("Id"), \mathbf{col(street, APPSTRING, \varnothing, \varnothing)},\\
 & \varnothing)) 
 \end{align*}
-\begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-& ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"] )\\
-\}
-\end{align*}
+%\begin{align*}
+%r &=\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+%& ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("person", ["Id", 2], ["surname", "Doe"], \\
+%& ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]), \\
+%& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+%& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
+%& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
+%& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"]) \\
+%& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"] )\\
+%\}
+%\end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-ExtactClass = dropPropertyAndData("street"
-\begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
-& pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
-& )
-\end{align*}
-\begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
-& col(city, APPSTRING, \varnothing, \varnothing) \\
-& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
-& col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
-& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
-& \varnothing)) 
-\end{align*}
-\begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["city", "NY"], ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-& ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"] )\\
-\}
-\end{align*}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-ExtactClass = copyProperty("city"
-\begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
-& pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
-& )
-\end{align*}
-\begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
-& col(city, DBSTRING, \varnothing, \varnothing) \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
-& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing)
-& \varnothing)) 
-\end{align*}
-\begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["city", "NY"], ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-&  ["city", "LA"], ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"] )\\
-\}
-\end{align*}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-ExtactClass = dropPropertyAndData("city"
-\begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
-& pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
-& pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
-& )
-\end{align*}
-\begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
-& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing)
-& \varnothing)) 
-\end{align*}
-\begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-& ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"] )\\
-\}
-\end{align*}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-ExtactClass = CopyProperty("zip"
-\begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
-& pr(zip, APPSTRING, \varnothing)), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
-& pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
-& )
-\end{align*}
-\begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
-& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)
-& \varnothing)) 
-\end{align*}
-\begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
-& ["zip", 10001]), \\
-& row("person", ["Id", 2], ["surname", "Doe"], \\
-& ["zip", 90003]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
-& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
-& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]) )\\
-\}
-\end{align*}
-
-
+%\newpage
+%ExtactClass = dropPropertyAndData("street"
+%\begin{align*}
+%a' &=app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+%& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+%& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
+%& pr(street, APPSTRING, \varnothing), \\
+%& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+%& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) , \varnothing)
+%& )
+%\end{align*}
+%\begin{align*}
+%t &=db(tab(Person, pk("Id"), col(surname, APPSTRING, \varnothing, \varnothing), \\
+%& col(city, APPSTRING, \varnothing, \varnothing) \\
+%& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab(LegalParty, pk("Id"),  col(businessName, APPSTRING, \varnothing, \varnothing), \\
+%& col(street, APPSTRING, \varnothing, \varnothing), col(city, APPSTRING, \varnothing, \varnothing) \\
+%& col(zip, APPSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab("Address\_tmp1", pk("Id"), col(street, APPSTRING, \varnothing, \varnothing),\\
+%& \varnothing)) 
+%\end{align*}
+%\begin{align*}
+%r &=\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+%& ["city", "NY"], ["zip", 10001]), \\
+%& row("person", ["Id", 2], ["surname", "Doe"], \\
+%& ["city", "LA"], ["zip", 90003]), \\
+%& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+%& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
+%& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
+%& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"]) \\
+%& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"] )\\
+%\}
+%\end{align*}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+%ExtactClass = copyProperty("city"
+%\begin{align*}
+%a' &=app(cl(Person, (pr(surname, APPSTRING, \varnothing), \\
+%& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+%& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
+%& pr(street, APPSTRING, \varnothing), \\
+%& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+%& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
+%& )
+%\end{align*}
+%\begin{align*}
+%t &=db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
+%& col(city, DBSTRING, \varnothing, \varnothing) \\
+%& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab(LegalParty, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
+%& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
+%& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+%& col(city, DBSTRING, \varnothing, \varnothing)
+%& \varnothing)) 
+%\end{align*}
+%\begin{align*}
+%r &=\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+%& ["city", "NY"], ["zip", 10001]), \\
+%& row("person", ["Id", 2], ["surname", "Doe"], \\
+%&  ["city", "LA"], ["zip", 90003]), \\
+%& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+%& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
+%& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
+%& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"]) \\
+%& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"] )\\
+%\}
+%\end{align*}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+%ExtactClass = dropPropertyAndData("city"
+%\begin{align*}
+%a' &=app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
+%& pr(zip, APPSTRING, \varnothing)), \\
+%& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
+%& pr(street, APPSTRING, \varnothing), \\
+%& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+%& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing) , \varnothing)
+%& )
+%\end{align*}
+%\begin{align*}
+%t &=db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
+%& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab(LegalParty, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
+%& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
+%& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+%& col(city, DBSTRING, \varnothing, \varnothing)
+%& \varnothing)) 
+%\end{align*}
+%\begin{align*}
+%r &=\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+%& ["zip", 10001]), \\
+%& row("person", ["Id", 2], ["surname", "Doe"], \\
+%& ["zip", 90003]), \\
+%& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+%& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
+%& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
+%& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"]) \\
+%& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"] )\\
+%\}
+%\end{align*}
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+%ExtactClass = CopyProperty("zip"
+%\begin{align*}
+%a' &=app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\
+%& pr(zip, APPSTRING, \varnothing)), \\
+%& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
+%& pr(street, APPSTRING, \varnothing), \\
+%& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+%& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+%& )
+%\end{align*}
+%\begin{align*}
+%t &=db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \\
+%& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab(LegalParty, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
+%& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
+%& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+%& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
+%& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)
+%& \varnothing)) 
+%\end{align*}
+%\begin{align*}
+%r &=\{ row("person", ["Id", 1], ["surname", "Griffin"], \\
+%& ["zip", 10001]), \\
+%& row("person", ["Id", 2], ["surname", "Doe"], \\
+%& ["zip", 90003]), \\
+%& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+%& ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
+%& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
+%& ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
+%& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]) \\
+%& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]) )\\
+%\}
+%\end{align*}
+%
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-ExtactClass = DropPopertyAndData("zip"
+The software after moving all properties from $Person$ to $Address\_tmp1$.
+\medskip
+\hline
 \begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing))), \\
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
+a' &=app(cl(Person, (pr(surname, APPSTRING, \varnothing))), \\
+& cl(LegalParty, (pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& \mathbf{cl("Address\_tmp1", pr(street, APPSTRING, \varnothing) } \\
+& \mathbf{pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)}
 & )
 \end{align*}
 \begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
+t &=db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab(LegalParty, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)
+& \mathbf{tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),}\\
+& \mathbf{col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)}
 & \varnothing)) 
 \end{align*}
 \begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
-& row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+r &=\{ \mathbf{row("person", ["Id", 1], ["surname", "Griffin"])}, \\
+& \mathbf{row("person", ["Id", 2], ["surname", "Doe"])}, \\
+& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
+& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], ["city", "NY"], ["zip", 10001]) \\
-& row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"], ["city", "LA"], ["zip", 90003]) )\\
+& \mathbf{row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"],} \\
+& \mathbf{["city", "NY"], ["zip", 10001])} \\
+& \mathbf{row("address\_tmp1", ["Id", 1], ["street", "Olive ave. 2225"],} \\
+& \mathbf{ ["city", "LA"], ["zip", 90003])} )\\
 \}
 \end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-$AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1), 
- \{(x,y)| x \in instances("Person", database(S)), y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \})$
 \begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
-& assoc("address", "Address\_tmp1", 1, 1)), \\ 
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing), \\
+	S_3 &= state(S_2) \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) = \\
+\end{align*}
+
+\hline
+\begin{align*}
+a' &= app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+& \mathbf{assoc("address", "Address\_tmp1", 1, 1)}), \\ 
+& cl(LegalParty, pr(businessName, APPSTRING, \varnothing), \\
 & pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing)), pr(zip, APPSTRING, \varnothing)), \\
+& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing)), \\
 & cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
 & )
 \end{align*}
 \begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
+t' &=db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab(LegalParty, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
 & col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
 & col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
 & tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("person\_address", "Person", \varnothing))\\
+& \mathbf{fk("person\_address", "Person", \varnothing)})\\
 ) 
 \end{align*}
 \begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r &=\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
+& row("LegalParty", ["Id", 10], ["businessName", "Tools and Machines ltd."], \\
 & ["street", "Hill stret 22"], ["city", "NY"], ["zip", 10001]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"], \\
+& row("LegalParty", ["Id", 20], ["businessName", "Doe"], \\
 & ["street", "Pine ave. 2225"], ["city", "LA"], ["zip", 90003])\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\
-& ["city", "NY"], ["zip", 10001], ["person\_address", 1]) \\
+& ["city", "NY"], ["zip", 10001], \mathbf{["person\_address", 1]}) \\
 & row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
-& ["city", "LA"], ["zip", 90003], ["person\_address", 2]) )\\
+& ["city", "LA"], ["zip", 90003], \mathbf{["person\_address", 2]}) )\\
 \}
 \end{align*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+The next steps are very similar to the previous ones - extracting a temporary class and creates an association.
 \begin{align*}
-& Extract("LegalPerson", "Address\_tmp2", "street", "city", "zip")  \\
-& \oplus AddAssociation("LegalPerson", assoc("address", "Address\_tmp1", 1, 1),\\ 
-& \{(x,y)| x \in instances("LegalPerson", database(S)), \\
-& y \in instances("Address\_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
-\end{align*}
+S_4 &= S_3 \oplus Extract("LegalParty", "Address\_tmp2", "street", "city", "zip",\\ 
+& \;\;\;\;\;\; \;\;\;\;\;\;  \{(x,x) | x \in instances("LegalParty", database(S)\}) \\
+& \;\;\;\;\;\; \oplus AddAssociation("LegalParty", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("LegalParty", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp2", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \})\end{align*}
 \hline
 \begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
+a' &=app(cl(Person, pr(surname, APPSTRING, \varnothing), \\ 
 & assoc("address", "Address\_tmp1", 1, 1)), \\ 
-& cl(LegalPerson, (pr(businessName, APPSTRING, \varnothing),\\
-& assoc("address", "Address\_tmp2", 1, 1)), \\
+& \mathbf{cl(LegalParty, pr(businessName, APPSTRING, \varnothing)},\\
+& \mathbf{assoc("address", "Address\_tmp2", 1, 1))}, \\
 & cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
 & pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
-& cl("Address\_tmp2", pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
+& \mathbf{cl("Address\_tmp2", pr(street, APPSTRING, \varnothing)}, \\
+& \mathbf{pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)}
 & )
 \end{align*}
 \begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing), \\
-& col(street, DBSTRING, \varnothing, \varnothing), col(city, DBSTRING, \varnothing, \varnothing) \\
-& col(zip, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+t &=db(tab("Person", pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& \mathbf{tab("LegalParty", pk("Id"), } \\
+& \mathbf{col(businessName, DBSTRING, \varnothing, \varnothing), \varnothing),} \\
 & tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
 & col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
 & fk("person\_address", "Person", \varnothing))\\
-& tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("legalPerson\_address", "LegalPerson", \varnothing))\\
-) 
+& \mathbf{tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing)},\\
+& \mathbf{col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)} \\
+& \mathbf{fk("LegalParty\_address", "LegalParty", \varnothing))}) 
 \end{align*}
 \begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r &=\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
+& \mathbf{row("LegalParty", ["Id", 10],} \\
+& \mathbf{["businessName", "Tools and Machines ltd."])}, \\
+& \mathbf{row("LegalParty", ["Id", 20], ["businessName", "Doe"])}\\
 & row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\ 
 & ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
 & row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
 & ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
-& row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], \\
-& ["city", "NY"], ["zip", 10001], ["LegalPerson\_address", 10]) \\
-& row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"], \\
-& ["city", "LA"], ["zip", 90003], ["LegalPerson\_address", 20]) )\\
+& \mathbf{row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], }\\
+& \mathbf{["city", "NY"], ["zip", 10001], ["LegalParty\_address", 10]}) \\
+& \mathbf{row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"],} \\
+& \mathbf{["city", "LA"], ["zip", 90003], ["LegalParty\_address", 20])} )\\
 \}
 \end{align*}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \begin{align*}
-& \oplus AddAssociation("Person", \\
-& assoc("address", "Address\_tmp2", 1, 1), \varnothing) \\
+	S_5 &= S_4 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
+& 
 \end{align*}
 \hline
 \begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
-& assoc("address", "Address\_tmp1", 1, 1), assoc("address", "Address\_tmp2", 1, 1)), \\ 
-& cl(LegalPerson, pr(businessName, APPSTRING, \varnothing),\\
-& assoc("address", "Address\_tmp2", 1, 1), assoc(\mathbf{"address"}, "Address\_tmp1", 1, 1)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
-& cl("Address\_tmp2", pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
-& )
+a' &=app(cl(Person, pr(surname, APPSTRING, \varnothing), \\ 
+& \mathbf{assoc("address", "Address", 1, 1)}), \\ 
+& cl(LegalParty, pr(businessName, APPSTRING, \varnothing),\\
+& \mathbf{assoc("address", "Address", 1, 1)}), \\
+& \mathbf{cl("Address", pr(street, APPSTRING, \varnothing),} \\
+& \mathbf{pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing)}
 \end{align*}
 \begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing)) \\
-& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("address", "Person", \varnothing), fk("address", "LegalPerson", \varnothing))\\
-& tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("LegalPerson\_address", "LegalPerson", \varnothing), fk("Person\_address", "Person", \varnothing))\\
-) 
+t &=db(tab("Person", pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& tab("LegalParty", pk("Id"),  \\
+& col(businessName, DBSTRING, \varnothing, \varnothing), \varnothing), \\
+& \mathbf{tab("Address", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing)},\\
+& \mathbf{col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing)} \\
+& \mathbf{fk("person\_address", "Person", \varnothing)},\\
+& \mathbf{fk("LegalParty\_address", "LegalParty", \varnothing)}) 
 \end{align*}
 \begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
+r &= (row("person", ["Id", 1], ["surname", "Griffin"]), \\
 & row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\ 
-& ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
-& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
-& ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
-& row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], \\
-& ["city", "NY"], ["zip", 10001], ["LegalPerson", 10]) \\
-& row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"], \\
-& ["city", "LA"], ["zip", 90003], ["LegalPerson", 20]) )\\
-\}
+& row("LegalParty", ["Id", 10], \\
+& ["businessName", "Tools and Machines ltd."]), \\
+& row("LegalParty", ["Id", 20], ["businessName", "Doe"])\\
+& \mathbf{row("address", ["Id", 1], ["street", "S. Mary Evenue 22"]}, \\ 
+& \mathbf{["city", "NY"], ["zip", 10001], ["Person", 1])} \\
+& \mathbf{row("address", ["Id", 2], ["street", "Olive ave. 2225"],} \\
+& \mathbf{["city", "LA"], ["zip", 90003], ["Person", 2])} )\\
+& \mathbf{row("address", ["Id", 3], ["street", "Hill stret 22"], }\\
+& \mathbf{["city", "NY"], ["zip", 10001], ["LegalParty\_address", 10]}) \\
+& \mathbf{row("address", ["Id", 4], ["street", "Pine ave. 2225"],} \\
+& \mathbf{["city", "LA"], ["zip", 90003], ["LegalParty\_address", 20])} ))
 \end{align*}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-\begin{align*}
-& \oplus AddAssociation("LegalPerson", \\
-& assoc("address", "Address\_tmp1", 1, 1),\varnothing) \\
-\end{align*}
-\hline
-\begin{align*}
-a' & \;\;\;\;\;\; =app(cl(Person, (pr(surname, APPSTRING, \varnothing)), \\ 
-& assoc("address", "Address\_tmp1", 1, 1)), \\ 
-& cl(LegalPerson, pr(businessName, APPSTRING, \varnothing),\\
-& assoc("address", "Address\_tmp2", 1, 1), assoc(\mathbf{"address"}, "Address\_tmp1", 1, 1)), \\
-& cl("Address\_tmp1", pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing) \\
-& cl("Address\_tmp2", pr(street, APPSTRING, \varnothing), \\
-& pr(city, APPSTRING, \varnothing), pr(zip, APPSTRING, \varnothing), \varnothing)
-& )
-\end{align*}
-\begin{align*}
-t & \;\;\;\;\;\; =db(tab(Person, pk("Id"), col(surname, DBSTRING, \varnothing, \varnothing), \varnothing), \\
-& tab(LegalPerson, pk("Id"),  col(businessName, DBSTRING, \varnothing, \varnothing)) \\
-& tab("Address\_tmp1", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("Person\_address", "Person", \varnothing), fk("LegalPerson\_address", "LegalPerson", \varnothing))\\
-& tab("Address\_tmp2", pk("Id"), col(street, DBSTRING, \varnothing, \varnothing),\\
-& col(city, DBSTRING, \varnothing, \varnothing), col(zip, DBSTRING, \varnothing, \varnothing) \\
-& fk("LegalPerson\_address", "LegalPerson", \varnothing))\\
-) 
-\end{align*}
-\begin{align*}
-r & \;\;\;\;\;\; =\{ row("person", ["Id", 1], ["surname", "Griffin"]), \\
-& row("person", ["Id", 2], ["surname", "Doe"]), \\
-& row("legalPerson", ["Id", 10], ["businessName", "Tools and Machines ltd."]), \\
-& row("legalPerson", ["Id", 20], ["businessName", "Doe"])\\
-& row("address\_tmp1", ["Id", 1], ["street", "S. Mary Evenue 22"], \\ 
-& ["city", "NY"], ["zip", 10001], ["Person", 1]) \\
-& row("address\_tmp1", ["Id", 2], ["street", "Olive ave. 2225"], \\
-& ["city", "LA"], ["zip", 90003], ["Person", 2]) )\\
-& row("address\_tmp2", ["Id", 10], ["street", "Hill stret 22"], \\
-& ["city", "NY"], ["zip", 10001], ["LegalPerson", 10]) \\
-& row("address\_tmp2", ["Id", 20], ["street", "Pine ave. 2225"], \\
-& ["city", "LA"], ["zip", 90003], ["LegalPerson", 20]) )\\
-\}
-\end{align*}
+
+
 
 
 
