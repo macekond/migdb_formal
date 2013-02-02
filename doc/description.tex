@@ -1206,7 +1206,7 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 &	\Psi(s, merge(l_1, l_2, l_n)) = \\
 & \;\;\;\;\;\; = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\ \wedge columns(t_1) = columns(t_2)\\
 \forall f \in (foreignKeys(t_1) \cup foreignKey(t_2)) \\ \setminus (foreignKey(t_1) \cap foreignKey(t_2)) \\ : NOTNULL \not \in constraints(f)  }{\begin{gathered}
-	state(database(s)) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1)) \\ 
+	state(database(s)) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1) \cup foreignKeys(t_2)  ) \\ 
 \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ n =  row(l_n, next(seq(key(l_n))), pairs(r)), insertRow(l_n, n) \\ 
 \bullet (\forall k \in data(database(s)), f \in foreignKeys(k) \\ \wedge reference(f) = reference(r) \\ \wedge value(select(name(f), k)) = pkValue(r) : \\value(select(name(f), k)) = pkValue(n))) \\  \bullet dropTableAndData(l_1) \bullet dropTableAndData(l_2)
  \end{gathered}} \\\\
