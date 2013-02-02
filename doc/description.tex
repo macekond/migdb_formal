@@ -783,12 +783,12 @@ c.name = l_n
 
 \paragraph{Copy Value} The function copy value from one column in a table to another column in the same or in another table - according to provided mapping. First argument of the transformation is the name of the source table, the second one is the target table, then there are names of source column and target column, finally the mapping between rows (stored instances) has to be provided.
 \begin{align*}
-&	\mathbf{copyValue} : Label \times Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
-&	copyValue(l_s, l_t, l_{sc}, l_{tc} o_{l_s, l_t}, d) = \\
+&	\mathbf{copyValue} : Label \times Label \times Label \times Label \times M \times State \rightarrow \\ & \;\;\;\;\;\; \rightarrow Database \\
+&	copyValue(l_s, l_t, l_{sc}, l_{tc}, m_{l_s, l_t}, d) = \\
 & \;\;\;\;\;\; =	\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
-		\forall	p \in m_{l_s, l_t} :	d \bullet insertValue(name(second(p)), keyValue(second(p)), \\ [l_{tc},value(select(l_{sc}, first(p)))])
+		\forall	p \in m_{l_s, l_t} :	\\ state(d) \bullet insertValue(name(second(p)), \\ pkValue(second(p)), [l_{tc},value(select(l_{sc}, first(p)))])
 		\end{gathered}}\\
-& 	l_s, l_t, l_{sc}, l_{tc} \in Label, d \in Database
+& 	l_s, l_t, l_{sc}, l_{tc} \in Label, d \in Database, m_{l_s, l_t} \in M
 \end{align*}
 
 \paragraph{Copy rows} The function $copyRow$ creates a copy of a source table content in another table with the same structure. 
@@ -887,8 +887,8 @@ There are defined three transformations which are able to create a software: $ad
 &	\Phi(s, addProperty(l, p)) = \\
 & \;\;\;\;\;\; = \begin{cases}
     		\inference{cardinality(p) \leq 1}{database(s) \bullet addColumn(l, \rho(p,d), d)} \\ \\
-	    \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) \leq 1}{\begin{gathered}
-   database(s) \bullet addTable(\rho(p,d), d) \\ \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), value(primaryKey(r))])) 
+	    \inference{ \exists t \in tables(d) : name(t) = name(owningClass(p)) \\ \wedge mandatory(p) \wedge instantiated(owningClass(p)) \\ \wedge cardinality(p) > 1}{\begin{gathered}
+   database(s) \bullet addTable(\rho(p,d), d) \\ \bullet \forall r \in row(owningClass(p)) :\\ insertRow(row(name(p), ["value", defaultValue(p)], \\ [name(p), pkValue(r)])) 
     \end{gathered} } 
    \end{cases}\\
 &	s \in State, l \in Label, p \in Properties
@@ -897,30 +897,30 @@ There are defined three transformations which are able to create a software: $ad
 
 \paragraph{Add association} Adding an association into a database is complicated because of already existing instances. When an association between classes is added the instances of both classes has to be connected on the database level via foreign key or connection table. The information about pairing has to be provided by the user in form of set of instances pairs, because the model does not contain enough information. 
 \begin{align*}
-& \mathbf{addAsociation} : Label \times Association \times (Row \times Row) \times State \rightarrow State \\
+& \mathbf{addAsociation} : Label \times Association \times M \times State \rightarrow State \\
 & \Psi(s, addAsociation(l, a, m_{l_1, l_2})) = application(s) \circ addAssoc(l, a) \\
 & \Phi(s, addAsociation(l, a, m_{l_1, l_2})) = \\
 & \;\;\;\;\;\; = \begin{cases}
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l\\ 		\wedge name(t_t) = reference(a) \\ \wedge \forall f \in foreignKeys(t_t) \cup columns(t_t) \\: name(f) \neq name(a) \\ startCardinality(a) \leq 1}{\begin{gathered}
-		database(s) \\ \bullet addForeignKey(name(t_t), \rho(a,d), d) \\ \bullet \forall r \in m_{l_1, l_2} : \\
-		insertValue(name(t_t), value(primaryKey(second(r))), \\ [name(a), value(primaryKey(first(r)))])
+		database(s) \\ \bullet addForeignKey(name(t_t), \rho(a,d), d) \\ \bullet (\forall r \in m_{l_1, l_2} : 
+		insertValue(\\ name(t_t), pkValue(second(r)), \\ [name(a), pkValue(first(r))]))
 	\end{gathered}}
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
-	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet \forall r \in m_{l, reference(a)} :
-	\\ insertRow(\\ row(name(owningClass(a)) + name(a), \\ [name(t_s), value(primaryKey(first(r)))]\\ [name(t_t), value(primaryKey(second(r)))]))
+	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet (\forall r \in m_{l, l_2} :
+	 insertRow(\\ row(name(owningClass(a)) + name(a), \\ [name(t_s), pkValue(first(r))]\\ [name(t_t), pkValue(second(r))])))
 	\end{gathered}} 
 \end{cases}\\
-& s \in Software, l_1, l_2 \in Label, m_{l, reference(a)} \wedge l_2 = reference(a)
+& s \in Software, l, l_2 \in Label, m_{l, l_2} \in M \wedge l_2 = reference(a)
 \end{align*} 
 
 \paragraph{Add Class} The $insertClass$ operation changes the structure of the database schema only, because the $insertAssoc$ transformation needs a mapping function to work properly, which is not part of the $addClass$ definition. The situation reflect the modeling praxis when the structure of a class is defined and then its associations are created.
 \begin{align*}
 & \mathbf{addClass} : Class \times State \rightarrow State \\
-& \Psi(s, addClass(c)) = application(s) \circ addClass(c) \\
-& \Phi(s, addClass(c)) = database(s)  \bullet addTable(\rho(c,d)) \\ 
+& \Psi(s, addClass(c)) = state(application(s)) \circ addClass(c) \\
+& \Phi(s, addClass(c)) = state(database(s))  \bullet addTable(\rho(c,d)) \\ 
 & \bullet addColumn(name(c), \{\forall r \in singleProperties(c) | \rho(r,d)\}, database(s)) \\
-& \bullet addTable(name(c), \{\forall r \in collections(c) | \rho(r,database(s))\})  \\
+& \bullet addTable(name(c), \{\forall r \in collections(c) | \rho(r,database(s))\})  \\\\
 & s \in Software, c \in Class
 \end{align*}
 
@@ -931,37 +931,37 @@ There are defined three transformations which are able to create a software: $ad
 The removal of class, property or association is limited only by the constraints given in application or database transformations. The main constraint is there has to be no data, which can be lost during removal. 
 \paragraph{Remove class}
 \begin{align*}
-&	\mathbf{RemoveClass}: Label \times Software \rightarrow State  \\
-&	\Psi RemoveClass(l, s) = applications(s) \circ remClass(l) \\
-&	\Phi RemoveClass(l, s) = database(s) \bullet dropTable(l) \\
+&	\mathbf{RemoveClass}: Label \times State \rightarrow State  \\
+&	\Psi RemoveClass(l, s) = state(applications(s)) \circ remClass(l) \\
+&	\Phi RemoveClass(l, s) = state(database(s)) \bullet dropTable(l) \\\\
 &	l \in Label, s \in Software 
 \end{align*}
 
 \paragraph{Remove property}
 \begin{align*}
 &	\mathbf{RemoveProperty} : Label \times Label \times State \rightarrow State \\
-&	\Psi RemoveProperty(l, l_p, s) =  applications(s) \circ  remProp(l, l_p) \\
+&	\Psi RemoveProperty(l, l_p, s) =  state(applications(s)) \circ  remProp(l, l_p) \\
 &	\Phi RemoveProperty(l, l_p, s) = \\
 & \;\;\;\;\;\; =\begin{cases}
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
-		\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet dropColumn(l, l_p)}  \\\\
+		\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{state(database(s)) \bullet dropColumn(l, l_p)}  \\\\
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
-		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{database(s) \bullet dropTable(name(owningClass(p)+l)}
- 	\end{cases}\\
-&	l, l_p \in Label, s \in State
+		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{state(database(s)) \bullet dropTable(name(owningClass(p)+l)}
+ 	\end{cases}\\\\
+&	l, l_p \in Label, s \in Software
 \end{align*}
 
 \paragraph{Remove Property and its Data} The $RemovePropertyAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemovePropertyAndData$ should be used carefully.
 \begin{align*}
 &	\mathbf{RemovePropertyAndData} : Label \times Label* \times State \rightarrow State \\
-&	\Phi(RemovePropertyAndData(L_c, ps), s) = application(s)\\ 
+&	\Phi(RemovePropertyAndData(L_c, ps), s) = state(application(s)) \\ 
 &  \circ remProperty(l_s, ps) \\
 &	\Psi(RemovePropertyAndData(L_c, ps), s) = \\
 & \;\;\;\;\;\; = \begin{cases}
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered} database(s) \\ \bullet RemovePropertyAndData(L_c, head(ps)) \\ \bullet RemovePropertyAndData(L_c, tail(ps)) 	\end{gathered}}\\\\
- 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{database(s) \bullet DropColumnAndData(l_c, ps)}\\\\
- 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{database(s) \bullet RemoveTableAndData(name(owningClass(p))+l_c, ps)}
+ 		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{state(database(s)) \bullet DropColumnAndData(l_c, ps)}\\\\
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{state(database(s)) \bullet RemoveTableAndData(name(owningClass(p))+l_c, ps)}
  \end{cases}
 	\\
 &	l_c \in Label, ps = \{x | x \in Label\}, s \in State
@@ -970,15 +970,15 @@ The removal of class, property or association is limited only by the constraints
 \paragraph{Remove association} 
 \begin{align*}
 &    \mathbf{RemoveAssociation} : Label \times Labels \times State \rightarrow State \\ 
-&    \Psi RemoveAssociation(l, l_a, s) = application(s) \circ remAss(l, l_a) \\
+&    \Psi RemoveAssociation(l, l_a, s) = state(application(s)) \circ remAss(l, l_a) \\
 &    \Phi RemoveAssociation(l, l_a, s) = \\
 & \;\;\;\;\;\; =\begin{cases}
      	\inference{\exists c \in classes(application(s)) : name(c) = l \\
      	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
-     	\wedge startCardinality(a) \leq 1 \\}{database(s) \bullet dropForeignKey(l_a, reference(a))} \\\\
+     	\wedge startCardinality(a) \leq 1 \\}{state(database(s)) \bullet dropForeignKey(l_a, reference(a))} \\\\
      	\inference{\exists c \in classes(application(s)) : name(c) = l \\
      	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
-     	\wedge startCardinality(a) > 1}{database(s) \bullet dropTable(name(owningClass(a))+l_a)} 
+     	\wedge startCardinality(a) > 1}{state(database(s)) \bullet dropTable(name(owningClass(a))+l_a)} 
      \end{cases}\\
 &    l_c, l_a \in Labels, s \in State
 \end{align*}
@@ -986,18 +986,18 @@ The removal of class, property or association is limited only by the constraints
 \paragraph{Remove Association and its Data} The $RemoveAssociationAndData$ transformation helps to remove a property together with data stored in the database. The evolution can cause data and information lost, to prevent this the transformation $RemoveAssociationAndData $ should be used carefully.
 \begin{align*}
 &	\mathbf{RemoveAssociationAndData} : Label \times Label* \times State \rightarrow State \\
-&	\Phi(RemoveAssociationAndData(L_c, ps), s) = application(s)\\ 
+&	\Phi(RemoveAssociationAndData(L_c, ps), s) = state(application(s))\\ 
 & \circ remAssociation(l_s, ps) \\
 &	\Psi(RemoveAssociationAndData(L_c, ps), s) = \\
 & \;\;\;\;\;\; = \begin{cases}
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered}			database(s) \\ \bullet RemoveAssociationAndData(L_c, head(ps)) \\ \bullet RemoveAssociationAndData(L_c, tail(ps)) \end{gathered}}\\\\
  		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(p) \leq 1}{\begin{gathered}
-	database(s) \\ \bullet RemoveForeignKeyAndData(reference(a), ps)
+	state(database(s)) \\ \bullet RemoveForeignKeyAndData(reference(a), ps)
 \end{gathered}}
  		\\\\
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(a) > 1}{\begin{gathered}
-	database(s) \\\bullet RemoveTableAndData(l_c + reference(a), ps)
+	state(database(s)) \\\bullet RemoveTableAndData(l_c + reference(a), ps)
 \end{gathered}}
  \end{cases}
 	\\
@@ -1010,23 +1010,23 @@ Alternation of a software is limited to renaming functions in our model.
 \paragraph{Rename Class}
 \begin{align*}
 & \mathbf{RenameClass} : Label \times Label \times State \rightarrow State \\ 
-& \Psi(RenameClass(l_o, l_n), s) = application(s) \circ renClass(l_o, l_n) \\
-& \Phi(RenameClass(l_o, l_n), s) = database(s) \bullet alterTable(l_o, l_n) \\ \\
+& \Psi(RenameClass(l_o, l_n), s) = state(application(s)) \circ renClass(l_o, l_n) \\
+& \Phi(RenameClass(l_o, l_n), s) = state(database(s)) \bullet alterTable(l_o, l_n) \\ \\
 \end{align*}
 
 \paragraph{Rename Property}
 \begin{align*}
 &	\mathbf{RenameProperty} : Label \times Label \times Label \times State \rightarrow State \\ \\
-& \Psi(RenameProperty(l_c, l_o, l_n, s)) = application(s) \circ renProp(l_c, l_o, l_n) \\
+& \Psi(RenameProperty(l_c, l_o, l_n, s)) = state(application(s)) \circ renProp(l_c, l_o, l_n) \\
 & \Phi(RenameProperty(l_c, l_o, l_n, s)) = \\
 & \;\;\;\;\;\; =\begin{cases}
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l_o \\
- 	cardinality(p) \leq 1}{database(s) \bullet alterColumn(l_c, l_o, l_n))} \\\\
+ 	cardinality(p) \leq 1}{state(database(s)) \bullet alterColumn(l_c, l_o, l_n))} \\\\
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l_o \\
  	cardinality(p) > 1}{\begin{gathered}
-		database(s)\\ \bullet alterTable(name(owningClass(p)+l_o, \\l_n, database(s))
+		state(database(s)) \\ \bullet alterTable(name(owningClass(p)+l_o, \\l_n, database(s))
 \end{gathered}}
  \end{cases}\\
 & l_c, l_o, l_n \in Label,  s \in State
@@ -1037,19 +1037,19 @@ Alternation of a software is limited to renaming functions in our model.
 \paragraph{Rename Association}
 \begin{align*}
 & \mathbf{RenameAssociation} : Label \times Label \times Label \times State \rightarrow State \\
-& \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = application(s) \circ renAssoc(l_c, l_o, l_n)\\
+& \Psi(RenameAssocaiation(l_c, l_o, l_n), s) = state(application(s)) \\ &\;\;\;\;\;\;  \circ renAssoc(l_c, l_o, l_n)\\
 & \Phi(RenameAssocaiation(l_c, l_o, l_n), s) = \\
 & \;\;\;\;\;\; =\begin{cases}
-	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
-		\wedge \exists a \in associations(c) : name(a) = l_o 
-	\\ \wedge startCardinality(a) > 1 }{\begin{gathered}
-		database(s) \\ \bullet alterTable(name(owningClass(a)) + l_o, l_n)
-\end{gathered}}\\ \\
   \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists a \in associations(c) : name(a) = l_o 
 	\\ \wedge startCardinality(a) \leq 1 }{\begin{gathered}
-database(s) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
-\end{gathered}}
+state(database(s)) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
+\end{gathered}}\\ \\
+	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
+		\wedge \exists a \in associations(c) : name(a) = l_o 
+	\\ \wedge startCardinality(a) > 1 }{\begin{gathered}
+		state(database(s)) \\ \bullet alterTable(name(owningClass(a)) + l_o, l_n)
+\end{gathered}}\\ 
  \end{cases} \\
 &	l_c, l_o, l_n \in Label, a \in Application, s : Sate
 \end{align*}
@@ -1062,30 +1062,32 @@ There are two possible implementation of transformation for copying property, fi
 \begin{align*}
 &	\mathbf{CopyPropertyStructure} : Label \times Label \times Label \times State \rightarrow State \\
 &	\Psi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
-& \;\;\;\;\;\; =\inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
+& \;\;\;\;\;\; =\inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{state(application(s)) \circ addProp(l_t, p)} 
 	\\\\
 &	\Phi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
 & \;\;\;\;\;\; =\begin{cases}
     \inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
-			database(s) \bullet copyColumn(l_s, l_t, l_p) 			\end{gathered}} \\ \\
+			state(database(s)) \bullet copyColumn(l_s, l_t, l_p) 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) 			\end{gathered}}
+			state(database(s)) \bullet copyTable(l_s + l_p, l_t + l_p) 			\end{gathered}}
  \end{cases}\\
 & l_s, l_t, l_p \in Label, s \in State
 \end{align*}
 
 \begin{align*}
 &	\mathbf{CopyProperty} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
-&	\Psi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{application(s) \circ addProp(l_t, p)} 
+&	\Psi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \\
+& \;\;\;\;\;\; = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{state(application(s)) \circ addProp(l_t, p)} 
 	\\\\
-&	\Phi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \begin{cases}
+&	\Phi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \\
+& \;\;\;\;\;\; = \begin{cases}
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
-			database(s) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValue(l_s, l_t, l_p, l_p, m_{l_s, l_t}) 
+			state(database(s)) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValue(l_s, l_t, l_p, l_p, m_{l_s, l_t}) 
 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			database(s) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRow(l_s + l_p, l_t + l_p, m_{l_s, l_t}) 
+			state(database(s)) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRow(l_s + l_p, l_t + l_p, m_{l_s, l_t}) 
 			\end{gathered}}
- \end{cases}\\
+ \end{cases}\\\\
 & l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \in State
 \end{align*}
 With the copy property transformation defined we are able to define advanced evolution scenarios.
@@ -1099,15 +1101,15 @@ The refactoring cases presented in this section were chosen according to the ref
 \paragraph{Move Property}
 The aim of the move property transformation is to change two classes - one will get a new property, the other will lost a property. An example of such transformation is merging information from one class to another. The implementation of move property transformation is based on copy property transformation. Its inputs are the name of source class, the name of target class and the sequence of names of properties to be moved from source to target, finally the mapping between instances of source and target class.
 \begin{align*}
-&	\mathbf{MoveProperty} : Label \times Label \times Label* \times (Row \times Row) \times State \rightarrow State \\
-&	s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) =
+&	\mathbf{MoveProperty} : Label \times Label \times Label* \times M \times State \rightarrow State \\
+&	s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) = \\
 % \begin{cases}
 %	\inference{|ps| = \varnothing}{state(s)}\\\\
 %	\inference{|ps| > 1}{\begin{gathered} 	s \oplus MoveProperty(l_s, l_t, head(ps), m_{l_s, l_t}) \\ \oplus MoveProperty(l_s, l_t, tail(ps), m_{l_s, l_t}) \end{gathered}}
- 	\inference{|ps| = 1 }{\begin{gathered} s \oplus CopyProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemovePropertyAndData(l_s, ps)
+& \;\;\;\;\;\; = 	\inference{|ps| = 1 }{\begin{gathered} s \oplus CopyProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemovePropertyAndData(l_s, ps)
 \end{gathered}}
 % \end{cases}
-	\\
+	\\ \\
 &	l_s, l_t \in Label, ps \in Label*,  m_{l_s, l_t} \in M, s \in State
 \end{align*}
 Although the $MoveProperty$ transformation contains the transformation $RemovePropertyData$ its execution preserve data and information as the information has been already copied. 
@@ -1115,49 +1117,52 @@ Although the $MoveProperty$ transformation contains the transformation $RemovePr
 \paragraph{Extract and Inline Class}
 The extract and inline class are two opposite transformations. First of them extract a class from existing class, second of them merges two classes into one.
 \begin{align*}
-&	\mathbf{Extract} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
-&	s \oplus Extract(l_s, l_n, ps, m_{l_s, l_s}) = \begin{cases}
+&	\mathbf{Extract} : Label \times Label \times Label \times M \times State \rightarrow State \\
+&	s \oplus Extract(l_s, l_n, ps, m_{l_s, l_s}) = %\begin{cases}
 	\inference{|ps| = 1}{\begin{gathered}
 		s \oplus addClass(cl(l_n, \varnothing, \varnothing)) \\ \oplus MoveProperty(l_s, l_n, ps, m_{l_s, l_s}) \end{gathered}}\\\\
 	%\inference{|ps| > 1}{\begin{gathered} 	s \oplus Extract(l_s, head(ps), l_n) \\\oplus Extract(l_s, tail(ps), l_n) \end{gathered}}\\\\
 	% \inference{|ps| = \varnothing}{state(s)}	 
- \end{cases}
-	\\
-&	l_s, l_n \in Label, ps ={ x | x  \in Label},  s \in State 
+ %\end{cases}
+\\\\
+&	l_s, l_n \in Label, ps ={ x | x  \in Label},  s \in State, m_{l_s, l_s} \in M
 \end{align*}
 The opposite transformation $Inline$ gets the name of a class to inline and the name of target class. The result of the transformation is a merge of information from two classes in the target class, the source class is removed. The important condition of feasibility is there is no name collision among properties in both classes.
 \begin{align*}
-&	\mathbf{Inline} : Label \times Label \times (Row \times Row) \times State \rightarrow State \\
+&	\mathbf{Inline} : Label \times Label \times M \times State \rightarrow State \\
 &	s \oplus Inline(l_s, l_t, m_{l_s, l_t}) = \\
 & \;\;\;\;\;\; =\inference{\exists c_s \in classes(application(s)) : name(c_s) = l_s \\
 \wedge \exists c_t \in classes(application(s)) : name(c_t) = l_t \\
-\wedge \forall p_s \in properties(c_s), p_t \in properties(c_t) : name(ps) \neq name(p_t) \\
+\wedge \forall p_s \in properties(c_s), p_t \in properties(c_t) :\\  name(ps) \neq name(p_t) \\
 \wedge !\:associated(l_s, s)   }{\begin{gathered}
 	s \oplus MoveProperty(l_s, l_t, ps, m_{l_s, l_t}) \\ \oplus RemoveClass(l_s) 
 \end{gathered}
-}\\
+}\\\\
 & l_s, l_t \in Label, m_{l_s, l_t} \in M, s \in State, \\ 
-& ps = \{x | x \in \forall c \in classes(application(s)) : \forall p \in properries(c) : name(p))\}
+& ps = \{x | x \in (\forall c \in classes(application(s)) : \\ 
+& \;\;\;\;\;\; \forall p \in properries(c) : name(p)))\}
 \end{align*}
 
 \paragraph{Merge of Classes} There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) is equals. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
 \begin{align*}
 &	\mathbf{Merge} : Label \times Label \times Label \times State \rightarrow State \\
-&	\Phi(s, Merge(l_1, l_2, l_n) = \inference{
+&	\Phi(s, Merge(l_1, l_2, l_n) = \\
+& \;\;\;\;\;\; = \inference{
 		\exists c_1, c_2 \in classes(application(s)) \wedge 
 		equals(c_1, c_2)}{\begin{gathered}
-			application(s) \\ \circ addClass(cl(ln, properties(c_1), associations(c_1)) \\
+			state(application(s)) \\ \circ addClass(cl(ln, properties(c_1), associations(c_1)) \\
 			\circ (\forall c \in classes (application(s)), a \in associations(c) \\
 			reference(a) = c_1 \vee reference(a) = c_2 : \\
 			reference(a) = l_n) \\
 			\circ renClass(l_1) \circ renClass(l_2) \end{gathered}}
  \\\\
-&	\Psi(s, merge(l_1, l_2, l_n)) = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\ \wedge columns(t_1) = columns(t_2)\\
+&	\Psi(s, merge(l_1, l_2, l_n)) = \\
+& \;\;\;\;\;\; = \inference{\exists t_1, t_2 \in tables(database(s)) : \\ name(t_1) = l_1 \wedge name(t_2) = l_2 \\ \wedge columns(t_1) = columns(t_2)\\
 \forall f \in (foreignKeys(t_1) \cup foreignKey(t_2)) \\ \setminus (foreignKey(t_1) \cap foreignKey(t_2)) \\ : NOTNULL \not \in constraints(f)  }{\begin{gathered}
-	 database(s) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1)) \\ 
+	state(database(s)) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1)) \\ 
 \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ n =  row(l_n, next(seq(key(l_n))), pairs(r)), insertRow(l_n, n) \\ 
 \bullet (\forall k \in data(database(s)), f \in foreignKeys(k) \\ \wedge reference(f) = reference(r) \\ \wedge value(select(name(f), k)) = pkValue(r) : \\value(select(name(f), k)) = pkValue(n))) \\  \bullet dropTableAndData(l_1) \bullet dropTableAndData(l_2)
- \end{gathered}} \\
+ \end{gathered}} \\\\
  & l_1, l_2, l_n \in Label, s \in State
 \end{align*}
 
