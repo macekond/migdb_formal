@@ -442,7 +442,7 @@ There are defined functions for object-relational mapping used in this paper. Th
 & 	\rho_{t}(APPSTRING) = DBSTRING 
 \end{align*}
 
-\paragraph{Mapping of Names} There can occur situations when a consistent application could be mapped into an inconsistent database because of name collisions or the name can collide with some internal database construct (which are not right now implemented in the model).
+\paragraph{Mapping of Names} There can occur situations when a consistent application could be mapped into an inconsistent database because of name collisions or the name can collide with some internal database construct (which are not right now implemented in the model). Very simple mapping is provided - name of classes are mapped directly, whereas names of properties and associations are mapped as concatenation of name of theirs owning class and the name of the property (association), this prevents name collisions in the database schema. The mapping of names is implicit and it is not mentioned in this paper to increase readability.
 
 
 
@@ -489,12 +489,12 @@ There can occur name collision during mapping in case there are more classes wit
      	\inference{|p| = 1 \wedge cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
      		\wedge 	\exists t = table(name(owningClass(p)), d)
      		}{\begin{gathered}
-     			tab(name(t)+name(p), primaryKey("Id"), \\ col("value", \rho_t(type(p)), \varnothing), \\ fk(name(p), 			name(owningClass(p)), NOTNULL) \\
+     			tab(name(p), primaryKey("Id"), \\ col("value", \rho_t(type(p)), \varnothing), \\ fk(name(p), 			name(owningClass(p)), NOTNULL) \\
     	\end{gathered}}\\ \\
      	\inference{|p| = 1 \wedge  cardinality(p) > 1 \wedge mandatory(p) \\ 
      		\wedge \exists t = table(name(owningClass(p)), d) 
      		}{\begin{gathered}  
-     			tab(name(t)+name(p), primaryKey("Id"), \\ 
+     			tab(name(p), primaryKey("Id"), \\ 
      			col("value", \rho_t(type(p)), NOTNULL), \\ 			fk(name(p), name(owningClass(p)), NOTNULL)
     	 \end{gathered}}
  	\end{cases}\\
@@ -509,12 +509,12 @@ There can occur name collision during mapping in case there are more classes wit
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
 		\inference{|a| = 1 \wedge  startCardinality(a) = 0 \\ \wedge \exists t \in table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
 		}{
-			foreignKey(name(a), name(t),  \varnothing) 
+			fk(name(a), name(t),  \varnothing) 
 	 	}
   \\ \\
- 	 \inference{|a| = 1 \wedge  startCardinality(a) = 1 \\ \wedge \exists t = table(name(owningClass(p)), d) \\ \wedge \exists u \in tables(d) : name(u = reference(a)
+ 	 \inference{|a| = 1 \wedge  startCardinality(a) = 1 \\ \wedge \exists t = tab(name(owningClass(p)), d) \\ \wedge \exists u \in tables(d) : name(u = reference(a)
  	 }{ 
-		foreignKey(name(a), name(t),  NOTNULL)
+		fk(name(a), name(t),  NOTNULL)
 	}	 \end{cases}
 \\
 &	 a \in Association
@@ -527,7 +527,7 @@ There can occur name collision during mapping in case there are more classes wit
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
 		\inference{|a| = 1 \wedge   startCardinality > 1 \\ \wedge \exists t \in tables(d) : name(owningClass(p)) = name(t) \\ \wedge \exists e \in tables(d) : name(reference(a)) = name(e)
   		}{\begin{gathered}  
-		 table(name(t)+name(a), pk("Id"), \varnothing, \\ fk(name(owningClass(a)), \\ name(owningClass(a)), NOTNULL) \\ fk(reference(a), reference(a), NOTNULL)) 
+		 table(name(a), pk("Id"), \varnothing, \\ fk(name(owningClass(a)), \\ name(owningClass(a)), NOTNULL) \\ fk(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
  	%\end{cases}
 \\
@@ -945,7 +945,7 @@ There are defined three transformations which are able to create a software: $ad
  \\ \\
 	\inference{ \exists t_s, t_t \in tables(d) : name(t_s) = l \\ \wedge name(t_t) = reference(a) \\ \wedge startCardinality(a) > 1}{\begin{gathered} 
 	database(s) \bullet addTable(\rho(a,d),d) \\ \bullet (\forall r \in m_{l, l_2} :
-	 insertRow(\\ row(name(owningClass(a)) + name(a), \\ [name(t_s), pkValue(first(r))]\\ [name(t_t), pkValue(second(r))])))
+	 insertRow(\\ row(name(a), \\ [name(t_s), pkValue(first(r))]\\ [name(t_t), pkValue(second(r))])))
 	\end{gathered}} 
 \end{cases}\\
 & s \in Software, l, l_2 \in Label, m_{l, l_2} \in M \wedge l_2 = reference(a)
@@ -983,7 +983,7 @@ The removal of class, property or association is limited only by the constraints
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{state(database(s)) \bullet dropColumn(l, l_p)}  \\\\
 		 \inference{\exists c \in classes(application(s)) : name(c) = l\\ 
-		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{state(database(s)) \bullet dropTable(name(owningClass(p)+l)}
+		\wedge \exists p \in properties(c)  : name(p) = l \\ \wedge cardinality(p)>1}{state(database(s)) \bullet dropTable(l)}
  	\end{cases}\\\\
 &	l, l_p \in Label, s \in Software
 \end{align*}
@@ -998,7 +998,7 @@ The removal of class, property or association is limited only by the constraints
 		%\inference{ps = \varnothing}{d}\\
 		%\inference{|ps| > 1}{\begin{gathered} database(s) \\ \bullet RemovePropertyAndData(L_c, head(ps)) \\ \bullet RemovePropertyAndData(L_c, tail(ps)) 	\end{gathered}}\\\\
  		\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) \leq 1}{state(database(s)) \bullet DropColumnAndData(l_c, ps)}\\\\
- 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{state(database(s)) \bullet RemoveTableAndData(name(owningClass(p))+l_c, ps)}
+ 	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists p \in properties(c) : name(p) = l \\ \wedge cardinality(p) > 1}{state(database(s)) \bullet DropTableAndData(l_c, ps)}
  \end{cases}
 	\\
 &	l_c \in Label, ps = \{x | x \in Label\}, s \in State
@@ -1015,7 +1015,7 @@ The removal of class, property or association is limited only by the constraints
      	\wedge startCardinality(a) \leq 1 \\}{state(database(s)) \bullet dropForeignKey(l_a, reference(a))} \\\\
      	\inference{\exists c \in classes(application(s)) : name(c) = l \\
      	\wedge \exists a \in associaions(c) : name(a) = l_a  \\
-     	\wedge startCardinality(a) > 1}{state(database(s)) \bullet dropTable(name(owningClass(a))+l_a)} 
+     	\wedge startCardinality(a) > 1}{state(database(s)) \bullet dropTable(l, l_a)} 
      \end{cases}\\
 &    l_c, l_a \in Labels, s \in State
 \end{align*}
@@ -1034,7 +1034,7 @@ The removal of class, property or association is limited only by the constraints
 \end{gathered}}
  		\\\\
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 	\wedge \exists a \in associations(c) : name(a) = l \\ \wedge startCardinality(a) > 1}{\begin{gathered}
-	state(database(s)) \\\bullet RemoveTableAndData(l_c + reference(a), ps)
+	state(database(s)) \\\bullet RemoveTableAndData(l_c, ps)
 \end{gathered}}
  \end{cases}
 	\\
@@ -1063,7 +1063,7 @@ Alternation of a software is limited to renaming functions in our model.
  	\inference{\exists c \in classes(application(s)) : name(c) = l\\ 
 		\wedge \exists p \in properties(c) : name(p) = l_o \\
  	cardinality(p) > 1}{\begin{gathered}
-		state(database(s)) \\ \bullet alterTable(name(owningClass(p)+l_o, \\l_n, database(s))
+		state(database(s)) \\ \bullet alterTable(l_o, \\l_n, database(s))
 \end{gathered}}
  \end{cases}\\
 & l_c, l_o, l_n \in Label,  s \in State
@@ -1097,22 +1097,22 @@ All transformations described earlier does change primary the structure of an ap
 
 There are two possible implementation of transformation for copying property, first implementation $CopyPropertyStructure$ copies only the structure of a property on the database level, the second implementation $CopyProperty $ copies both structure and data of the property.
 \begin{align*}
-&	\mathbf{CopyPropertyStructure} : Label \times Label \times Label \times State \rightarrow State \\
+&	\mathbf{CopyPropertyStructure} : Label \times Label \times Label  \times Label \times State \rightarrow \\ &  \;\;\;\;\;\;  \;\;\;\;\;\;  \rightarrow State \\
 &	\Psi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
 & \;\;\;\;\;\; =\inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{state(application(s)) \circ addProp(l_t, p)} 
 	\\\\
-&	\Phi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
+&	\Phi(CopyPropertyStructure(l_s, l_t, l_p, l_n, s) = \\
 & \;\;\;\;\;\; =\begin{cases}
     \inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
-			state(database(s)) \bullet copyColumn(l_s, l_t, l_p) 			\end{gathered}} \\ \\
+			state(database(s)) \bullet copyColumn(l_s, l_t, l_p, l_n) 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			state(database(s)) \bullet copyTable(l_s + l_p, l_t + l_p) 			\end{gathered}}
- \end{cases}\\
+			state(database(s)) \bullet copyTable(l_p, l_n) 			\end{gathered}}
+ \end{cases}\\\\
 & l_s, l_t, l_p \in Label, s \in State
 \end{align*}
 
 \begin{align*}
-&	\mathbf{CopyProperty} : Label \times Label \times Label \times (Row \times Row) \times State \rightarrow State \\
+&	\mathbf{CopyProperty} : Label \times Label \times Label \times Label \times M \times State \rightarrow \\ &\;\;\;\;\;\; \;\;\;\;\;\;  \rightarrow State \\
 &	\Psi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \\
 & \;\;\;\;\;\; = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{state(application(s)) \circ addProp(l_t, p)} 
 	\\\\
@@ -1122,7 +1122,7 @@ There are two possible implementation of transformation for copying property, fi
 			state(database(s)) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValue(l_s, l_t, l_p, l_p, m_{l_s, l_t}) 
 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			state(database(s)) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRow(l_s + l_p, l_t + l_p, m_{l_s, l_t}) 
+			state(database(s)) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRow(l_p, l_n, m_{l_s, l_t}) 
 			\end{gathered}}
  \end{cases}\\\\
 & l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \in State
