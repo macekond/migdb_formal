@@ -771,17 +771,21 @@ c.name = l_n
 
 \paragraph{Copy Column} The transformation creates a copy of a column structure in a another table in the database. The transformation changes only the structure of database - stored data are not changed. The transformation inputs are the name of the table which is the source for the transformation, the name of a column to be copied and the name of the target table. It means the copy operation does not change the name of copied column during its execution. 
 \begin{align*}
-&	\mathbf{copyColumn} : Label \times Label \times Label \times Database \rightarrow Database \\
-&	copyColumn(l_s, l_t, l_c, d) = \begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_c}{d \bullet addColumn(l_t, c)} 
-	\end{cases} \\
+&	\mathbf{copyColumn} : Label \times Label \times Label \times Label \times Database \rightarrow Database \\
+&	copyColumn(l_s, l_t, l_c, l_n, d) = \\
+& \;\;\;\;\;\;=% \begin{cases}
+ 		\inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \exists c \in columns(t) : name(c) = l_c \\ \wedge \exists e \in tables(d) : name(e) = l_t  \\ \wedge \forall q \in properties(e) : name(q) \neq l_n}{\begin{gathered}
+d \bullet addColumn(l_t, col(l_n, type(c), constraints(c))
+\end{gathered}} 
+	%\end{cases} 
+	\\\\
 &	l_s,l_t,l_c \in Label \wedge l_s \neq l_t,d \in Database
 \end{align*}
 
-\paragraph{Copy Table} The transformation creates a copy of a table in database schema with a given name. The new name has to be different than the old one otherwise the transformation could not be processed.
+\paragraph{Copy Table Structure} The transformation creates a copy of a table in database schema with a given name. The new name has to be different than the old one otherwise the transformation could not be processed.
 \begin{align*}
 &	\mathbf{copyTable} : Label \times Label \times Database \times Database \\
-&	copyTable(l_s, l_t, d) = \inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \forall e \in tables(d) : name(e) \neq l_t}{\begin{gathered} d \bullet addTable(tab(l_t, primaryKey(t), \\ 
+&	copyTable(l_s, l_n, d) = \inference{\exists t \in tables(d) : name(t) = l_s \\ \wedge \forall e \in tables(d) : name(e) \neq l_n}{\begin{gathered} d \bullet addTable(tab(l_n, primaryKey(t), \\ 
  columns(t), foreignKeys(t)))
 \end{gathered}}\\
 & l_s, l_t \in Label,  d \in Database
@@ -1095,10 +1099,10 @@ state(database(s)) \\ \bullet alterForeignKey(endClass(a) ,l_c, l_o, l_n)
 \paragraph{Copy Property}
 All transformations described earlier does change primary the structure of an application. Therefore we define  the transformation for copying a property from one class to another. Copy property is the basic way to move data among instances of different classes. Note the transformation does not move a single value, but it move the values for all instances in the software.
 
-There are two possible implementation of transformation for copying property, first implementation $CopyPropertyStructure$ copies only the structure of a property on the database level, the second implementation $CopyProperty $ copies both structure and data of the property.
+There are two possible implementation of transformation for copying property, first implementation $CopyPropertyStructure$ copies only the structure of a property on the database level, the second implementation $CopyProperty $ copies both structure and data of the property. The copy is created with name ($l_n$), which can be the same or different than original name ($l_p$) possible name collision in database schema is eliminated due to the mapping of names between application and database schema.
 \begin{align*}
 &	\mathbf{CopyPropertyStructure} : Label \times Label \times Label  \times Label \times State \rightarrow \\ &  \;\;\;\;\;\;  \;\;\;\;\;\;  \rightarrow State \\
-&	\Psi(CopyPropertyStructure(l_s, l_t, l_p, s) = \\
+&	\Psi(CopyPropertyStructure(l_s, l_t, l_p, l_n, s) = \\
 & \;\;\;\;\;\; =\inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{state(application(s)) \circ addProp(l_t, p)} 
 	\\\\
 &	\Phi(CopyPropertyStructure(l_s, l_t, l_p, l_n, s) = \\
@@ -1113,16 +1117,20 @@ There are two possible implementation of transformation for copying property, fi
 
 \begin{align*}
 &	\mathbf{CopyProperty} : Label \times Label \times Label \times Label \times M \times State \rightarrow \\ &\;\;\;\;\;\; \;\;\;\;\;\;  \rightarrow State \\
-&	\Psi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \\
-& \;\;\;\;\;\; = \inference{\exists c \in classes(s) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p }{state(application(s)) \circ addProp(l_t, p)} 
+&	\Psi(CopyProperty(l_s, l_t, l_p, l_n, m_{l_s, l_t}), s) = \\
+& \;\;\;\;\;\; = \inference{\exists c \in classes(application(s)) : name(c) = l_s \\ \wedge \exists p \in properties(c) : name(p) = l_p \\ \wedge \exists c_2 \in classes(application(s)): name(c_2) = l_t \\
+\wedge \forall r \in properties(c_2): name(r) \neq l_n}{\begin{gathered}
+ state(application(s)) \circ addProp(l_t, \\ prop(l_n, type(p), defaultValue(p), \\ cardinality(p), mandatory(p)))
+\end{gathered}
+} 
 	\\\\
-&	\Phi(CopyProperty(l_s, l_t, l_p, m_{l_s, l_t}), s) = \\
+&	\Phi(CopyProperty(l_s, l_t, l_p, l_n, m_{l_s, l_t}), s) = \\
 & \;\;\;\;\;\; = \begin{cases}
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) \leq 1 }{\begin{gathered}
-			state(database(s)) \bullet copyColumn(l_s, l_t, l_p) \\ \bullet copyValue(l_s, l_t, l_p, l_p, m_{l_s, l_t}) 
+			state(database(s)) \bullet copyColumn(l_s, l_t, l_p, l_n) \\ \bullet copyValue(l_s, l_t, l_p, l_p, m_{l_s, l_t}) 
 			\end{gathered}} \\ \\
 		\inference{\exists p \in properties(c), c \in classes(s) : \\ name(p) = l_p \wedge cardinality(p) > 1}{\begin{gathered}
-			state(database(s)) \bullet copyTable(l_s + l_p, l_t + l_p) \\ \bullet copyRow(l_p, l_n, m_{l_s, l_t}) 
+			state(database(s)) \bullet copyTable(l_p, l_n) \\ \bullet copyRow(l_p, l_n, m_{l_s, l_t}) 
 			\end{gathered}}
  \end{cases}\\\\
 & l_s, l_t, l_p \in Label,  m_{l_s, l_t}) \in M, s \in State
