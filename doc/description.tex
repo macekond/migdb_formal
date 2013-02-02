@@ -552,6 +552,43 @@ This section provide transformations for manipulating the application layer of a
 %	l_c, l_a \in Label, a \in Application
 %\end{align*}
 
+\paragraph{Comparison of Structures} During the evolution there occur situations when the structure of two classes has to be compared.
+\begin{align*}
+& \mathbf{equals} : Class \times Class \rightarrow Boolean \\
+& equals(c_1, c_2) = \begin{cases}
+ 	\inference{|properties(c_1)| = |properties(c_2)| \\ \wedge
+ 	\forall p \in properties(c_1) \exists r \in properties(c_2): \\ equals(p, r) \\
+ 	|associations(c_1)| = |associations(c_2)| \\
+ 	\wedge \forall a \in associations(c_1) \exists b \in asccosiations(c_2): \\ equals(a,b) \\ }{true}\\\\
+ false
+ \end{cases}\\\\
+& c_1, c_2 \in Class
+\end{align*}
+\begin{align*}
+& \mathbf{equals} : Property \times Property \rightarrow Boolean \\
+& equals(p_1, p_2) = \begin{cases}
+	\inference{name(p_1) = name(p_2) \\
+	\wedge mandatory(p_1) = mandatory(p_2) \\
+	\wedge cardinality(p_1) = cardinality(p_2)}{true}
+ \\\\ false
+ \end{cases}\\\\
+& p_1, p_2 \in Property
+\end{align*}
+\begin{align*}
+& \mathbf{equals} : Association \times Association \rightarrow Boolean \\
+& equals(a_1, a_2) = \begin{cases}
+	\inference{name(a_1) = name(a_2)\\
+	\wedge reference(a_1) = reference(a_2) \\
+	\wedge startCardinality(a_1) = startCardinality(a_2) \\
+	\wedge endCardinaility(a_1) = endCardinality(a_2)
+	}{true}
+ \\\\ false
+ \end{cases}\\\\
+& a_1, a_2 \in Association
+\end{align*}
+
+
+
 \paragraph{Add Property} The name collision only has to be verified, before adding a property into an application structure. The transformation inputs are the property to be added and the name of the class the property is going to be added to.
 \begin{align*}
 & 	\mathbf{addProp} : Label \times Property \times Application \rightarrow Application \\
@@ -1143,7 +1180,7 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 & \;\;\;\;\;\; \forall p \in properries(c) : name(p)))\}
 \end{align*}
 
-\paragraph{Merge of Classes} There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) is equals. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
+\paragraph{Merge of Classes} There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) are equal. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
 \begin{align*}
 &	\mathbf{Merge} : Label \times Label \times Label \times State \rightarrow State \\
 &	\Phi(s, Merge(l_1, l_2, l_n) = \\
