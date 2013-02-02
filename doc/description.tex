@@ -1173,11 +1173,12 @@ The case study demonstrates how the transformation helps with data evolution in 
 To improve the design of code the class Address has to be created which associated with both original classes and contains the data already stored in the software. The evolution is defined in following text together with graphical illustrations of its processing. The whole evolution processing can be found in the appendix \ref{sec:caseStudy}.
 
 \begin{figure}
-\begin{subfigure}[b]{0.5\textwidth}
+\begin{subfigure}[b]{0.45\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_app_1}
 	\caption{The application model.}
 \end{subfigure}
-\begin{subfigure}[b]{0.5\textwidth}
+\quad
+\begin{subfigure}[b]{0.45\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_db_1}
 	\caption{The database model.}
 \end{subfigure}
@@ -1207,23 +1208,28 @@ To improve the design of code the class Address has to be created which associat
 
 The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalPerson$. Temporary classes has to be connected with the origin classes by an association. The result is shown in Figure \ref{fig:case2}.
 \begin{align*}
-S_1 & = state(S) \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
-& \oplus AddAssociation("Person", assoc("address", "Address\_tmp1", 1, 1),\\ 
-& \{(x,y)| x \in instances("Person", database(S)), \\
-& y \in instances("Address\_tmp1", database(S)) : pkVal(x) = pkVal(y) \}) \\
-& \oplus Extract("LegalPerson", "Address\_tmp2", "street", "city", "zip")  \\
-& \oplus AddAssociation("LegalPerson", \\ 
-& assoc("residentialAddress", "Address\_tmp2", 1, 1),\\ 
-& \{(x,y)| x \in instances("LegalPerson", database(S)), \\
-& y \in instances("Address\_tmp2", database(S)) : pkVal(x) = pkVal(y) \}) \\
+S_1 & = state(S) \\
+& \;\;\;\;\;\; \oplus Extract("Person", "Address\_tmp1", "street", "city", "zip") \\
+& \;\;\;\;\;\; \oplus AddAssociation("Person", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("address", "Address\_tmp1", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("Person", database(S)), \\
+& \;\;\;\;\;\; \;\;\;\;\;\; y \in instances("Address\_tmp1", database(S)) : \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) \\
+&\;\;\;\;\;\; \oplus Extract("LegalPerson", "Address\_tmp2", "street", \\
+& \;\;\;\;\;\;\;\;\;\;\;\; "city", "zip")  \\
+& \;\;\;\;\;\; \oplus AddAssociation("LegalPerson", \\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; assoc("residentialAddress", "Address\_tmp2", 1, 1),\\ 
+& \;\;\;\;\;\;\;\;\;\;\;\; \{(x,y)| x \in instances("LegalPerson", database(S)), \\
+& \;\;\;\;\;\;\;\;\;\;\;\; y \in instances("Address\_tmp2", database(S)) : \\
+& \;\;\;\;\;\;\;\;\;\;\;\; pkVal(x) = pkVal(y) \}) \\
 \end{align*}
 
 \begin{figure}
-\begin{subfigure}[b]{0.5\textwidth}
+\begin{subfigure}[b]{0.45\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_app_5}
 	\caption{The application model.}
 \end{subfigure}
-\begin{subfigure}[b]{0.5\textwidth}
+\begin{subfigure}[b]{0.45\textwidth}
 	\includegraphics[width=\textwidth]{./images/case_db_5}
 	\caption{The database model.}
 \end{subfigure}
@@ -1281,20 +1287,23 @@ The two temporary classes can be merged together as they have the same structure
 %& \oplus AddAssociation("LegalPerson", \\
 %& assoc("residentialAddress", "Address\_tmp1", 1, 1),\varnothing) \\
 %
-S_2 & \;\;\;\;\;\; =S_1 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
+S_2 &= S_1 \oplus Merge("Address\_tmp1", "Address\_tmp2", "Address") \\
 \end{align*}
 Finally the associations are renamed and the evolution end.
 \begin{align*}
-S_3 & \;\;\;\;\;\; =S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
+S_3 &= S_2  \oplus RenameAssociation("Person", "Address\_tmp1", "Address")\\
 & \oplus RenameAssociation("LegalPerson", "Address\_tmp2". "Address")\\
 \end{align*}
 
 \begin{figure}
-\begin{subfigure}[b]{0.5\textwidth}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
 	\includegraphics[width=\textwidth]{./images/case_app_9}
 	\caption{The application model.}
 \end{subfigure}
-\begin{subfigure}[b]{0.5\textwidth}
+\quad
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
 	\includegraphics[width=\textwidth]{./images/case_db_8}
 	\caption{The database model.}
 \end{subfigure}
