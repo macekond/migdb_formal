@@ -112,8 +112,8 @@ The application of a transformation on a software state (evolution) is marked by
 \end{align*}
 and similarly the $\circ$ and the $\bullet$ operators for evolving application and database:
 \begin{align*}
-& \circ \in Application \times AppT \rightarrow State \\
-& \bullet \in Database \times DbT \rightarrow State
+& \circ \in State \times AppT \rightarrow State \\
+& \bullet \in State \times DbT \rightarrow State
 \end{align*}
 The definition of the evolving operator is inspired by the monads (as used e.g. in Haskell programming language) so the state of the software can be passed from one evolution step to another, which helps us to concatenate evolution transformations.
 \begin{align*}
@@ -124,14 +124,14 @@ The definition of the evolving operator is inspired by the monads (as used e.g. 
 & s \in Software, t \in E
 \end{align*}
 \begin{align*}
-& a \circ e = \begin{cases}
+& state(a) \circ e = \begin{cases}
  	\inference{!\;consistent(a)}{\perp} \\ \\
  	\inference{consistent(a)}{e(a)} 
 \end{cases}\\ 
 & a \in Application, e \in AppT
 \end{align*}
 \begin{align*}
-&  d \bullet e = \begin{cases}
+&  state(d) \bullet e = \begin{cases}
  	\inference{!\;consistent(d)}{\perp} \\ \\
  	\inference{consistent(d)}{e(d)} 
 \end{cases}\\ 
@@ -147,7 +147,7 @@ A lot of introduced transformations can be applied on an ordered sets. The appli
 \begin{align*}
 & 	f(x, y) = \begin{cases}
  		\inference{x = \varnothing}{y}\\
- 		\inference{|x| > 1}{f(head(x), y) \cup f(tail(x), y}\\\\
+ 		\inference{|x| > 1}{f(head(x), y) \cup f(tail(x), y)}\\\\
  		\inference{|x| = 1}{effect}\\\\
  		\inference{otherwise}{\perp}
  \end{cases}\\\\
@@ -413,7 +413,7 @@ The database consistency is founded on the consistency of structure and consiste
 &	\mathbf{consistent} \in Database \rightarrow Boolean \\
 &	consistent(d) = \\
 & \;\;\;\;\;\; =\begin{cases}
-		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \exists t \in tables(d) \wedge name(t) = reference(f) \\ \wedge \forall r \in data(d): ( \exists t \in tables(d) : reference(r) = name(t) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \\ \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ value(pairByName(name(g), u_1) \neq value(pairByName(name(g), u_2) }{true}
+		\inference{ \forall t_1, t_2 \in tables(d) : name(t_1) \neq name(t_2) \\ \wedge \forall c_1, c_2 \in columns(t_1) : name(c_1) \neq name(c_2) \\ \wedge \forall f_1, f_2 \in foreignKeys(t_1) : name(f_1) \neq name (f_2) \\ \wedge \forall f \in foreignKeys(t_1) : \\(\exists t \in tables(d) \wedge name(t) = reference(f)) \\ \wedge \forall r \in data(d): \\( \exists t \in tables(d) : reference(r) = name(t)) \\ \wedge \forall p \in pairs(r) :\\ \exists u \in columns(t) \cup foreignKeys(t) \cup primaryKey(t) : \\ reference(p) = name(u) \\ \wedge \forall e \in columns(t) \cup foreignKeys(t) \\ \wedge NOTNULL \in constrain(e) : \exists q \in pairs(r) \\ \wedge name(e) = reference(q)) \\ \wedge \forall g \in columns(t) \cup foreignKeys(t) \\ \wedge UNIQUE \in constrain(g) : \\ \forall u_1, u_2 \in rows(t) : \\ (value(select(name(g), u_1) \neq \\ \neq value(select(name(g), u_2)) }{true}
  	\\ \\
  	false
  \end{cases}\\
@@ -467,15 +467,15 @@ There can occur name collision during mapping in case there are more classes wit
 		%\inference{p = \varnothing}{\varnothing}\\
 		%\inference{|p| > 1}{\rho_{sp}(head(p)) \cup \rho_{sp}(tail(p))}\\\\
  		\inference{|p| = 1 \wedge cardinality(p) = 1 \wedge !\;mandatory(p)
- 			\\ \wedge \exists t : t = table(name(owningClass(p)), d) 
+ 			\\ \wedge \exists t = table(name(owningClass(p)), d) 
 		 }{\begin{gathered}
-	  		column(name(p), \rho_t(type(p)), \varnothing )
+	  		col(name(p), \rho_t(type(p)), \varnothing )
 		\end{gathered}} \\ \\
   		\inference{|p| = 1 \wedge cardinality(p) = 1 \wedge mandatory(p)
-			 \\ \wedge \exists t : t = table(name(owningClass(p)), d)
+			 \\ \wedge \exists t = table(name(owningClass(p)), d)
 			\\ \wedge ! instanciated(owningClass(p))
 		}{\begin{gathered}
- 	 		column(name(p), \rho_t(type(p)), NOTNULL ) \\ 
+ 	 		col(name(p), \rho_t(type(p)), NOTNULL ) \\ 
 		\end{gathered}}
 	\end{cases}\\
 &	p \in Property
@@ -487,15 +487,15 @@ There can occur name collision during mapping in case there are more classes wit
 		%\inference{p = \varnothing}{\varnothing}\\
 		%\inference{|p| > 1}{\rho_{cp}(head(p)) \cup \rho_{cp}(tail(p))}\\\\
      	\inference{|p| = 1 \wedge cardinality(p) > 1 \wedge !\;mandatory(p) \\ 
-     		\wedge 	\exists t : t = table(name(owningClass(p)), d)
+     		\wedge 	\exists t = table(name(owningClass(p)), d)
      		}{\begin{gathered}
-     			table(name(t)+name(p), primaryKey("Id"), \\ column("value", \rho_t(type(p)), \varnothing), \\ foreignKey(name(p), 			name(owningClass(p)), NOTNULL) \\
+     			tab(name(t)+name(p), primaryKey("Id"), \\ col("value", \rho_t(type(p)), \varnothing), \\ fk(name(p), 			name(owningClass(p)), NOTNULL) \\
     	\end{gathered}}\\ \\
      	\inference{|p| = 1 \wedge  cardinality(p) > 1 \wedge mandatory(p) \\ 
-     		\wedge \exists t : t = table(name(owningClass(p)), d) 
+     		\wedge \exists t = table(name(owningClass(p)), d) 
      		}{\begin{gathered}  
-     			table(name(t)+name(p), primaryKey("Id"), \\ 
-     			column("value", \rho_t(type(p)), NOTNULL), \\ 			foreignKey(name(p), name(owningClass(p)), NOTNULL)
+     			tab(name(t)+name(p), primaryKey("Id"), \\ 
+     			col("value", \rho_t(type(p)), NOTNULL), \\ 			fk(name(p), name(owningClass(p)), NOTNULL)
     	 \end{gathered}}
  	\end{cases}\\
 & 	p \in Property
@@ -507,12 +507,12 @@ There can occur name collision during mapping in case there are more classes wit
 &	\rho_a(a) = \begin{cases}
 		%\inference{a = \varnothing}{\varnothing}\\
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
-		\inference{|a| = 1 \wedge  startCardinality(a) = 0 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
+		\inference{|a| = 1 \wedge  startCardinality(a) = 0 \\ \wedge \exists t \in table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
 		}{
 			foreignKey(name(a), name(t),  \varnothing) 
 	 	}
   \\ \\
- 	 \inference{|a| = 1 \wedge  startCardinality(a) = 1 \\ \wedge \exists t : t = table(name(owningClass(p)), d) \\ \wedge \exists u : u = table(reference(a)), d)
+ 	 \inference{|a| = 1 \wedge  startCardinality(a) = 1 \\ \wedge \exists t = table(name(owningClass(p)), d) \\ \wedge \exists u \in tables(d) : name(u = reference(a)
  	 }{ 
 		foreignKey(name(a), name(t),  NOTNULL)
 	}	 \end{cases}
@@ -527,7 +527,7 @@ There can occur name collision during mapping in case there are more classes wit
 		%\inference{|a| > 1}{\rho_{a}(head(a)) \cup \rho_{a}(tail(a))}\\\\
 		\inference{|a| = 1 \wedge   startCardinality > 1 \\ \wedge \exists t \in tables(d) : name(owningClass(p)) = name(t) \\ \wedge \exists e \in tables(d) : name(reference(a)) = name(e)
   		}{\begin{gathered}  
-		 table(name(t)+name(a), pk("Id"), \varnothing, \\ fk(name(owningClass(a)), name(owningClass(a)), NOTNULL) \\ fk(reference(a), reference(a), NOTNULL)) 
+		 table(name(t)+name(a), pk("Id"), \varnothing, \\ fk(name(owningClass(a)), \\ name(owningClass(a)), NOTNULL) \\ fk(reference(a), reference(a), NOTNULL)) 
   		\end{gathered}}  
  	%\end{cases}
 \\
@@ -580,12 +580,12 @@ This section provide transformations for manipulating the application layer of a
 \begin{align*}
 &	\mathbf{remProp} : Label \times Label \times Application \rightarrow Application \\
 & 	remProp(l_c, l_p, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_p
-	}{properties(c) - \; p }\\
+	}{properties(c) \setminus p }\\
 &	l_c, l_p \in Label, a \in Application 
 \end{align*}
 \begin{align*}
 &	\mathbf{remAssoc} : Label \times Label \times Application \rightarrow Application \\
-&	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) - \; f} \\
+&	remAssoc(l_c, l_a, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists f \in associations(c) : name(f) = l_a }{associations(c) \setminus f} \\
 &	l_c, l_a \in Labels, a \in Application
 \end{align*}
 
@@ -593,7 +593,7 @@ This section provide transformations for manipulating the application layer of a
 \begin{align*}
 &	\mathbf{remClass} : Label \times Application \rightarrow Application \\
 &	remClass(l, a) = \inference{\exists c \in classes(a) : name(c) = l \\ \wedge !\: associated(c)
-	} {classes(a) - \; c }\\
+	} {classes(a) \setminus c }\\
 &	l \in Label,a \in Application
 \end{align*}
 
@@ -602,7 +602,7 @@ This section provide transformations for manipulating the application layer of a
 &	\mathbf{renProp} : Label \times Label \times Label \times Application \rightarrow Application \\
 &	renProp(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists p \in properties(c) : name(p) = l_o \\ \wedge \forall e \in properties(c) : name(e) \neq l_n
 	}{\begin{gathered}
-		p.name = l_n 
+		p.name := l_n 
 	\end{gathered}}\\
 &	l_c, l_o, l_n \in Label, a \in Application
 \end{align*}
@@ -610,7 +610,7 @@ This section provide transformations for manipulating the application layer of a
 &	\mathbf{renAssoc} : Label \times Label \times Label \times Application \rightarrow Application \\
 &	renAssoc(l_c, l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_c \\ \wedge \exists b \in associations(c) : name(b) = l_o \\ \wedge \forall e \in associations(c) : name(e) \neq l_n
 	}{\begin{gathered}
-		b.name = l_n 
+		b.name := l_n 
 	\end{gathered}}
 	\\ & l_c, l_o, l_n \in Label, a \in Application
 \end{align*}
@@ -620,7 +620,7 @@ This section provide transformations for manipulating the application layer of a
 &	\mathbf{renClass} :  Label \times Label \times Application \rightarrow Application \\
 &	renClass(l_o, l_n, a) = \inference{\exists c \in classes(a) : name(c) = l_o \\ \wedge \forall e \in classes(a) : name(e) \neq l_n
 	}{\begin{gathered}
-		name(c) = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e) \wedge reference(f) = l_o ) :\\ f.reference = l_n 
+		name(c) = l_n \wedge \forall e \in classes(a) \\ \wedge \forall (f \in associations(e), reference(f) = l_o ) :\\ f.reference := l_n 
 	\end{gathered}}\\
 & l_o, l_n \in Label, a \in Application	
 \end{align*}
@@ -628,7 +628,8 @@ This section provide transformations for manipulating the application layer of a
 \subsection{Database Transformation}
 The database is composed from two separated parts - database schema and data. Transformations are defined to manipulate the database schema and to manipulate stored data. Some of presented operations has their origin in SQL queries (especially creation and decomposition), on the other hand some of them cannot be implemented as an SQL query, because of they complexity and conditions verified during theirs execution.
 
-\paragraph{Mapping of Instances} The set $M$ which contains all possible mappings between classes, has to be defined to allow several evolutionary operations. Each mapping represents an ordered set of pairs of instances. These pairs can represent one-to-one (or many) relationship or many-to-many relationship between instances. \begin{align*}
+\paragraph{Pairs of Instances} The set $M$ which contains all possible mappings between instances of classes, has to be defined to allow several evolutionary operations. Each mapping represents an ordered set of pairs of instances. These pairs can represent one-to-one (or many) relationship or many-to-many relationship between instances. The set $M$ contains functions: $\rightarrow Row \times Row$.
+\begin{align*}
 &	m_{l_1, l_2} =  (r_1, r_2)*,\\
 & 	r_1 \in instances(l_1, d), r_2 \in instances(l_2, d) \\
 &	\forall r_1, r_1 \in instances(l_1, d) \Rightarrow \exists p \in m_{l_1, l_2} \wedge first(p) = r_1 \\
@@ -643,18 +644,18 @@ The mapping $m_{l_1, l_2}$ can be used if there are instances in both tables in 
 \end{align*}
 
 
-\paragraph{Comparison of tables} The need to compare two tables during the evolution results into the comparing operator $\cong$. The operator has to be defined for columns and foreign keys too.
+\paragraph{Comparison of tables} The need to compare two tables during the evolution results into the comparing function equals. The operator has to be defined for columns and foreign keys too.
 \begin{align*}
-&	\mathbf{\cong} : Table \times Table \rightarrow Boolean \\
-&	t_1 \cong t_2 = \begin{cases}
- 		\inference{|columns(t_1)| = |columns(t_2)| \\ \wedge |foreignKeys(t_1)| = |foreignKeys(t_2)| \\ \wedge \forall c \in columns(t_1) \exists e \in columns(t_2) : c = e \\ \wedge \forall f \in foreignKeys(t_1) \exists g \in foreignKeys(t_2) : f = g }{true}\\\\
+& \mathbf{equals} : Table \times Table \rightarrow Boolean \\
+&	equals(t_1, t_2) = \begin{cases}
+ 		\inference{|columns(t_1)| = |columns(t_2)| \\ \wedge |foreignKeys(t_1)| = |foreignKeys(t_2)| \\ \wedge \forall c \in columns(t_1) \exists e \in columns(t_2) : c = e \\ \wedge \forall f \in foreignKeys(t_1) : \\ \exists g \in foreignKeys(t_2) : f = g }{true}\\\\
  false
  \end{cases}\\
 & t_1 \in Table, t_2 \in Table
 \end{align*}
 \begin{align*}
-&	\mathbf{\cong} : Column \times Column \rightarrow Boolean \\
-&	c_1 \cong c_2 = \begin{cases}
+& \mathbf{equals} : Column \times Column \rightarrow Boolean \\
+&	equals(c_1, c_2) = \begin{cases}
  		\inference{name(c_1) = name(c_2) \\ \wedge type(c_1) = type(c_2) \\ \wedge constraints(c_1) = comstraints(c_2)}{true}
  		\\ \\
 		false
@@ -662,8 +663,8 @@ The mapping $m_{l_1, l_2}$ can be used if there are instances in both tables in 
 & c_1 \in Column, c_2 \in Column
 \end{align*}
 \begin{align*}
-&	\mathbf{\cong} : ForeignKey \times ForeignKey \rightarrow Boolean \\
-&	f_1 \cong f_2 = \begin{cases}
+&	\mathbf{equals} : ForeignKey \times ForeignKey \rightarrow Boolean \\
+&	equals(f_1, f_2) = \begin{cases}
  		\inference{name(f_1) = name(f_2) \\ \wedge reference(f_1) = reference(f_2) \\ \wedge constraints(f_1) = comstraints(f_2)}{true}
  		\\ \\
 		false
@@ -671,10 +672,10 @@ The mapping $m_{l_1, l_2}$ can be used if there are instances in both tables in 
 & f_1 \in ForeignKey, f_2 \in ForeignKey
 \end{align*}
 
-\paragraph{Find pair} The function returns a pair corresponding to given column (or key) name in concrete row.
+\paragraph{Select a pair} The function returns a pair corresponding to given column (or key) name in concrete row.
 \begin{align*}
-& \mathbf{findPair} : Label \times Row \rightarrow Pair \\
-&	findPair(l, r) = \begin{cases}
+& \mathbf{select} : Label \times Row \rightarrow Pair \\
+&	select(l, r) = \begin{cases}
 		\inference{\exists p \in pairs(r) : reference(p) = l}{p} \\ \\
 			\varnothing
 		\end{cases}\\
@@ -687,7 +688,9 @@ The mapping $m_{l_1, l_2}$ can be used if there are instances in both tables in 
 &	addColum(l, c, d) = \begin{cases}
 		%\inference{|c| > 1}{addColumn(l, head(c), d) \bullet addColumn(l, tail(c), d)} \\ \\
 		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \not \in constraints(c) }{columns(t) \cup c}\\ \\
-		(\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c) }{columns(t) \cup c})\\ \bullet addValueToTable(l, [name(c), defVal(c)]) 
+		\inference{|c| = 1 \wedge \exists t \in tables(d) \wedge name(t) = l \\ \wedge \forall f \in columns(t) : name(f) \neq name(c) \\ \wedge NOTNULL \in constraints(c)}{\begin{gathered}
+	 (columns(t) \cup c) \\ \bullet (\forall r \in instances(l, d): \\ insetValue(reference(r), keyValue(r), \\ [name(c), defVal(c)]) 
+	\end{gathered}}
 %		\\ \\ Inconsistent \;d 
 	 \end{cases}\\ 
 &	 l \in Label, c \in Column*,d \in Database
@@ -768,7 +771,7 @@ c.name = l_n
 & \;\;\;\;\;\; =\begin{cases}
  		%\inference{|p| > 1}{\begin{gathered} 	d \bullet insertValue(r, head(p), d) \\ \bullet insertValue(r, tail(p), d)\end{gathered}}   \\ \\
  		\inference{|p| = 1 \wedge 
- 		\\ \wedge \exist r \in instances(l, d) : value(findPair("Id", r)) = n
+ 		\\ \wedge \exist r \in instances(l, d) : value(select("Id", r)) = n
  		\\ \wedge \exists t \in tables(d) : name(t) = l, 
  		\\ \wedge \exists c \in columns(t) : reference(p) = name(c) 
  		\\ \wedge \forall e \in pairs(r) :\\  reference(e) \neq reference(p) }{pairs(r) \cup p} 
@@ -777,24 +780,13 @@ c.name = l_n
 & r = \{ x | x \in Row\}, p = \{ x | x \in Pair\},d \in Databases
 \end{align*}
 
-\paragraph{Add Value To Table} The function appends a pair to all rows of a table with given name.
-\begin{align*}
-&	\mathbf{addValueToTable} : Label \times Pair \times Database \rightarrow Database \\
-&	addValueToTable(l, p, d) = \\
-&= \;\;\;\;\;\;\begin{cases}
- 		\inference{\exists t \in tables(d) : name(t) = l}	{\begin{gathered}
-		d \bullet (\forall r \in instances(l, d) \\ : insetValue(reference(r), keyValue(r), p) \\ \bullet addValueToTable(tail(instances(l, d)), p, d))
-	\end{gathered}} 
- 	\end{cases}\\ 
-& 	l \in Label, p \in Pair,  d \in Database
-\end{align*}
 
 \paragraph{Copy Value} The function copy value from one column in a table to another column in the same or in another table - according to provided mapping. First argument of the transformation is the name of the source table, the second one is the target table, then there are names of source column and target column, finally the mapping between rows (stored instances) has to be provided.
 \begin{align*}
 &	\mathbf{copyValue} : Label \times Label \times Label \times Label \times (Row \times Row) \times Database \rightarrow Database \\
 &	copyValue(l_s, l_t, l_{sc}, l_{tc} o_{l_s, l_t}, d) = \\
 & \;\;\;\;\;\; =	\inference{\exists t_s \in tables(d) : name(t_s) = l_s, \\ t_t \in tables(d) : name(t_t) = l_t, \\ c \in columns(t_s) : name(c) = l_{sc}, \\ e \in columns(t_t) : name(e) = l_{tc}}{\begin{gathered}
-		\forall	p \in m_{l_s, l_t} :	d \bullet insertValue(name(second(p)), keyValue(second(p)), \\ [l_{tc},value(findPair(l_{sc}, first(p)))])
+		\forall	p \in m_{l_s, l_t} :	d \bullet insertValue(name(second(p)), keyValue(second(p)), \\ [l_{tc},value(select(l_{sc}, first(p)))])
 		\end{gathered}}\\
 & 	l_s, l_t, l_{sc}, l_{tc} \in Label, d \in Database
 \end{align*}
@@ -806,7 +798,7 @@ c.name = l_n
 & \;\;\;\;\;\; =%\begin{cases}
  	%\inference{|m_{l_s, l_t}| = \varnothing}{d} \\\\
  	%\inference{|m_{l_s, l_t}| > 1}{\begin{gathered} d \bullet copyRow(l_s, l_t, head(M_{l_s, l_t})) \\ \bullet copyRow(l_s, l_t, tail(m_{l_s, l_t})) \end{gathered}}
- 	\inference{|m_{l_s, l_t}| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge t_s \cong t_t }{d \bullet insertRow(row(l, pairs(first(m_{l_s, l_t}))), d)} \\\\
+ 	\inference{|m_{l_s, l_t}| = 1 \\ \wedge \exists t_s, t_t \in tables(d) : name(t_s) = l_s, name(t_t) = l_t \\ \wedge equals(t_s, t_t) }{d \bullet insertRow(row(l, pairs(first(m_{l_s, l_t}))), d)} \\\\
 %  \end{cases} 
 \\
 &  l_s, l_t \in Label, d \in Database, m_{l_s, l_t} \in M
@@ -1164,7 +1156,7 @@ The opposite transformation $Inline$ gets the name of a class to inline and the 
 \forall f \in (foreignKeys(t_1) \cup foreignKey(t_2)) \\ \setminus (foreignKey(t_1) \cap foreignKey(t_2)) \\ : NOTNULL \not \in constraints(f)  }{\begin{gathered}
 	 database(s) \\ \bullet addTable(l_n, pk("Id", s_1), columns(t_1), foreignKeys(t_1)) \\ 
 \bullet (\forall r \in instances(t_1, database(s)) \cup instances(t_2, database(s)) :  \\ n =  row(l_n, next(seq(key(l_n))), pairs(r)), insertRow(l_n, n) \\ 
-\bullet (\forall k \in data(database(s)), f \in foreignKeys(k) \\ \wedge reference(f) = reference(r) \\ \wedge value(findPair(name(f), k)) = pkValue(r) : \\value(findPair(name(f), k)) = pkValue(n))) \\  \bullet dropTableAndData(l_1) \bullet dropTableAndData(l_2)
+\bullet (\forall k \in data(database(s)), f \in foreignKeys(k) \\ \wedge reference(f) = reference(r) \\ \wedge value(select(name(f), k)) = pkValue(r) : \\value(select(name(f), k)) = pkValue(n))) \\  \bullet dropTableAndData(l_1) \bullet dropTableAndData(l_2)
  \end{gathered}} \\
  & l_1, l_2, l_n \in Label, s \in State
 \end{align*}
