@@ -164,7 +164,7 @@ The application model represents an application persistent layer created using o
 Each instance in an application is defined according to some class - the class defines the structure of its instances and relationships between them an the rest of the application. The instances are stored in the relational database in our case, therefore we define only the structure of classes in our model. 
 \paragraph{Class} Class represents a basic structural unit in the application model. It has a unique name, one or more properties and it can be associated to other classes in the application. 
 \begin{align*}
-& 	\mathbf{Class} = <label, Property*, Association*> \\
+& 	\mathbf{Class} = (label, Property*, Association*) \\
 & 	\mathbf{cl} : Label \times Property* \times Association* \rightarrow Class \\\\
 & 	\mathbf{name} : Class \rightarrow Label \\
 & 	name(cl(l, props, assocs)) = l \\ \\
