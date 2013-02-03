@@ -236,6 +236,93 @@ The data secure transformations for disassembling the database can succeed (e.g.
 \label{sec:sw-evolution}
 The evolution of the whole software is based on the basic transformations specific for each software part. The evolution is described from the developer point of view, therefore the transformations use the names and elements from application context, these names and elements has to be transformed into a database context - this is assured by the ORM.
 
+The defined evolution are divided into two groups - first group contains the basic transformations for creating, altering and disassembling the software, second group contains the advanced refactoring cases.
+
+\subsection{Basic Evolutionary Transformations}
+The basic evolutionary transformations of the software are based on basic evolution of an application defined in Sec. \ref{sec:app-evolution}, nevertheless the evolution of the database is not so straightforward because properties and associations can be mapped as a column (foreign key respectively) or as a table, this has to be reflected during the evolution as shown on the example of creating a new property: 
+\begin{align*}
+& newProperty(className, property, application) \Rightarrow \\
+& \;\;\; \Rightarrow \begin{cases}
+  addColumn(ORM(className), ORM(property), database) \\\mathbf{if} \; cardinality(property \leq 1)  \\\\
+  addTable(ORM(property), database) \\
+  \mathbf{if} \; cardinality(property > 1)  
+ \end{cases}
+\end{align*}
+Next transformation are provided in the shortened way in table \ref{tab:sw-basic-evolution}, there is the basic application transformation and possible mappings on database level according to to the cardinality.  
+\begin{table}
+\centering
+	\begin{tabular}{|p{0.4\textwidth} p{0.4\textwidth}|}
+	\hline
+	Application Transformation & Database Transformation \\
+	\multicolumn{2}{|c|}{\textbf{Software Creation}} \\
+	newProperty & addColumn \\
+	& addTable \\ 
+	& \\
+	newAssociation & addColumn \\
+	& addTable \\
+	& \\
+	newClass & addTable \\
+	\multicolumn{2}{|c|}{\textbf{Application Alternation}} \\
+	renameProperty & renameColumn \\
+	& renameTable \\
+	& \\
+	renameAssociation & renameForeignKey \\
+	& renameTable \\
+	& \\
+	renameClass & renameTable \\
+	\multicolumn{2}{|c|}{\textbf{Application Disassembly}} \\
+	removeProperty & removeColumn \\
+	& removeTable \\
+	& \\
+	removeAssociation & removeForeignKey \\
+	& removeTable \\
+	& \\
+	removeClass & removeTable\\
+	\hline
+	\end{tabular}
+	\caption{The mapping between evolution of the application to the database transformations.}
+	\label{tab:sw-basic-evolution}
+\end{table}
+
+
+\subsection{Advanced Evolutionary Transformations}
+Advanced evolutionary transformations are based on the basic ones, they can be obtained as a concatenation of transformations. The concatenation of transformation is possible because each transformation produces a state of a software (or application or database) which can be used as an input for the next transformation. 
+
+All transformations presented so far has the same input information for both application and database, whereas the advanced transformations usually needs a mapping between stored data (instances) as theirs input. First two of them - $copyProperty$ and $mergeClasses$ completes the set of basic transformations.
+
+The $copyProperty$ creates a duplicate of a property in a given class. It can not rename the property so it can not be used for creating duplicates of a property in the property owning class. If the mapping is not provided the transformation creates only a structural copy of the property otherwise it copies the values of the given column too.
+\begin{align*}
+& \mathbf{copyProperty}(sourceClass, propertyName, targetClass, \\
+& \; \; \; mapping, software) 
+\end{align*}
+The transformation is interpreted for both software components - in case of the application a new property is added:
+\begin{align*}
+& copyProperty(sourceClass, property, targetClass, mapping, \\ 
+&  \; \; \; software) \rightarrow newProperty(targetClass, property, application) 
+\end{align*}
+in case of database the copy of a column or table is created according to property's cardinality and then values are copied:
+\begin{align*}
+& copyPropertysourceClass, property, targetClass, mapping, \\ 
+&  \; \; \; software) \rightarrow 
+\end{align*}
+
+
+The mapping provides information which value from the source table rows will be copied to which row in target table. 
+\begin{align*}
+&	mapping =  (r_1, r_2)*,\\
+& 	r_1 \in select(ORM(sourceClassName), database), \\
+& 	r_2 \in select(ORM(targetClassName), database) 
+\end{align*}
+
+The mapping features determine if the $moveProperty$ is data inconsistent or not.
+
+
+\begin{align*}
+&	\forall r_1, r_1 \in instances(l_1, d) \Rightarrow \exists p \in m_{l_1, l_2} \wedge first(p) = r_1 \\
+&	\forall r_2, r_2 \in instances(l_2, d) \Rightarrow \exists p \in m_{l_1, l_2} \wedge second(p) = r_2
+\end{align*}
+
+
 \section{Contribution}
 \label{sec:contribution}
 
