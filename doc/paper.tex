@@ -11,7 +11,7 @@
 \begin{document}
 \maketitle
 \section{Introduction}
-\label{sex:intro}
+\label{sec:intro}
 The evolution (change) of a software is a common issue during software development. It occurs from many reasons in all phases of software lifecycle. The evolution severity usually depends on number of changes which has to be made and on the number of affected software components. The focus of this paper is in data evolution context of software implemented in object oriented language using relational database. It means that the data evolution affect at least two software components: persistent objects (entities) and the database. The evolution is based on developer's point of view in this paper as it origins in the need to evolve code. This kind of evolution is straightforward in case there are no data stored in the database, because the database schema can be generated according to an evolved code, moreover some object-relational mapping (ORM) frameworks are able to process basic evolutionary transformation on database with stored data. The evolution of an software with ORM become more difficult when there are stored data and when the evolutionary scenario is more complex. The data migration to the new database schema is usually processed manually, which is expensive and error prone.
 
 This paper shows how the code refactoring can be used as the source for data migration. The approach based on changes in code is useful in case when there is no model of database as it is derived directly from code. Next it can help developers to understand impact  of code changes on database. The formal description of code refactoring impact on database and stored data can help with construction of a standalone migration framework or evolutionary extension for existing ORM frameworks.
@@ -141,6 +141,42 @@ mapping, thus a lot of developers should be familiar with it.
 
 \section{Data Evolution of Software}
 \label{sec:evolution}
+The evolution of the software is mapped to the layer specific transformation, which are defined in Sec. \ref{sec:app-evolution} and \ref{sec:db-evolution}. Finally the evolution cases and their mapping on application and database components are presented in \ref{sec:sw-evolution}. The transformations are divided into groups according to their impact on structure and data. 
+
+%TODO evalutation of trnasformations
+
+\subsection{Application Evolution}
+\label{sec:app-evolution}
+The application model defines only the structure of an application thus there are defined transformation for its creating, altering and disassembling. Therefore the conditions for successful transformations are simple 1) when creating an object in the model or altering its name collisions has to be prevent, 2) when renaming a class the references have to be updated 3) when creating or altering an association the existence of referenced class has to be verified. The only issue during disassembling is the class can be removed only in case it is not associated by other classes. If a transformation cannot be processed the state of the application become inconsistent. The transformations are in table \ref{tab:app-evolution}. The list of altering operations is not complete as there are missing transformation for changing the obligation or cardinality of properties and associations. It is because these transformations are not so important for the next text when the complex refactorings are considered. 
+\begin{table}
+\centering
+	\begin{tabular}{|l|}
+	\hline
+	\textbf{Application Creation} \\
+	newProperty(className, property, application) \\
+	newAssociation(className, association, application) \\
+	newClass(class, application) \\
+	\textbf{Application Alternation} \\
+	renameProperty(className, oldName, newName, application) \\
+	renameAssociation(className, oldName, newName, application) \\
+	renameClass(oldName, newName, application)\\
+	\textbf{Application Disassembly} \\
+	removeProperty(className, propertyName, application) \\
+	removeAssociation(className, associationName, application) \\
+	removeClass(className, application)\\
+	\hline
+	\end{tabular}
+	\caption{The transformations for application evolution}
+	\label{tab:app-evolution}
+\end{table}
+
+\subsection{Database Evolution}
+\label{sec:db-evolution}
+
+
+
+\subsection{Software Evolution}
+\label{sec:sw-evolution}
 
 \section{Contribution}
 \label{sec:contribution}
