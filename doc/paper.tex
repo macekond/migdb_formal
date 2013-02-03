@@ -20,6 +20,7 @@ The paper is organized as follows: first the evolution of software is described 
 
 \section{Problem Definition} 
 \label{sec:problem}
+% víc rozepsat o změnách a jak se jim bránit a kam tím směřujeme
 A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:evolution}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM, therefore we define a software as a triple consisting of an application and a database which are connected together by an ORM:
 \begin{align*}
 & \mathbf{software} = ( Application, Database, ORM )
@@ -166,17 +167,74 @@ The application model defines only the structure of an application thus there ar
 	removeClass(className, application)\\
 	\hline
 	\end{tabular}
-	\caption{The transformations for application evolution}
+	\caption{The transformations for application evolution.}
 	\label{tab:app-evolution}
 \end{table}
 
 \subsection{Database Evolution}
 \label{sec:db-evolution}
+The database consists of two parts - from database schema which defines the structure and from stored data - hence the evolutionary transformation has to consider both parts. The transformation for evolution of structure has similar conditions to the evolution of application application. The transformations for data manipulation are inspired by the SQL language. The basic transformations are in Table \ref{tab:db-basic-evolution}. 
+\begin{table}
+\centering
+	\begin{tabular}{|l|}
+	\hline
+	\textbf{Database Creation} \\
+	addColumn(tableName, column, database) \\
+	addForeignKey(tableName, key, database) \\
+	addTable(table, database)\\
+	\textbf{Database Alternation} \\
+	alterColumnName(tableName, oldName, newName, dataabse) \\
+	alterForeignKeyName(tableName, oldName, newName, dataabse) \\
+	alterTableName(oldName, newName, dataabse) \\
+	\textbf{Database Disasembling} \\
+	dropColumn(tableName, columnName, database) \\
+	dropForeignKey(tableName, keyName, database) \\
+	dropTable(tableName, database) \\
+	\textbf{Data Manipulation} \\
+	select(tableName, rowId, database) \\
+	select(tableName, database) \\
+	insert(row, database) \\
+	insert(rowId, value, database) \\
+	delete(tableName, rowId, database) \\
+	delete(tableName, rowId, columnName, database) \\
+	\hline
+	\end{tabular}
+	\caption{The transformations for database evolution.}
+	\label{tab:db-basic-evolution}
+\end{table}
+\begin{table}
+\centering
+	\begin{tabular}{|l|}
+	\hline
+	\textbf{Copy Structure} \\
+	copyColumnStructure(sourceTableName, targetTableName, \\  \hspace{1in} sourceColumnName, targetColumnName, database) \\
+	copyTableStructure(sourceTable, newTableName, database) \\
+	\textbf{Copy Values} \\
+	copyColumn(sourceTable, targetTable, \\
+	\hspace{1in} sourceColumnName, targetColumnName, \\ 
+	\hspace{1in} mapping, database) \\
+	copyTabele(sourceTable, targetTable, mapping,  database) \\
+	\textbf{Data Secure Database Disassembling} \\
+	dropEmptyColumn(tableName, columnName, database) \\
+	dropEmptyForeignKey(tableName, keyName, database) \\
+	dropEmptyTable(tableName, database) \\
+	\hline
+	\end{tabular}
+	\caption{The transformations for database evolution which are created as SQL functions.}
+	\label{tab:db-adv-evolution}
+\end{table}
 
+
+The transformation for disassembly the database has fatal impact on the data preservation, therefore the advanced set of transformations is created. These transformations are not part of SQL standard, although they can be implemented as database functions. These transformations creates a structural copy of database structures or data or creates a secure way to disassembly the database. These transformations are in table \ref{tab:db-adv-evolution}. 
+
+The copying of structural elements has the same limits as database creation. The column copying transformation needs one more information to succeed - there has to be provided mapping between the source and target table to assure the data information consistency. Moreover the source and target should have the same structure, type and constraints. 
+
+The data secure transformations for disassembling the database can succeed (e.g. drop a table) when there are no data contained within the dropped element.
 
 
 \subsection{Software Evolution}
 \label{sec:sw-evolution}
+The evolution of the whole software is based on the basic transformations specific for each software part. The evolution is described from the developer point of view, therefore the transformations use the names and elements from application context, these names and elements has to be transformed into a database context - this is assured by the ORM.
 
 \section{Contribution}
 \label{sec:contribution}
