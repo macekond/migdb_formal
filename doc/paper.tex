@@ -4,8 +4,10 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{semantic}
+\usepackage{caption}
+\usepackage{subcaption}
 
-\title{Refactoring of Software Using ORM: A Formal Description}
+\title{Refactoring of Software Using Relational Database}
 \author{Ondrej Macek}
 
 \begin{document}
@@ -16,11 +18,12 @@ The evolution (change) of a software is a common issue during software developme
 
 This paper shows how the code refactoring can be used as the source for data migration. The approach based on changes in code is useful in case when there is no model of database as it is derived directly from code. Next it can help developers to understand impact  of code changes on database. The formal description of code refactoring impact on database and stored data can help with construction of a standalone migration framework or evolutionary extension for existing ORM frameworks.
 
-The paper is organized as follows: first the evolution of software is described in detail in Sec. \ref{sec:problem}, then the related work in presented in Sec. \ref{sec:related-work}. In Sec. \ref{sec:models} the models of software and database is provided together with a set of basic evolutionary transformations. The impact of code refactoring on database is discussed in Sec. \ref{sec:evolution}. Finally the applicability and limitations of the proposed solution is discussed in Sec. \ref{sec:contribution}.
+The paper is organized as follows: first the evolution of software is described in detail in Sec. \ref{sec:problem}, then the related work in presented in Sec. \ref{sec:related-work}. In Sec. \ref{sec:models} the models of software and database is provided together with a set of basic evolutionary transformations. The impact of code refactoring on database is discussed in Sec. \ref{sec:evolution}. Finally the applicability and limitations of the proposed solution is discussed in Sec. \ref{sec:case}.
 
 \section{Problem Definition} 
 \label{sec:problem}
 % víc rozepsat o změnách a jak se jim bránit a kam tím směřujeme
+\textbf{TODO: write an introduction when and why the software changes. and possible solutions.}
 A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:evolution}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM, therefore we define a software as a triple consisting of an application and a database which are connected together by an ORM:
 \begin{align*}
 & \mathbf{software} = ( Application, Database, ORM )
@@ -56,6 +59,8 @@ The main issue during the software evolution is the preservation of data and inf
 \section{Related Work}
 \label{sec:related-work}
 
+\textbf{TODO}
+
 \section{Model of Software}
 \label{sec:models}
 The aim of this paper is to provide an definition of data evolution, which can be applied in case of various programming language, therefore the platform independent models of application and database are introduced. These models also provide simplification, which should increase the understanding of the proposed evolutions.
@@ -89,6 +94,35 @@ The properties of a class can be of two kinds - values or collections - accordin
 \end{align*}
 
 %TODO consistency
+
+\subsubsection{Application Manipulation}
+\label{sec:app-evolution}
+The application model defines only the structure of an application thus there are defined transformation for its creating, altering and disassembling. Therefore the conditions for successful transformations are simple 1) when creating an object in the model or altering its name collisions has to be prevent, 2) when renaming a class the references have to be updated 3) when creating or altering an association the existence of referenced class has to be verified. The only issue during disassembling is the class can be removed only in case it is not associated by other classes. If a transformation cannot be processed the state of the application become inconsistent. The transformations are in table \ref{tab:app-evolution}. The list of altering operations is not complete as there are missing transformation for changing the obligation or cardinality of properties and associations. It is because these transformations are not so important for the next text when the complex refactorings are considered. 
+\begin{table}
+\centering
+	\begin{tabular}{|l|}
+	\hline
+	\textbf{Application Creation} \\
+	newProperty(className, property, application) \\
+	newAssociation(className, association, mapping, application) \\
+	newClass(class, application) \\
+	\textbf{Application Alternation} \\
+	renameProperty(className, oldName, newName, application) \\
+	renameAssociation(className, oldName, newName, application) \\
+	renameClass(oldName, newName, application)\\
+	changeReference(referncedClass, newReferencedClass) \\
+	\textbf{Application Disassembly} \\
+	removeProperty(className, propertyName, application) \\
+	removeAssociation(className, associationName, application) \\
+	removeClass(className, application)\\
+	\textbf{Copy Structure}\\
+	copyProperty(sourceClass, property, targetClass, newName, application)  \\
+	copyClass(class, newName, application) \\
+	\hline
+	\end{tabular}
+	\caption{The transformations for application evolution.}
+	\label{tab:app-evolution}
+\end{table}
 
 \subsection{Database Model}
 he relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents stored instances. The database is defined as a tuple:
@@ -135,45 +169,9 @@ A database consists not only from schema but also from data which are represente
 
 %TODO consistency
 
-\subsection{Object Relational Mapping}
-The ORM can differ from application to application, its impact on the evolution is not crucial but it has to be present to provide full information about the method. The mapping is similar to the Hibernate
-mapping, thus a lot of developers should be familiar with it. 
-% add mapping
-
-\section{Data Evolution of Software}
-\label{sec:evolution}
-The evolution of the software is mapped to the layer specific transformation, which are defined in Sec. \ref{sec:app-evolution} and \ref{sec:db-evolution}. Finally the evolution cases and their mapping on application and database components are presented in \ref{sec:sw-evolution}. The transformations are divided into groups according to their impact on structure and data. 
-
-%TODO evalutation of trnasformations
-
-\subsection{Application Evolution}
-\label{sec:app-evolution}
-The application model defines only the structure of an application thus there are defined transformation for its creating, altering and disassembling. Therefore the conditions for successful transformations are simple 1) when creating an object in the model or altering its name collisions has to be prevent, 2) when renaming a class the references have to be updated 3) when creating or altering an association the existence of referenced class has to be verified. The only issue during disassembling is the class can be removed only in case it is not associated by other classes. If a transformation cannot be processed the state of the application become inconsistent. The transformations are in table \ref{tab:app-evolution}. The list of altering operations is not complete as there are missing transformation for changing the obligation or cardinality of properties and associations. It is because these transformations are not so important for the next text when the complex refactorings are considered. 
-\begin{table}
-\centering
-	\begin{tabular}{|l|}
-	\hline
-	\textbf{Application Creation} \\
-	newProperty(className, property, application) \\
-	newAssociation(className, association, application) \\
-	newClass(class, application) \\
-	\textbf{Application Alternation} \\
-	renameProperty(className, oldName, newName, application) \\
-	renameAssociation(className, oldName, newName, application) \\
-	renameClass(oldName, newName, application)\\
-	\textbf{Application Disassembly} \\
-	removeProperty(className, propertyName, application) \\
-	removeAssociation(className, associationName, application) \\
-	removeClass(className, application)\\
-	\hline
-	\end{tabular}
-	\caption{The transformations for application evolution.}
-	\label{tab:app-evolution}
-\end{table}
-
-\subsection{Database Evolution}
+\subsubsection{Database Manipulation}
 \label{sec:db-evolution}
-The database consists of two parts - from database schema which defines the structure and from stored data - hence the evolutionary transformation has to consider both parts. The transformation for evolution of structure has similar conditions to the evolution of application application. The transformations for data manipulation are inspired by the SQL language. The basic transformations are in Table \ref{tab:db-basic-evolution}. 
+The database consists of two parts - from database schema which defines the structure and from stored data - hence the transformations have to consider both parts. The transformation for manipualtion of structure has similar conditions to the evolution of application application. The transformations for data manipulation are inspired by the SQL language. The basic transformations are in Table \ref{tab:db-basic-evolution}. 
 \begin{table}
 \centering
 	\begin{tabular}{|l|}
@@ -197,84 +195,109 @@ The database consists of two parts - from database schema which defines the stru
 	insert(rowId, value, database) \\
 	delete(tableName, rowId, database) \\
 	delete(tableName, rowId, columnName, database) \\
+	\textbf{Copy Structure} \\
+	copyColumnStructure(sourceTableName, targetTableName, \\  \hspace{0.5in} sourceColumnName, newName, database) \\
+	copyTableStructure(sourceTable, newTableName, database) \\
+	\textbf{Copy Strucutre and Values} \\
+	copyColumn(sourceTable, targetTable, \\
+	\hspace{0.5in} sourceColumnName, targetColumnName, \\ 
+	\hspace{0.5in} mapping, database) \\
+	copyTable(sourceTable, newName, database) \\
 	\hline
 	\end{tabular}
 	\caption{The transformations for database evolution.}
 	\label{tab:db-basic-evolution}
 \end{table}
+The set of transformations for database manipulation is limited in contrast with the SQL language it is because mentioned transformation are necessary for application of data evolution on database level. 
+
+\paragraph{Copying of Database Elements} The transformations for copying the structure of a database elements serves more as helpers in advanced evolution cases as they adds a structural duplicate of an existing element only, nevertheless they are valid part of the transformation for database manipulation.  The copying of structural elements has the same limits as database creation - the transformation can not cause name collisions. 
+
+The mapping between instances of the classes (stored data) to provides information which value from the source table rows will be copied to which row in target table. The value of a column is then inserted for each row into the copied column during $copyColumn$ transformation. 
+The mapping is usually defined as: 
+\begin{align*}
+&	mapping =  (r_1, r_2)*,\\
+& 	r_1 \in select(ORM(sourceName), database) \cup \varnothing, \\
+& 	r_2 \in select(ORM(targetName), database) \cup \varnothing
+\end{align*}
+The mapping is not limited to the bijection and it is possible to not include a row into a mapping - this has to be verified because of possible $NOTNULL$ constraints on a target column, as well as the $UNIQUE$ constraint has to be verified because the mapping can violate it in general. On the other hand the benevolent mapping help with creating various kinds on advanced evolutionary transformations. The mapping can cause data losses in some cases if used as a part of advanced refactoring. This situation is discussed later on. 
+
+
+\paragraph{Data Secure Disasembling of a Software} The transformation for disassembly the database can have fatal impact on the data preservation, therefore the set of transformations is extended by a data secure transformations for database disassembling. These transformations are not part of the SQL standard, although they can be implemented as database functions. These transformations creates a secure way to disassembly the database as they drops empty structural elements only. These transformations are in table \ref{tab:db-adv-evolution}. 
 \begin{table}
 \centering
 	\begin{tabular}{|l|}
 	\hline
-	\textbf{Copy Structure} \\
-	copyColumnStructure(sourceTableName, targetTableName, \\  \hspace{1in} sourceColumnName, targetColumnName, database) \\
-	copyTableStructure(sourceTable, newTableName, database) \\
-	\textbf{Copy Values} \\
-	copyColumn(sourceTable, targetTable, \\
-	\hspace{1in} sourceColumnName, targetColumnName, \\ 
-	\hspace{1in} mapping, database) \\
-	copyTabele(sourceTable, targetTable, mapping,  database) \\
 	\textbf{Data Secure Database Disassembling} \\
 	dropEmptyColumn(tableName, columnName, database) \\
 	dropEmptyForeignKey(tableName, keyName, database) \\
 	dropEmptyTable(tableName, database) \\
 	\hline
 	\end{tabular}
-	\caption{The transformations for database evolution which are created as SQL functions.}
+	\caption{The data secure transformations for database evolution which can be created as SQL functions.}
 	\label{tab:db-adv-evolution}
-\end{table}
+\end{table} 
 
 
-The transformation for disassembly the database has fatal impact on the data preservation, therefore the advanced set of transformations is created. These transformations are not part of SQL standard, although they can be implemented as database functions. These transformations creates a structural copy of database structures or data or creates a secure way to disassembly the database. These transformations are in table \ref{tab:db-adv-evolution}. 
 
-The copying of structural elements has the same limits as database creation. The column copying transformation needs one more information to succeed - there has to be provided mapping between the source and target table to assure the data information consistency. Moreover the source and target should have the same structure, type and constraints. 
+\subsection{Object Relational Mapping}
+The ORM can differ from application to application, its impact on the evolution is not crucial but it has to be present to provide full information about the method. The mapping is similar to the Hibernate
+mapping, thus a lot of developers should be familiar with it. 
+% add mapping
 
-The data secure transformations for disassembling the database can succeed (e.g. drop a table) when there are no data contained within the dropped element.
-
+\textbf{TODO: Describe ORM}
 
 \subsection{Software Evolution}
 \label{sec:sw-evolution}
-The evolution of the whole software is based on the basic transformations specific for each software part. The evolution is described from the developer point of view, therefore the transformations use the names and elements from application context, these names and elements has to be transformed into a database context - this is assured by the ORM.
+The evolution of the whole software consider its both components application and database containing data. The way how evolutionary transformation are created based on the set of component specific transformations is introduced in this chapter.
 
-The defined evolution are divided into two groups - first group contains the basic transformations for creating, altering and disassembling the software, second group contains the advanced refactoring cases.
+The evolution is described from the developer point of view, therefore the transformations use the names and elements from application context. The names of application elements and elements themselves have to be transformed into a database context - this is assured by the ORM.
+
+%Finally the evolution cases and their mappings on application and database components are presented in \ref{sec:sw-evolution}. 
+
+%TODO evalutation of trnasformations
 
 \subsection{Basic Evolutionary Transformations}
-The basic evolutionary transformations of the software are based on basic evolution of an application defined in Sec. \ref{sec:app-evolution}, nevertheless the evolution of the database is not so straightforward because properties and associations can be mapped as a column (foreign key respectively) or as a table, this has to be reflected during the evolution as shown on the example of creating a new property: 
+\label{sec:sw-basic-evolution}
+The evolution of the whole software is based on the atomic transformations specific for each software part, which are defined in Sec. \ref{sec:app-evolution} and \ref{sec:db-evolution}. This section introduces how these primitives can be used to manipulate the software elements.
+
+\paragraph{Basic Software Evolution} The basic evolutionary transformations of the software are based on basic evolution of an application. These transformation cannot be  mapped directly on the evolutionary transformations of the database, because properties and associations can be mapped as a column (foreign key respectively) or as a table, this has to be reflected during the evolution as shown on the example of creating a new property: 
 \begin{align*}
-& newProperty(className, property, application) \Rightarrow \\
-& \;\;\; \Rightarrow \begin{cases}
+& \Phi(newProperty(className, property, application)) = \\
+& \;\;\; = \begin{cases}
   addColumn(ORM(className), ORM(property), database) \\\mathbf{if} \; cardinality(property \leq 1)  \\\\
   addTable(ORM(property), database) \\
   \mathbf{if} \; cardinality(property > 1)  
  \end{cases}
 \end{align*}
-Next transformation are provided in the shortened way in table \ref{tab:sw-basic-evolution}, there is the basic application transformation and possible mappings on database level according to to the cardinality.  
+
+Mapping between basic evolutionary transformations is provided in the shortened way in table \ref{tab:sw-basic-evolution}, there is the basic application transformation and possible mappings on database level according to to the cardinality.  
+
 \begin{table}
 \centering
-	\begin{tabular}{|p{0.4\textwidth} p{0.4\textwidth}|}
+	\begin{tabular}{|p{0.4\textwidth} p{0.5\textwidth}|}
 	\hline
 	Application Transformation & Database Transformation \\
 	\multicolumn{2}{|c|}{\textbf{Software Creation}} \\
-	newProperty & addColumn \\
+	newProperty & addColumn  ($cardinality \leq 1$)\\
 	& addTable \\ 
 	& \\
-	newAssociation & addColumn \\
+	newAssociation & addColumn ($cardinality \leq 1$)\\
 	& addTable \\
 	& \\
 	newClass & addTable \\
 	\multicolumn{2}{|c|}{\textbf{Application Alternation}} \\
-	renameProperty & renameColumn \\
+	renameProperty & renameColumn ($cardinality \leq 1$)\\
 	& renameTable \\
 	& \\
-	renameAssociation & renameForeignKey \\
+	renameAssociation & renameForeignKey ($cardinality \leq 1$)\\
 	& renameTable \\
 	& \\
 	renameClass & renameTable \\
 	\multicolumn{2}{|c|}{\textbf{Application Disassembly}} \\
-	removeProperty & removeColumn \\
+	removeProperty & removeColumn ($cardinality \leq 1$)\\
 	& removeTable \\
 	& \\
-	removeAssociation & removeForeignKey \\
+	removeAssociation & removeForeignKey ($cardinality \leq 1$)\\
 	& removeTable \\
 	& \\
 	removeClass & removeTable\\
@@ -285,47 +308,201 @@ Next transformation are provided in the shortened way in table \ref{tab:sw-basic
 \end{table}
 
 
+
+
+
+The data secure transformations for disassembling the database can succeed (e.g. drop a table) when there are no data contained within the dropped element.
+
+
 \subsection{Advanced Evolutionary Transformations}
+\label{sec:sw-adv-evolution}
 Advanced evolutionary transformations are based on the basic ones, they can be obtained as a concatenation of transformations. The concatenation of transformation is possible because each transformation produces a state of a software (or application or database) which can be used as an input for the next transformation. 
 
-All transformations presented so far has the same input information for both application and database, whereas the advanced transformations usually needs a mapping between stored data (instances) as theirs input. First two of them - $copyProperty$ and $mergeClasses$ completes the set of basic transformations.
+All transformations presented so far has the same input information for both application and database, whereas the advanced transformations usually needs a mapping between stored data (instances) as theirs input. 
 
-The $copyProperty$ creates a duplicate of a property in a given class. It can not rename the property so it can not be used for creating duplicates of a property in the property owning class. If the mapping is not provided the transformation creates only a structural copy of the property otherwise it copies the values of the given column too.
+\paragraph{Copy Property}
+The $copyProperty$ creates a duplicate of a property in a given class. It can rename the property so it can be used for creating duplicates of a property in the property owning class. If the mapping is not provided the transformation creates only a structural copy of the property otherwise it copies the values too. Therefore the  $copyProperty$ transformation is the simplest way to manipulate stored data.
+
+The  $copyProperty$ is the first transformation when an additional information has to be added to the usual code refactoring. It is because the $copyColumn$ transformation needs one more information to succeed - there has to be provided mapping between the source and target table to assure the data information consistency. %Moreover the source and target should have the same structure, type and constraints.
 \begin{align*}
 & \mathbf{copyProperty}(sourceClass, propertyName, targetClass, \\
 & \; \; \; mapping, software) 
 \end{align*}
 The transformation is interpreted for both software components - in case of the application a new property is added:
 \begin{align*}
-& copyProperty(sourceClass, property, targetClass, mapping, \\ 
-&  \; \; \; software) \rightarrow newProperty(targetClass, property, application) 
+& \Psi(copyProperty(sourceClass, property, targetClass, mapping, \\ 
+&  \; \; \; software)) = newProperty(targetClass, property, application) 
 \end{align*}
 in case of database the copy of a column or table is created according to property's cardinality and then values are copied:
 \begin{align*}
-& copyPropertysourceClass, property, targetClass, mapping, \\ 
-&  \; \; \; software) \rightarrow 
+& \Phi(copyProperty(sourceClass, property, targetClass, newName,  \\ 
+&  \; \; \; mapping, software)) = \begin{cases}
+ coypColumn(ORM(sourceClass),  \\ \;\;\; ORM(targetClass),  \\ \;\;\;alterColumnName(ORM(property), \\ \;\;\; ORM(newName)), mapping, database) \\ \; \mathbf{if} \; cardinality(property) \leq 1 \\\\
+ copyTable(ORM(Property), \\ \;\;\; ORM(newName))
+ \end{cases}
 \end{align*}
 
+If there are no data in the target table an identity can be used as a mapping function instead of mapping above. 
 
-The mapping provides information which value from the source table rows will be copied to which row in target table. 
+\paragraph{Move Property}
+The $moveProperty$ transformation is based on the $copy$ $Property$ transformation followed by the $removeProperty$ so its construction is easy. On the other hand special attention has to be paid to the provided mapping of instances, because it can cause data loses. The ideal case is when the mapping is a bijection among instances, then the transformation can not cause the lost of data. On the other hand the situation when the mapping does not provides pairs for all rows in a source table can lead to data loss. 
 \begin{align*}
-&	mapping =  (r_1, r_2)*,\\
-& 	r_1 \in select(ORM(sourceClassName), database), \\
-& 	r_2 \in select(ORM(targetClassName), database) 
+& moveProperty(sourceClass, property, targetClass, newName, \\
+& \;\;\; mapping, software) = removeProperty(sourceClass, property, \\
+& \;\;\; CopyProperty(sourceClass, property, targetClass, \\ 
+& \;\;\;newName, mapping, software))
 \end{align*}
 
-The mapping features determine if the $moveProperty$ is data inconsistent or not.
-
-
+\paragraph{Merge Classes}
+There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) are equal. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
 \begin{align*}
-&	\forall r_1, r_1 \in instances(l_1, d) \Rightarrow \exists p \in m_{l_1, l_2} \wedge first(p) = r_1 \\
-&	\forall r_2, r_2 \in instances(l_2, d) \Rightarrow \exists p \in m_{l_1, l_2} \wedge second(p) = r_2
+& merge(firstClass, secondClass, newClassName, software) = \\
+& \; \; \; = removeClass(secondClass, removeClass(firstClass, \\
+& \; \; \; changeReference(secondClass, newClassName, \\
+& \; \; \; changeReference(firstClass, newClassName, \\
+& \; \; \; copyClass(firstClass, newClassName, software))))))
 \end{align*}
 
 
-\section{Contribution}
-\label{sec:contribution}
+\paragraph{Extract and Inline Class}
+The extract and inline class are two opposite transformations. First of them extract a class from an existing class, second of them moves data from one class into another.
+\begin{align*}
+& extract(sourceClass, newClass, property*, software) = \\ 
+& \; \; \; = moveProperty(sourceClass, newClass, property*, \\ 
+& \; \; \; addClass(newClass, software))
+\\\\
+& inline(targetClass, classToInline, software)) = \\
+& \; \; \; = removeClass(classToInline, moveProperty(classToInline, \\
+& \; \; \; targetClass, properties(classToInline), software))
+\end{align*}
+
+The advanced refactoring cases are limited by the transformations they are created from.
+
+\section{Case Study}
+\label{sec:case}
+It is obvious that the set of defined transformation is limited because of focus on data preservation or transformation concatenation. On the other hand defined transformations are strong enough to handle a lot of refactoring cases. 
+
+Before one complex case study example is shown a set of small refactoring cases is discussed. These cases are chosen based on the Eclipse foundation refactoring statistics (the transformation from the top ten influencing data chosen only) and on Martin Fowler's book: Refactoring - improving design of existing code, where one chapter is dedicated to the data organization in the software. 
+
+Selected refactorings are:
+\begin{enumerate}
+	\item \textbf{Rename} is the most used refactoring used according to Eclipse statistic and it is one of the basic refactoring cases introduced in the Sec. \ref{sec:sw-basic-evolution}.
+	\item  \textbf{Move} refactoring is used in Eclipse to move properties from a class to another class within an inheritance hierarchy or to move classes between packages. In contrast our model does not consider packages, on the other hand it is able to move property from one class to another according given mapping, which contains not only move in hierarchy but a lot of other cases too.
+	\item \textbf{Extract Class} is often used refactoring in Eclipse and it is mentioned in Fowler's book too. It is introduced as an example of advanced refactorings in Sec. \ref{sec:sw-adv-evolution} together with its opposite transformation $inline$.
+	\item \textbf{Move field} from the Fowler's book is introduced as $moveProperty$ in Sec. \ref{sec:sw-basic-evolution}.
+	\item \textbf{Replace Data Value with Object} is a refactoring case which is not mentioned among the evolutionary transformations, on the other hand it can be composed from already defined transformations:
+	\begin{align*}
+& replaceDataWithObject(sourceClass, property, newObject, \\
+& \; \; \; software) = removeProperty(sourceClass, property, \\
+& \; \; \; newAssociation(sourceClass, newObject,  mapping, \\
+& \; \; \; copyProperty(sourceClass, property, newObject, \\ & \; \; \;  software)
+	\end{align*}
+Where the mapping use the values copied in the first transformation as a matching point for creating connection between the old and the new class.
+\end{enumerate}
+The transformations proposed in this paper are able to implement all data refactorings used on Eclipse platform. There are some refactorings from Fowler which are not considered in the proposal: replace array with object, change unidirectional association to bidirectional (and reverse) and operations which replace types with polymorphism.
+
+\subsection{Example of Usage}
+The example demonstrates how the transformation helps with data evolution in real example of software evolution. There are two classes in our software $Person$ and $LegalParty$ both of them contains information about address (street, city and zip code). The situation in software is in Figure \ref{fig:case1}, where the whole software is shown. 
+
+To improve the design of code the class Address has to be created which associated with both original classes and contains the data already stored in the software. 
+\begin{figure}
+\begin{subfigure}[b]{0.45\textwidth}
+	\includegraphics[width=\textwidth]{./images/case_app_1}
+	\caption{The application model.}
+\end{subfigure}
+\quad
+\begin{subfigure}[b]{0.45\textwidth}
+	\includegraphics[width=\textwidth]{./images/case_db_1}
+	\caption{The database model.}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+	\centering
+	\begin{tabular}{| c | l | l | l | l | }
+	 	\hline
+		Id &  Surname & Street & City & ZIP  \\ \hline  
+		11 & Jackson & Central Park St & New York & 100 01  \\ \hline
+		12 & Clooney & S Orange Ave & Orlando & 320 24  \\ \hline
+	\end{tabular}
+	\caption{Data stored in the table $Person$.}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+	\centering
+	\begin{tabular}{| c | l | l | l | l | c |}
+	 	\hline
+		Id &  BusinessName & Street & City & ZIP \\ \hline  
+		100 & Tools \& Machines & Olive ave. & New York & 100 01 \\ \hline
+		200 & AI Robotics & Pine ave. & LA & 900 03  \\ \hline
+	\end{tabular}
+	\caption{Data stored in the table $LegalParty$.}
+\end{subfigure}
+	\caption{The initial state of the example used in the case study. There is a repetition of information structure in the $Person$ and $LegalParty$ class.}
+	\label{fig:case1}
+\end{figure}
+The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalParty$. Temporary classes has to be connected with the origin classes by an association.
+\begin{align*}
+ s' &= merge("Address\_tmp1", "Address\_tmp2", "Address", \\
+& \;\;\;\;  newAssociation("LegalParty", association("address", \\
+& \;\;\;\; "Address\_tmp2", 1, 1), mapping_2, extract("LegalParty", \\
+& \;\;\;\;  "Address\_tmp2", "street", "city", "zip", \varnothing  \\
+& \;\;\;\; newAssociation("Person", association("address", \\
+& \;\;\;\; "Address\_tmp1", 1, 1), mapping_1, extract("Person", \\
+& \;\;\;\; "Address\_tmp1", "street", "city", "zip", \varnothing, software)))
+\end{align*}
+Both $mapping_1$ and $mapping_2$ are identities so the creation of the association is straightforward. The result of the transformations is in the Fig. \ref{fig:case2}. 
+\begin{figure}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{./images/case_app_9}
+	\caption{The application model.}
+\end{subfigure}
+\quad
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{./images/case_db_8}
+	\caption{The database model.}
+\end{subfigure}
+
+\begin{subfigure}[b]{0.5\textwidth}
+	\centering
+	\begin{tabular}{| c | l |}
+	 	\hline
+		Id &  Surname \\ \hline  
+		11 & Jackson  \\ \hline
+		12 & Clooney  \\ \hline
+	\end{tabular}
+	\caption{Data stored in the table $Person$.}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\textwidth}
+	\centering
+	\begin{tabular}{| c | l |}
+	 	\hline
+		Id &  BusinessName  \\ \hline  
+		100 & Tools \& Machines  \\ \hline
+		200 & AI Robotics \\ \hline
+	\end{tabular}
+	\caption{Data stored in the table $LegalParty$.}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+	\centering
+	\begin{tabular}{| c | l | l | l | l | l |}
+	 	\hline
+		Id & Street & City & ZIP & Person\_Address & LegalParty\_Address\\ \hline  
+		1 & Olive ave. & New York & 100 01 & & 100 \\ \hline
+		2 & Pine ave. & LA & 900 03 & & 200  \\ \hline
+		3 & Central Park St & New York & 100 01 & 11 &  \\ \hline
+		4 & Orange Ave & Orlando & 320 24 & 12 &\\ \hline
+	\end{tabular}
+	\caption{Data stored in the table $Address\_tmp2$.}
+\end{subfigure}
+	\caption{The initial state of the example used in the case study. There is a repetition of information structure in the $Person$ and $LegalParty$ class.}
+	\label{fig:case2}
+\end{figure}
+
+The example shows that defined transformations are able to perform regular data evolutions. It shows that usage of the transformations are sometimes not intuitive for user (e.g. creating temporary classes before merge).
+
 
 \section{Conclusion}
+
+
 
 \end{document}
