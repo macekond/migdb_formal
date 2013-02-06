@@ -2,6 +2,24 @@
 
 \begin{document}
 \section{Related Work}
+
+
+
+\subsection{Database Evolution}
+\subsubsection{Evolution in Objec-Oriented Databases}
+The problem of database schema evolution is well known issue which is discussed for a long time. There is proposed an approach for  schemes of object-oriented databases in \cite{Banerjee:SemanticsOfSchemaEvolutionInOODB} which based on a set of schema invariants (representing the properties of the schema) and a set of rules for invariant preserving schema changes. The impact of evolution on instances is considered too. The approach is presented informally, while our approach is based on set of formal definitions.
+
+The formal definition of evolution of object-oriented databases is presented in \cite{Peters:AxiomaticModelOfDynamicEvolutionInOODB}. The approach is based on type system representing the database schema, on axioms which defines the schema structural constraints and on changes which evolves the system. There are three change operators: add, remove, modify defined in the paper. The model satisfies the properties of soundness and completeness. The approach in this paper is based on small transformations (changes) too, but its aim is to combine them in a way advanced refactoring cases can be easily applied on a software. 
+
+The SERF framework \cite{Claypool:SERF} provides a similar functionality to the user of an object-oriented database as we do for the user of a software based on ORM. The approach is based on templates a user can create and maintain. Limitation and condition of some evolution cases is discussed in \cite{Claypool:SERF-formal}.
+
+All mentioned approaches address similar  issue as this paper, in contrast it focusses on the homogenous environment of object-oriented databases, whereas our approach aims the heterogenous world of ORM.  
+
+
+
+The formal approach based on epistemic logic (logic of knowledge) is introduced in \cite{Chang-LogicFrameworkForDbRefactoring}. The approach presents a database as a set of beliefs (knowledge), which is revision can be seen as refactoring. The approach consider not only database structure but database queries too, on the other hand data are not considered in this approach.
+
+\subsection{Data Evolution Metrics}
 There are proposed several metrics for classification of impact of a change on the conceptual schema in \cite{Wedemeijer:ConceptualMetrics}. These metrics can help us to describe the impact of proposed transformation on a software which is represent as two models (application and database). Only some metrics could be used for describing transformations as the others describe the state of conceptual schema. The universe (domain) is the application as all changes origins on this level.
 
 The first metric "\textbf{Justified change}" means (in our context) that for each change of database exists a change of application. In case the evolution of the software was based on transformations proposed in this paper the metric is equal to one - each change is justified.
@@ -10,7 +28,8 @@ The metric "\textbf{Proportional change}" which compares the size and severity o
 
 The metric "\textbf{Impact on Complexity}" determines how the complexity of software or its components  changed. The metric can be used to evaluate each single transformations
 
-\paragraph{Prediction of database change impact}The analysis technique for identifying the impact of relational database change upon object oriented application is proposed in \cite{Maule:ImpactAnalysis}. The technique focus on relational database and its change which impact on application is predicted. The analysis technique is able to identify changes in application structure (new attributes) as well as changes in database queries used in application. In contrast approach proposed in this paper does not consider database queries and theirs change and it is not mentioned to predict the impact of a change, but to  
+\subsection{Impact of Database Evolution on Application}
+\paragraph{Prediction of database change impact on application}The analysis technique for identifying the impact of relational database change upon object oriented application is proposed in \cite{Maule:ImpactAnalysis}. The technique focus on relational database and its change which impact on application is predicted. The analysis technique is able to identify changes in application structure as well as changes in database queries used in application. In contrast approach proposed in this paper does not consider database queries and theirs change and it is not mentioned to predict the impact of a change, but to  
 process the change in the whole software, although it can be used for simulation of a change on formal level.
 
 \bibliographystyle{plain}
