@@ -58,8 +58,34 @@ The main issue during the software evolution is the preservation of data and inf
 
 \section{Related Work}
 \label{sec:related-work}
+Research of data and database evolution is not limited to relational ones only, there are also works in the areas of object databases and XML databases. These works provide solutions specific to concrete types of databases using various ranges of solutions - domain specific languages \cite{SERF}, extensions of existing standards or MDD \cite{Evolution_vs_Reorganization} or formal specification \cite{Tresch:1991vi}. These solutions are inspiring, however the domain of the ORM has its specific issues, so a solution from another domain has to be adapted carefully.
 
-\textbf{TODO}
+\paragraph{Informal definitions} The taxonomy of relational database evolution based on the entity-relationship model  is proposed in \cite{Roddick:TaxonomyOnERM}. The evolution is described as a change in entity-relationship model and change in relational database.  The semantics change patterns in context of conceptual schema is described in \cite{Wedemeijer:SemanticChangePatternsInConceptualSchema}, although its impact on database schema or data is not described. The main cases of data evolution are defined in both publications, however the description is informal. The extensive set of possible database refactorings is provided in \cite{Ambler:DbRefactoringBook}, where both schema and data evolution is discussed. The refactorings are intended to be used by database administrators, thus it assume database-first approach to evolution whereas this proposal is application-first.   
+
+\paragraph{Formal framework} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be used for comparison with our framework, where our framework consider stored data. The contribution of the formal framework is definition of equivalent structures in schemas.
+
+A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
+
+
+\paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. Both MeDEA and proposed framework allows automatic database evolution, the difference is in different target audience.  The framework is aimed to be used by database administrators, therefore it is aimed on database structures (such as views) which are not considered in our approach as it is aimed to be used by developers. Proposed framework can use MeDEA to enrich its ability on database model, whereas MeDEA can use the code-centric point of view to design developer friendly transformations.
+
+The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA it extends the SQL command set by so-called schema modification operators which implements the schema evolution. The project is aimed to  be used by database administrators (as well as MeDEA). The PRISM's set of modification operators could be used for database transformation in our proposal, however we prefer to work with a standard SQL set of commands. 
+
+The project DB-MAIN \cite{Hick:DBMAIN} provides a MDD approach to data evolution on all the levels of software we do. The project is well documented formally. The difference between DB-MAIN and our framework is that each has a different focus. DB-MAIN starts with database modification and database migration, and entities are created accordingly; whereas our focus is on entities evolution, which is then propagated to a database with an emphasis on automatization. Our goal is to hide the entire database level from our users.
+
+\paragraph{ORM Frameworks} here are many object-relational mapping frameworks available for developers, and some of them provide tools for database migration. Hibernate \cite{Hibernate} is one of the most popular ORM frameworks in the Java community.  It provides customizable ORM for a wide range of databases, however it does not support complex database migrations.  It is capable only of creating a new table or adding a new column, hence it is not possible to, for example, drop a table or copy values from one column to another. Active Record \cite{Active_Record} is an ORM framework in the Ruby on Rails environment. Since its first version it has contained support for database evolution according to the create-update-delete principle, in the form of so-called migrations \cite{Rails:Migrations} which can be extended by adding user SQL commands. Entity Framework \cite{Entity_Framework} is Microsoft's ORM solution for the .NET platform. Its capabilities of data evolution support are similar to those of Active Record. 
+
+Each of presented ORM frameworks provides support for creating data evolution, as they are all capable of adding a new class as an entity and creating a corresponding table in the database. On the other hand, only two of them (Active Record and Entity Framework) are capable of updating and deleting evolution. In the case of evolutions which need to manipulate data, e.g. moving the property, none of the frameworks mentioned provides a built-in solution. Active Record and Entity Framework allow developers to describe the data move manually. In contrast to these ORMFs, our proposal  provides a higher level of user comfort because of its capability to handle complex data evolutions.
+
+
+\paragraph{Language Specific Solution} An evolution approach for COBOL language is described in \cite{Cleve:2006ug}, which allows a database schema change to be propagated into stored data and entities in the COBOL language. The evolution described in this paper are for create, update and delete. In contrast, our framework is platform independent and covers a wider range of evolution cases including data manipulation; it is aimed at being used by software developers, and thus it starts on the entities level.
+
+Very promising solution is Liquibase \cite{Liquibase} a tool for database refactoring and evolution. It is capable to migrate both database schema and stored data. The evolution is described in a form of a XML document which can be interpreted on various databases. The difference is we try not to bother the developer with database-specific details and make all changes according to a change in application code. 
+
+
+\paragraph{Forward Round-Trip Engineering in Data Evolution} A round-trip approach for data evolution was described in \cite{VanPaesschen:2005to}, which was implemented in the SELF language. This approach proposed a forward-oriented evolution on all application levels in the software application. In contrast with our framework, the round-trip approach does not care about stored data because it is focused only on create, update and delete types of evolution.
+
+A meta-model based approach to data evolution is proposed in\cite{Aboulsamh:MetaModelBasedApproachToIsDataEvolution} and very similar solution for data evolution is proposed, which is based on extended UML meta-model. The solution provides similar capabilities of change of application and database as does our framework. In contrast our work is created with respect to ORM domain and therefore we extended the application meta-model with constructs typical for this domain.
 
 \section{Model of Software}
 \label{sec:models}
@@ -503,6 +529,7 @@ The example shows that defined transformations are able to perform regular data 
 
 \section{Conclusion}
 
-
+\bibliographystyle{plain}      % basic style, author-year citations
+\bibliography{references}   % name your BibTeX data base
 
 \end{document}
