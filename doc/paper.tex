@@ -67,21 +67,15 @@ Research of data and database evolution is not limited to relational ones only, 
 A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
 
 
-\paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. Both MeDEA and proposed framework allows automatic database evolution, the difference is in different target audience.  The framework is aimed to be used by database administrators, therefore it is aimed on database structures (such as views) which are not considered in our approach as it is aimed to be used by developers. Proposed framework can use MeDEA to enrich its ability on database model, whereas MeDEA can use the code-centric point of view to design developer friendly transformations.
-
-The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA it extends the SQL command set by so-called schema modification operators which implements the schema evolution. The project is aimed to  be used by database administrators (as well as MeDEA). The PRISM's set of modification operators could be used for database transformation in our proposal, however we prefer to work with a standard SQL set of commands. 
+\paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA, it extends the SQL command set by so-called schema modification operators which implements the schema evolution.  
 
 The project DB-MAIN \cite{Hick:DBMAIN} provides a MDD approach to data evolution on all the levels of software we do. The project is well documented formally. The difference between DB-MAIN and our framework is that each has a different focus. DB-MAIN starts with database modification and database migration, and entities are created accordingly; whereas our focus is on entities evolution, which is then propagated to a database with an emphasis on automatization. Our goal is to hide the entire database level from our users.
 
+All mentioned project is aimed to  be used by database administrators
+
 \paragraph{ORM Frameworks} here are many object-relational mapping frameworks available for developers, and some of them provide tools for database migration. Hibernate \cite{Hibernate} is one of the most popular ORM frameworks in the Java community.  It provides customizable ORM for a wide range of databases, however it does not support complex database migrations.  It is capable only of creating a new table or adding a new column, hence it is not possible to, for example, drop a table or copy values from one column to another. Active Record \cite{Active_Record} is an ORM framework in the Ruby on Rails environment. Since its first version it has contained support for database evolution according to the create-update-delete principle, in the form of so-called migrations \cite{Rails:Migrations} which can be extended by adding user SQL commands. Entity Framework \cite{Entity_Framework} is Microsoft's ORM solution for the .NET platform. Its capabilities of data evolution support are similar to those of Active Record. 
 
-Each of presented ORM frameworks provides support for creating data evolution, as they are all capable of adding a new class as an entity and creating a corresponding table in the database. On the other hand, only two of them (Active Record and Entity Framework) are capable of updating and deleting evolution. In the case of evolutions which need to manipulate data, e.g. moving the property, none of the frameworks mentioned provides a built-in solution. Active Record and Entity Framework allow developers to describe the data move manually. In contrast to these ORMFs, our proposal  provides a higher level of user comfort because of its capability to handle complex data evolutions.
-
-
-\paragraph{Language Specific Solution} An evolution approach for COBOL language is described in \cite{Cleve:2006ug}, which allows a database schema change to be propagated into stored data and entities in the COBOL language. The evolution described in this paper are for create, update and delete. In contrast, our framework is platform independent and covers a wider range of evolution cases including data manipulation; it is aimed at being used by software developers, and thus it starts on the entities level.
-
 Very promising solution is Liquibase \cite{Liquibase} a tool for database refactoring and evolution. It is capable to migrate both database schema and stored data. The evolution is described in a form of a XML document which can be interpreted on various databases. The difference is we try not to bother the developer with database-specific details and make all changes according to a change in application code. 
-
 
 \paragraph{Forward Round-Trip Engineering in Data Evolution} A round-trip approach for data evolution was described in \cite{VanPaesschen:2005to}, which was implemented in the SELF language. This approach proposed a forward-oriented evolution on all application levels in the software application. In contrast with our framework, the round-trip approach does not care about stored data because it is focused only on create, update and delete types of evolution.
 
@@ -95,29 +89,21 @@ The aim of this paper is to provide an definition of data evolution, which can b
 %TODO popis
 \paragraph{Application} Application is defined as a sequence of classes and it creates the context for all structures used in the software persistent layer.
 \begin{align*}
-& \mathbf{Application} = (Class*)
-\end{align*}
-
-\paragraph{Class} Class represents a basic structural unit in the application model. It has a unique name, one or more properties and it can be associated to other classes in the application. 
-\begin{align*}
-& 	\mathbf{Class} = (label, Property*, Association*)
-\end{align*}
-The properties of a class can be of two kinds - values or collections - according of theirs cardinality.
-	 
-\paragraph{Property} Property represents a feature of a class which is represented as a primitive type. The property can be mandatory, can have a default value and according to its cardinality it can represent a single value or a collection of values. 
-\begin{align*}
-&	\mathbf{Property} = (label, AppType, DefaultValue, Cardinality, Mandatory)
-\end{align*}
-
-\paragraph {Association} Association represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of both association ends.
-\begin{align*}
-&	\mathbf{Association} = (label, classRef, startCardinality, endCardinality) 
-\end{align*}
-
-\paragraph{Application type} Application type ($AppType$) represents primitive type in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only $AppType$ type is called $APPSTRING$.
-\begin{align*}
+& \mathbf{Application} = (Class*) \\
+& 	\mathbf{Class} = (label, Property*, Association*) \\
+& \mathbf{Property} = (label, AppType, DefaultValue, Cardinality, Mandatory) \\
+&	\mathbf{Association} = (label, classRef, startCardinality, endCardinality)  \\
 & \mathbf{AppType} = APPSTRING
 \end{align*}
+
+\paragraph{Class} Class represents a basic structural unit in the application model. It has a unique name, one or more properties and it can be associated to other classes in the application. The properties of a class can be of two kinds - values or collections - according of theirs cardinality.
+	 
+\paragraph{Property} Property represents a feature of a class which is represented as a primitive type. The property can be mandatory, can have a default value and according to its cardinality it can represent a single value or a collection of values. 
+
+\paragraph {Association} Association represents a connection between two classes. It has a unique name and the reference is represented by the label of referenced class. The class which owns the association is consider to be the starting class of an association, referenced class is consider to be the ending class of an association. The cardinalities defines the multiplicity of both association ends.
+
+
+\paragraph{Application type} Application type ($AppType$) represents primitive type in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only $AppType$ type is called $APPSTRING$.
 
 %TODO consistency
 
@@ -152,40 +138,30 @@ The application model defines only the structure of an application thus there ar
 
 \subsection{Database Model}
 he relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents stored instances. The database is defined as a tuple:
+
 \begin{align*}
-&	\mathbf{Database} = ( Table*, Row* )
+&	\mathbf{Database} = ( Table*, Row* )\\
+&	\mathbf{Table} = (label, primaryKey, Column*, ForeignKey*)\\
+&	\mathbf{Column} = (label, DbType, DefaultValue, Constraint*) \\
+&	\mathbf{ForeignKey} = (Label, Label, Constraint*) \\
+&	\mathbf{PrimaryKey} =  ( Label, Sequence ) \\
+&	\mathbf{DbType} = DBSTRING \; | \; DBINT\\
+&	\mathbf{Constraint} = NOTNULL \; | \; UNIQUE 
 \end{align*}
 
 \paragraph{Table} Table represents a basic concept of database schema. It has a unique name, one or more columns and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
-\begin{align*}
-&	\mathbf{Table} = (label, primaryKey, Column*, ForeignKey*)
-\end{align*}
 
 \paragraph{Column} Column defines data values and types which can be part of a table record.
-\begin{align*}
-&	\mathbf{Column} = (label, DbType, DefaultValue, Constraint*) 
-\end{align*}
 
 \paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
-\begin{align*}
-&	\mathbf{ForeignKey} = (Label, Label, Constraint*) 
-\end{align*}
-
 
 \paragraph{Primary key} Primary key is unambiguous identifier of a record in a table. The primary key is always provided (automatically generated) by the database as a non-zero natural number. Primary key is always defined with constraints $NOTNULL$ and $UNIQUE$. 
-\begin{align*}
-&	\mathbf{PrimaryKey} =  ( Label, Sequence ) \end{align*}
+
 The sequence generates values of primary key. The new value of a key is obtained by calling the function $next(s)$. The sequence which provides numbers incremented by one is called $s_1$ if the increment is 1, $s_{10}$ if the increment is 10 etc.
 
 \paragraph{Data Types} Database data types $DbType$ represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There is only one type of column values defined in the model called $DBSTRING$. Next the $DBINT$ type is defined for the values of keys.
-\begin{align*}
-&	\mathbf{DbType} = DBSTRING \; | \; DBINT
-\end{align*}
 
 \paragraph{Constraints} There are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines non-empty columns, second constraint defines there has to be unique records in a column or foreign key.
-\begin{align*}
-&	\mathbf{Constraint} = NOTNULL \; | \; UNIQUE 
-\end{align*}
 
 A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete value of concrete column or key. Each row contains a name of a table it belongs to.
 \begin{align*}
