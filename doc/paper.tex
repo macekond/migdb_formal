@@ -14,7 +14,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 
-\title{Refactoring of Software Using Relational Database}
+\title{Refactoring of Application Using Relational Database}
 \author{Ondrej Macek\inst{1}}
 \authorrunning{Ondrej Macek}
 \institute{Czech Technical University in Prague\\
@@ -27,22 +27,28 @@
 
 \begin{abstract}
 
-\vspace{6pt}\textbf{Keywords:}
+\vspace{6pt}\textbf{Keywords:} code refactoring, relational database, formal model
 \end{abstract}
 
 
 \section{Introduction}
 \label{sec:intro}
-The evolution (change) of a software is a common issue during software development. It occurs from many reasons in all phases of software lifecycle. The evolution severity usually depends on number of changes which has to be made and on the number of affected software components. The focus of this paper is in data evolution context of software implemented in object oriented language using relational database. It means that the data evolution affect at least two software components: persistent objects (entities) and the database. The evolution is based on developer's point of view in this paper as it origins in the need to evolve code. This kind of evolution is straightforward in case there are no data stored in the database, because the database schema can be generated according to an evolved code, moreover some object-relational mapping (ORM) frameworks are able to process basic evolutionary transformation on database with stored data. The evolution of an software with ORM become more difficult when there are stored data and when the evolutionary scenario is more complex. The data migration to the new database schema is usually processed manually, which is expensive and error prone.
+The evolution (change) of a software is a common issue during software development. It occurs from many reasons in all phases of software lifecycle. The evolution severity usually depends on number of changes which has to be made and on the number of affected software components. Refactoring \cite{Fowler:Refactoring} is very popular practice in object-oriented environment for evolving the source code and software architecture. The evolution of database schema and stored data is implemented separately from  source code refactoring, although the change of application affects the database too. There exist object-relational mapping frameworks, which can help with propagation of evolution from application to database. However these framework are usually not capable to solve complex refactoring cases nor migrate data properly as shown in Sect. \ref{sec:problem}.
 
-This paper shows how the code refactoring can be used as the source for data migration. The approach based on changes in code is useful in case when there is no model of database as it is derived directly from code. Next it can help developers to understand impact  of code changes on database. The formal description of code refactoring impact on database and stored data can help with construction of a standalone migration framework or evolutionary extension for existing ORM frameworks.
+%The focus of this paper is in data evolution context of software implemented in object oriented language using relational database. It means that the data evolution affect at least two software components: persistent objects (entities) and the database. The evolution is based on developer's point of view in this paper as it origins in the need to evolve code. This kind of evolution is straightforward in case there are no data stored in the database, because the database schema can be generated according to an evolved code, moreover some object-relational mapping (ORM) frameworks are able to process basic evolutionary transformation on database with stored data. The evolution of an software with ORM become more difficult when there are stored data and when the evolutionary scenario is more complex. The data migration to the new database schema is usually processed manually, which is expensive and error prone.
 
-The paper is organized as follows: first the evolution of software is described in detail in Sec. \ref{sec:problem}, then the related work in presented in Sec. \ref{sec:related-work}. In Sec. \ref{sec:models} the models of software and database is provided together with a set of basic evolutionary transformations. The impact of code refactoring on database is discussed in Sec. \ref{sec:evolution}. Finally the applicability and limitations of the proposed solution is discussed in Sec. \ref{sec:case}.
+The problem of application and database evolution is discussed from developers point of view and the formal model of application refactoring and its impact is shown in Sect. \ref{sec:models}. There are introduced basic refactoring cases as well as the complex ones which are created as a sequences of the basic ones. The capabilities of proposed formal models are illustrated on the common refactoring issues in Sect. \ref{sec:case}.
+
+%This paper shows how the application refactoring can be used as the source for database migration. The approach based on changes in code is useful in case when there is no model of database as it is derived directly from code. Next it can help developers to understand impact  of code changes on database. The formal description of code refactoring impact on database and stored data can help with construction of a standalone migration framework or evolutionary extension for existing ORM frameworks.
+
+%The paper is organized as follows: first the evolution of software is described in detail in Sec. \ref{sec:problem}, then the related work in presented in Sec. \ref{sec:related-work}. In Sec. \ref{sec:models} the models of software and database is provided together with a set of basic evolutionary transformations. The impact of code refactoring on database is discussed in Sec. \ref{sec:evolution}. Finally the applicability and limitations of the proposed solution is discussed in Sec. \ref{sec:case}.
 
 \section{Problem Definition} 
 \label{sec:problem}
 % víc rozepsat o změnách a jak se jim bránit a kam tím směřujeme
 \textbf{TODO: write an introduction when and why the software changes. and possible solutions.}
+
+
 A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:evolution}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM, therefore we define a software as a triple consisting of an application and a database which are connected together by an ORM:
 \begin{align}
 & \mathbf{software} = ( Application, Database, ORM )
@@ -504,7 +510,9 @@ Research of data and database evolution is not limited to relational ones only, 
 
 \paragraph{Informal definitions} The taxonomy of relational database evolution based on the entity-relationship model  is proposed in \cite{Roddick:TaxonomyOnERM}. The evolution is described as a change in entity-relationship model and change in relational database.  The semantics change patterns in context of conceptual schema is described in \cite{Wedemeijer:SemanticChangePatternsInConceptualSchema}, although its impact on database schema or data is not described. The main cases of data evolution are defined in both publications, however the description is informal. The extensive set of possible database refactorings is provided in \cite{Ambler:DbRefactoringBook}, where both schema and data evolution is discussed. The refactorings are intended to be used by database administrators, thus it assume database-first approach to evolution whereas this proposal is application-first.   
 
-\paragraph{Formal framework} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be implemented in our proposal too. The contribution of the formal framework is definition of equivalent structures in relational database schemas. Our proposal is aimed to be used in domain of object-oriented languages where the class model is more common than entity-relationship model which is respected in our proposal.
+\paragraph{Formal frameworks} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be implemented in our proposal too. The contribution of the formal framework is definition of equivalent structures in relational database schemas. Our proposal is aimed to be used in domain of object-oriented languages where the class model is more common than entity-relationship model which is respected in our proposal. 
+
+The formal definition of MDD approach to database schema evolution is proposed in \cite{Aboulsamh:FormalModelingEvolution}, where a changes of database conceptual schema is interpreted on both physical schema and data. In contrast our proposal is aimed to solve the problem of code refactoring and we propose more complex transformations such as \emph{merge}.
 
 A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
 
@@ -518,6 +526,8 @@ A meta-model based approach to data evolution is proposed in \cite{Aboulsamh:Met
 \paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. The project DB-MAIN \cite{Hick:DBMAIN} provides a MDD approach to data evolution on all the levels of software we do. The project DB-MAIN is well documented formally. The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA, it extends the SQL command set by so-called schema modification operators which implements the schema evolution.  Very promising solution is Liquibase \cite{Liquibase} a tool for database refactoring and evolution. It is capable to migrate both database schema and stored data. The evolution is described in a form of a XML document which can be interpreted on various databases. 
 
 The difference between these frameworks and our proposal is that each has a different focus. All mentioned projects are aimed to  be used by database administrators; whereas our focus is on entities evolution, which is then propagated to a database with an emphasis on automatization. Our goal is to hide the entire database level from our users.
+
+\paragraph{Data Evolution of Software} The project IMIS \cite{Bordbar:ModelBasedMigration} follows the same idea of applying MDD into evolution of a whole software, but does not provide a formal model or an overview of capabilities (defined transformations).
 
 
 
