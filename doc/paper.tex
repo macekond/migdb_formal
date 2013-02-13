@@ -112,20 +112,20 @@ The application model defines only the structure of an application thus there ar
 	Type of transformation & Defined transformations \\
 	\hline
 	\\[-2ex] 
-	\textbf{Application Creation} 
+	Application Creation
 	& newProperty(className, property, application) \\
 	& newAssociation(className, association, mapping, \\ &  \hspace{0.5in}application) \\
 	&  newClass(class, application) \\
-	\textbf{Application Alternation} 
+	Application Alternation
 		& renameProperty(className, oldName, newName, \\ &  \hspace{0.5in} application) \\
 		& renameAssociation(className, oldName, newName, \\ &  \hspace{0.5in}application) \\
 		& renameClass(oldName, newName, application)\\
 		& changeReference(referncedClass, newReferencedClass) \\
-	\textbf{Application Disassembly} 
+	Application Disassembly 
 		& removeProperty(className, propertyName,\\ &  \hspace{0.5in} application) \\
 		& removeAssociation(className, associationName, \\ &  \hspace{0.5in}application) \\
 		& removeClass(className, application)\\
-	\textbf{Copy Structure} 	 
+	Copy Structure
 		& copyProperty(sourceClass, property, targetClass,\\ &  \hspace{0.5in} newName, application)  \\
 		& copyClass(class, newName, application) \\
 	\hline
@@ -152,11 +152,11 @@ he relational database consists of database schema which defines the structure o
 
 \paragraph{Foreign key} Foreign key is a reference to another table's primary key, it has an unique name and it can be constrained. The value of a foreign key is $\varnothing$ or a non-zero natural number.
 
-\paragraph{Primary key} Primary key is unambiguous identifier of a record in a table. The primary key is always provided (automatically generated) by the database as a non-zero natural number. Primary key is always defined with constraints $NOTNULL$ and $UNIQUE$. 
+\paragraph{Primary key} Primary key is unambiguous identifier of a record in a table. The primary key is always provided (automatically generated) by the database as a non-zero natural number. Primary key is always defined with constraints\\ $NOTNULL$ and $UNIQUE$. 
 
 The sequence generates values of primary key. The new value of a key is obtained by calling the function $next(s)$. The sequence which provides numbers incremented by one is called $s_1$ if the increment is 1, $s_{10}$ if the increment is 10 etc.
 
-\paragraph{Data Types} Database data types $DbType$ represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There is only one type of column values defined in the model called $DBSTRING$. Next the $DBINT$ type is defined for the values of keys.
+\paragraph{Data Types} Database data types $DbType$ represents primitive types in the database. There are usually defined types such as Varchar, Integer, Boolean etc. There is only one type of column values defined in the model called \\ $DBSTRING$. Next the $DBINT$ type is defined for the values of keys.
 
 \paragraph{Constraints} There are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines non-empty columns, second constraint defines there has to be unique records in a column or foreign key.
 
@@ -323,7 +323,7 @@ The $copyProperty$ creates a duplicate of a property in a given class. It can re
 
 The  $copyProperty$ is the first transformation when an additional information has to be added to the usual code refactoring. It is because the $copyColumn$ transformation needs one more information to succeed - there has to be provided mapping between the source and target table to assure the data information consistency. %Moreover the source and target should have the same structure, type and constraints.
 \begin{align}
-& \mathbf{copyProperty}(sourceClass, propertyName, targetClass, \nonumber  \\
+& copyProperty(sourceClass, propertyName, targetClass, \nonumber  \\
 & \; \; \; mapping, software) 
 \end{align}
 The transformation is interpreted for both software components - in case of the application a new property is added:
@@ -504,17 +504,15 @@ Research of data and database evolution is not limited to relational ones only, 
 
 \paragraph{Informal definitions} The taxonomy of relational database evolution based on the entity-relationship model  is proposed in \cite{Roddick:TaxonomyOnERM}. The evolution is described as a change in entity-relationship model and change in relational database.  The semantics change patterns in context of conceptual schema is described in \cite{Wedemeijer:SemanticChangePatternsInConceptualSchema}, although its impact on database schema or data is not described. The main cases of data evolution are defined in both publications, however the description is informal. The extensive set of possible database refactorings is provided in \cite{Ambler:DbRefactoringBook}, where both schema and data evolution is discussed. The refactorings are intended to be used by database administrators, thus it assume database-first approach to evolution whereas this proposal is application-first.   
 
-\paragraph{Formal framework} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be used for comparison with our framework, where our framework consider stored data. The contribution of the formal framework is definition of equivalent structures in schemas.
+\paragraph{Formal framework} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be implemented in our proposal too. The contribution of the formal framework is definition of equivalent structures in relational database schemas. Our proposal is aimed to be used in domain of object-oriented languages where the class model is more common than entity-relationship model which is respected in our proposal.
 
 A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
 
 \paragraph{ORM Frameworks} There are many object-relational mapping frameworks available for developers, and some of them provide tools for database migration. Hibernate \cite{Hibernate} is one of the most popular ORM frameworks in the Java community which is capable of creating a new table or adding a new column according to a change in the application. Active Record \cite{Active_Record} is an ORM framework in the Ruby on Rails environment. Since its first version it has contained support for database evolution according to the create-update-delete principle, in the form of so-called migrations \cite{Rails:Migrations} which can be extended by adding user SQL commands. Entity Framework \cite{Entity_Framework} is Microsoft's ORM solution for the .NET platform. Its capabilities of data evolution support are similar to those of Active Record. Neither of the frameworks is capable of automatization of complex refactoring cases.
 
-
-
 \paragraph{Forward Round-Trip Engineering in Data Evolution} A round-trip approach for data evolution was described in \cite{VanPaesschen:2005to}, which was implemented in the SELF language. This approach proposed a forward-oriented evolution on all application levels in the software application. In contrast with our framework, the round-trip approach does not care about stored data because it is focused only on create, update and delete types of evolution.
 
-A meta-model based approach to data evolution is proposed in\cite{Aboulsamh:MetaModelBasedApproachToIsDataEvolution} and very similar solution for data evolution is proposed, which is based on extended UML meta-model. The solution provides similar capabilities of change of application and database as does our framework. In contrast our work is created with respect to ORM domain and therefore we extended the application meta-model with constructs typical for this domain.
+A meta-model based approach to data evolution is proposed in \cite{Aboulsamh:MetaModelBasedApproachToIsDataEvolution} and very similar solution for data evolution is proposed, which is based on extended UML meta-model. The solution provides similar capabilities of change of application and database as does our proposal. In contrast our work is created with respect to ORM domain and therefore we extended the application meta-model with constructs typical for this domain.
 
 
 \paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. The project DB-MAIN \cite{Hick:DBMAIN} provides a MDD approach to data evolution on all the levels of software we do. The project DB-MAIN is well documented formally. The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA, it extends the SQL command set by so-called schema modification operators which implements the schema evolution.  Very promising solution is Liquibase \cite{Liquibase} a tool for database refactoring and evolution. It is capable to migrate both database schema and stored data. The evolution is described in a form of a XML document which can be interpreted on various databases. 
