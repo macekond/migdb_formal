@@ -1,4 +1,11 @@
-\documentclass[11pt]{article}
+\documentclass[runningheads]{comsis}
+
+\def\journalissue{ComSIS Vol.~0, No.~0, December 2009}
+\def\paperidnum{UDC, DOI: N/A}
+\setcounter{page}{1}
+
+\usepackage[dvipdfm]{hyperref}
+
 \usepackage{amssymb}
 \usepackage[fleqn]{amsmath}
 \usepackage{hyperref}
@@ -8,10 +15,22 @@
 \usepackage{subcaption}
 
 \title{Refactoring of Software Using Relational Database}
-\author{Ondrej Macek}
+\author{Ondrej Macek\inst{1}}
+\authorrunning{Ondrej Macek}
+\institute{Czech Technical University in Prague\\
+  Karlovo namesti 13 \\
+121 35 Praha 2, Czech Republic\\
+  \email{ondrej.macek@fel.cvut.cz}}
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+
+\vspace{6pt}\textbf{Keywords:}
+\end{abstract}
+
+
 \section{Introduction}
 \label{sec:intro}
 The evolution (change) of a software is a common issue during software development. It occurs from many reasons in all phases of software lifecycle. The evolution severity usually depends on number of changes which has to be made and on the number of affected software components. The focus of this paper is in data evolution context of software implemented in object oriented language using relational database. It means that the data evolution affect at least two software components: persistent objects (entities) and the database. The evolution is based on developer's point of view in this paper as it origins in the need to evolve code. This kind of evolution is straightforward in case there are no data stored in the database, because the database schema can be generated according to an evolved code, moreover some object-relational mapping (ORM) frameworks are able to process basic evolutionary transformation on database with stored data. The evolution of an software with ORM become more difficult when there are stored data and when the evolutionary scenario is more complex. The data migration to the new database schema is usually processed manually, which is expensive and error prone.
@@ -25,61 +44,35 @@ The paper is organized as follows: first the evolution of software is described 
 % víc rozepsat o změnách a jak se jim bránit a kam tím směřujeme
 \textbf{TODO: write an introduction when and why the software changes. and possible solutions.}
 A software implemented using an object-oriented language, which uses relational database as a data storage (as illustrated in the Figure \ref{fig:evolution}) is object of interest of this paper. There are three important components of such a software: application (its persistent layer concretely), database (consisting of database schema and stored data) and an ORM, therefore we define a software as a triple consisting of an application and a database which are connected together by an ORM:
-\begin{align*}
+\begin{align}
 & \mathbf{software} = ( Application, Database, ORM )
-\end{align*}
+\end{align}
 The software has to be in consistent state so its users could have benefit from its usage. The state of the software is defined to communicate the sate of the software to its user, the symbol $\perp$ is used as a notation for inconsistent state. 
-\begin{align*}
+\begin{align}
 & \mathbf{state} = Consistent\; s \: | \: \perp, s \in State 
-\end{align*}
+\end{align}
 The software is in consistent state if application and database are consistent and the database structure corresponds to the application structure according to the ORM.
 
 The evolution of a software is a transformation from one consistent state to another one. These states are called generations of the software and the function which changed the state of a software are called transformations. The evolution consists of change in application and in database as shown in the Figure \ref{fig:evolution}. 
 \begin{figure}
 \centering
-	\includegraphics[scale=0.4]{./images/evolution_simple}
+	\includegraphics[width=.7\textwidth]{./images/evolution_simple}
 	\caption{The evolution of data changes the system on all levels. The figure shows all the components of the evolution process.}
 	\label{fig:evolution}
 \end{figure}
 The usual approach is to refactor code (which is quite fast due to help of IDE) and then re-generation or manual migration of the database. Another approach is to evolve a database (e.g. due to database optimizations) and then update the code. This approach is very common too, nevertheless this paper focus on evolution which origin from the application point of view. 
 
 The refactoring itself does not provide enough information for the complex migration of database and data, therefore a level defining the evolution is added - the set of all possible transformations $E$. The evolution definition from this level is propagated into both involved levels - application and database. The evolution is defined as:
-\begin{align*}
+\begin{align}
 & t(state(s)) = \begin{cases}
 state(sw(\Psi(s, t), \Phi(s,t)) \; \mathbf{if} \; state(s) = Consistent \; s\\\\
  	\perp
 \end{cases}\\ 
-& s \in Software, t \in E
-\end{align*}
+& s \in Software, t \in E \nonumber
+\end{align}
 Where $\Psi$ maps the software evolution cases to the code refactoring and $\Phi$ to maps to the evolutionary transformation of database.
 
 The main issue during the software evolution is the preservation of data and information consistency. The data lost is a situation when data are damaged or lost during the migration. The information consistency means the data was transformed according to the evolution of the application and they correspond with developer's intention. 
-
-
-\section{Related Work}
-\label{sec:related-work}
-Research of data and database evolution is not limited to relational ones only, there are also works in the areas of object databases and XML databases. These works provide solutions specific to concrete types of databases using various ranges of solutions - domain specific languages \cite{SERF}, extensions of existing standards or MDD \cite{Evolution_vs_Reorganization} or formal specification \cite{Tresch:1991vi}. These solutions are inspiring, however the domain of the ORM has its specific issues, so a solution from another domain has to be adapted carefully.
-
-\paragraph{Informal definitions} The taxonomy of relational database evolution based on the entity-relationship model  is proposed in \cite{Roddick:TaxonomyOnERM}. The evolution is described as a change in entity-relationship model and change in relational database.  The semantics change patterns in context of conceptual schema is described in \cite{Wedemeijer:SemanticChangePatternsInConceptualSchema}, although its impact on database schema or data is not described. The main cases of data evolution are defined in both publications, however the description is informal. The extensive set of possible database refactorings is provided in \cite{Ambler:DbRefactoringBook}, where both schema and data evolution is discussed. The refactorings are intended to be used by database administrators, thus it assume database-first approach to evolution whereas this proposal is application-first.   
-
-\paragraph{Formal framework} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be used for comparison with our framework, where our framework consider stored data. The contribution of the formal framework is definition of equivalent structures in schemas.
-
-A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
-
-
-\paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA, it extends the SQL command set by so-called schema modification operators which implements the schema evolution.  
-
-The project DB-MAIN \cite{Hick:DBMAIN} provides a MDD approach to data evolution on all the levels of software we do. The project is well documented formally. The difference between DB-MAIN and our framework is that each has a different focus. DB-MAIN starts with database modification and database migration, and entities are created accordingly; whereas our focus is on entities evolution, which is then propagated to a database with an emphasis on automatization. Our goal is to hide the entire database level from our users.
-
-All mentioned project is aimed to  be used by database administrators
-
-\paragraph{ORM Frameworks} here are many object-relational mapping frameworks available for developers, and some of them provide tools for database migration. Hibernate \cite{Hibernate} is one of the most popular ORM frameworks in the Java community.  It provides customizable ORM for a wide range of databases, however it does not support complex database migrations.  It is capable only of creating a new table or adding a new column, hence it is not possible to, for example, drop a table or copy values from one column to another. Active Record \cite{Active_Record} is an ORM framework in the Ruby on Rails environment. Since its first version it has contained support for database evolution according to the create-update-delete principle, in the form of so-called migrations \cite{Rails:Migrations} which can be extended by adding user SQL commands. Entity Framework \cite{Entity_Framework} is Microsoft's ORM solution for the .NET platform. Its capabilities of data evolution support are similar to those of Active Record. 
-
-Very promising solution is Liquibase \cite{Liquibase} a tool for database refactoring and evolution. It is capable to migrate both database schema and stored data. The evolution is described in a form of a XML document which can be interpreted on various databases. The difference is we try not to bother the developer with database-specific details and make all changes according to a change in application code. 
-
-\paragraph{Forward Round-Trip Engineering in Data Evolution} A round-trip approach for data evolution was described in \cite{VanPaesschen:2005to}, which was implemented in the SELF language. This approach proposed a forward-oriented evolution on all application levels in the software application. In contrast with our framework, the round-trip approach does not care about stored data because it is focused only on create, update and delete types of evolution.
-
-A meta-model based approach to data evolution is proposed in\cite{Aboulsamh:MetaModelBasedApproachToIsDataEvolution} and very similar solution for data evolution is proposed, which is based on extended UML meta-model. The solution provides similar capabilities of change of application and database as does our framework. In contrast our work is created with respect to ORM domain and therefore we extended the application meta-model with constructs typical for this domain.
 
 \section{Model of Software}
 \label{sec:models}
@@ -88,13 +81,13 @@ The aim of this paper is to provide an definition of data evolution, which can b
 \subsection{Application Model}
 %TODO popis
 \paragraph{Application} Application is defined as a sequence of classes and it creates the context for all structures used in the software persistent layer.
-\begin{align*}
+\begin{align}
 & \mathbf{Application} = (Class*) \\
 & 	\mathbf{Class} = (label, Property*, Association*) \\
-& \mathbf{Property} = (label, AppType, DefaultValue, Cardinality, Mandatory) \\
+& \mathbf{Property} = (label, AppType, DefaultValue, \nonumber \\ & \;\;\;\;  Cardinality, Mandatory) \\
 &	\mathbf{Association} = (label, classRef, startCardinality, endCardinality)  \\
 & \mathbf{AppType} = APPSTRING
-\end{align*}
+\end{align}
 
 \paragraph{Class} Class represents a basic structural unit in the application model. It has a unique name, one or more properties and it can be associated to other classes in the application. The properties of a class can be of two kinds - values or collections - according of theirs cardinality.
 	 
@@ -111,35 +104,39 @@ The aim of this paper is to provide an definition of data evolution, which can b
 \label{sec:app-evolution}
 The application model defines only the structure of an application thus there are defined transformation for its creating, altering and disassembling. Therefore the conditions for successful transformations are simple 1) when creating an object in the model or altering its name collisions has to be prevent, 2) when renaming a class the references have to be updated 3) when creating or altering an association the existence of referenced class has to be verified. The only issue during disassembling is the class can be removed only in case it is not associated by other classes. If a transformation cannot be processed the state of the application become inconsistent. The transformations are in table \ref{tab:app-evolution}. The list of altering operations is not complete as there are missing transformation for changing the obligation or cardinality of properties and associations. It is because these transformations are not so important for the next text when the complex refactorings are considered. 
 \begin{table}
+\caption{The transformations for application evolution.}
+	\label{tab:app-evolution}
 \centering
-	\begin{tabular}{|l|}
+	\begin{tabular}{ll}
 	\hline
-	\textbf{Application Creation} \\
-	newProperty(className, property, application) \\
-	newAssociation(className, association, mapping, application) \\
-	newClass(class, application) \\
-	\textbf{Application Alternation} \\
-	renameProperty(className, oldName, newName, application) \\
-	renameAssociation(className, oldName, newName, application) \\
-	renameClass(oldName, newName, application)\\
-	changeReference(referncedClass, newReferencedClass) \\
-	\textbf{Application Disassembly} \\
-	removeProperty(className, propertyName, application) \\
-	removeAssociation(className, associationName, application) \\
-	removeClass(className, application)\\
-	\textbf{Copy Structure}\\
-	copyProperty(sourceClass, property, targetClass, newName, application)  \\
-	copyClass(class, newName, application) \\
+	Type of transformation & Defined transformations \\
+	\hline
+	\\[-2ex] 
+	\textbf{Application Creation} 
+	& newProperty(className, property, application) \\
+	& newAssociation(className, association, mapping, \\ &  \hspace{0.5in}application) \\
+	&  newClass(class, application) \\
+	\textbf{Application Alternation} 
+		& renameProperty(className, oldName, newName, \\ &  \hspace{0.5in} application) \\
+		& renameAssociation(className, oldName, newName, \\ &  \hspace{0.5in}application) \\
+		& renameClass(oldName, newName, application)\\
+		& changeReference(referncedClass, newReferencedClass) \\
+	\textbf{Application Disassembly} 
+		& removeProperty(className, propertyName,\\ &  \hspace{0.5in} application) \\
+		& removeAssociation(className, associationName, \\ &  \hspace{0.5in}application) \\
+		& removeClass(className, application)\\
+	\textbf{Copy Structure} 	 
+		& copyProperty(sourceClass, property, targetClass,\\ &  \hspace{0.5in} newName, application)  \\
+		& copyClass(class, newName, application) \\
 	\hline
 	\end{tabular}
-	\caption{The transformations for application evolution.}
-	\label{tab:app-evolution}
+	
 \end{table}
 
 \subsection{Database Model}
 he relational database consists of database schema which defines the structure of the database and data, which in our ORM system represents stored instances. The database is defined as a tuple:
 
-\begin{align*}
+\begin{align}
 &	\mathbf{Database} = ( Table*, Row* )\\
 &	\mathbf{Table} = (label, primaryKey, Column*, ForeignKey*)\\
 &	\mathbf{Column} = (label, DbType, DefaultValue, Constraint*) \\
@@ -147,7 +144,7 @@ he relational database consists of database schema which defines the structure o
 &	\mathbf{PrimaryKey} =  ( Label, Sequence ) \\
 &	\mathbf{DbType} = DBSTRING \; | \; DBINT\\
 &	\mathbf{Constraint} = NOTNULL \; | \; UNIQUE 
-\end{align*}
+\end{align}
 
 \paragraph{Table} Table represents a basic concept of database schema. It has a unique name, one or more columns and it can be related to other tables in the schema by foreign keys. Rows in the table represents stored data.
 
@@ -164,10 +161,10 @@ The sequence generates values of primary key. The new value of a key is obtained
 \paragraph{Constraints} There are two types of constraints defined in the model. Both constraints are column constraints - first constraint defines non-empty columns, second constraint defines there has to be unique records in a column or foreign key.
 
 A database consists not only from schema but also from data which are represented as rows in a table. A table row in our model is a tuple consisting of value pairs, which represents concrete value of concrete column or key. Each row contains a name of a table it belongs to.
-\begin{align*}
+\begin{align}
 &	\mathbf{Row} = (Label, N, Pair*) \\
 &	\mathbf{Pair} = (Label, Value) 
-\end{align*}
+\end{align}
 
 %TODO consistency
 
@@ -175,40 +172,43 @@ A database consists not only from schema but also from data which are represente
 \label{sec:db-evolution}
 The database consists of two parts - from database schema which defines the structure and from stored data - hence the transformations have to consider both parts. The transformation for manipualtion of structure has similar conditions to the evolution of application application. The transformations for data manipulation are inspired by the SQL language. The basic transformations are in Table \ref{tab:db-basic-evolution}. 
 \begin{table}
+\caption{The transformations for database evolution.}
+	\label{tab:db-basic-evolution}
 \centering
-	\begin{tabular}{|l|}
+\setlength\tabcolsep{0.5em}
+	\begin{tabular}{ll}
 	\hline
-	\textbf{Database Creation} \\
-	addColumn(tableName, column, database) \\
-	addForeignKey(tableName, key, database) \\
-	addTable(table, database)\\
-	\textbf{Database Alternation} \\
-	alterColumnName(tableName, oldName, newName, dataabse) \\
-	alterForeignKeyName(tableName, oldName, newName, dataabse) \\
-	alterTableName(oldName, newName, dataabse) \\
-	\textbf{Database Disasembling} \\
-	dropColumn(tableName, columnName, database) \\
-	dropForeignKey(tableName, keyName, database) \\
-	dropTable(tableName, database) \\
-	\textbf{Data Manipulation} \\
-	select(tableName, rowId, database) \\
-	select(tableName, database) \\
-	insert(row, database) \\
-	insert(rowId, value, database) \\
-	delete(tableName, rowId, database) \\
-	delete(tableName, rowId, columnName, database) \\
-	\textbf{Copy Structure} \\
-	copyColumnStructure(sourceTableName, targetTableName, \\  \hspace{0.5in} sourceColumnName, newName, database) \\
-	copyTableStructure(sourceTable, newTableName, database) \\
-	\textbf{Copy Strucutre and Values} \\
-	copyColumn(sourceTable, targetTable, \\
-	\hspace{0.5in} sourceColumnName, targetColumnName, \\ 
-	\hspace{0.5in} mapping, database) \\
-	copyTable(sourceTable, newName, database) \\
+	Type of transformation & Defined transformations \\
+	\hline
+	\\[-2ex] Database Creation
+	& addColumn(tableName, column, database) \\
+	& addForeignKey(tableName, key, database) \\
+	& addTable(table, database)\\
+	Database Alternation
+	& alterColumnName(tableName, oldName, \\ & \hspace{0.5in}newName, dataabse) \\
+	& alterForeignKeyName(tableName, oldName, \\ & \hspace{0.5in}newName, dataabse) \\
+	& alterTableName(oldName, newName, dataabse) \\
+	Database Disasembling
+	& dropColumn(tableName, columnName, database) \\
+	& dropForeignKey(tableName, keyName, database) \\
+	& dropTable(tableName, database) \\
+	Data Manipulation
+	& select(tableName, rowId, database) \\
+	& select(tableName, database) \\
+	& insert(row, database) \\
+	& insert(rowId, value, database) \\
+	& delete(tableName, rowId, database) \\
+	& delete(tableName, rowId, columnName, database) \\
+	Copy Structure
+	& copyColumnStructure(sourceTableName,\\ &  \hspace{0.5in} targetTableName,  sourceColumnName, \\ &  \hspace{0.5in} newName, database) \\
+	& copyTableStructure(sourceTable, newTableName, \\ &  \hspace{0.5in} database) \\
+	Copy Strucutre and Values
+	& copyColumn(sourceTable, targetTable, \\
+	& \hspace{0.5in} sourceColumnName, targetColumnName, \\ 
+	& \hspace{0.5in} mapping, database) \\
+	& copyTable(sourceTable, newName, database) \\
 	\hline
 	\end{tabular}
-	\caption{The transformations for database evolution.}
-	\label{tab:db-basic-evolution}
 \end{table}
 The set of transformations for database manipulation is limited in contrast with the SQL language it is because mentioned transformation are necessary for application of data evolution on database level. 
 
@@ -216,27 +216,30 @@ The set of transformations for database manipulation is limited in contrast with
 
 The mapping between instances of the classes (stored data) to provides information which value from the source table rows will be copied to which row in target table. The value of a column is then inserted for each row into the copied column during $copyColumn$ transformation. 
 The mapping is usually defined as: 
-\begin{align*}
+\begin{align}
 &	mapping =  (r_1, r_2)*,\\
 & 	r_1 \in select(ORM(sourceName), database) \cup \varnothing, \\
 & 	r_2 \in select(ORM(targetName), database) \cup \varnothing
-\end{align*}
+\end{align}
 The mapping is not limited to the bijection and it is possible to not include a row into a mapping - this has to be verified because of possible $NOTNULL$ constraints on a target column, as well as the $UNIQUE$ constraint has to be verified because the mapping can violate it in general. On the other hand the benevolent mapping help with creating various kinds on advanced evolutionary transformations. The mapping can cause data losses in some cases if used as a part of advanced refactoring. This situation is discussed later on. 
 
 
 \paragraph{Data Secure Disasembling of a Software} The transformation for disassembly the database can have fatal impact on the data preservation, therefore the set of transformations is extended by a data secure transformations for database disassembling. These transformations are not part of the SQL standard, although they can be implemented as database functions. These transformations creates a secure way to disassembly the database as they drops empty structural elements only. These transformations are in table \ref{tab:db-adv-evolution}. 
 \begin{table}
 \centering
-	\begin{tabular}{|l|}
+\caption{The data secure transformations for database evolution which can be created as SQL functions.}
+	\label{tab:db-adv-evolution}
+	\begin{tabular}{ll}
 	\hline
-	\textbf{Data Secure Database Disassembling} \\
-	dropEmptyColumn(tableName, columnName, database) \\
-	dropEmptyForeignKey(tableName, keyName, database) \\
-	dropEmptyTable(tableName, database) \\
+	Type of transformation & Defined transformations \\
+	\hline
+	\\[-2ex] 
+	Data Secure Database Disassembling &
+	dropEmptyColumn(tableName, columnName, \\ & \hspace{0.25in} database) \\
+	& dropEmptyForeignKey(tableName, keyName, \\ & \hspace{0.25in} database) \\
+	& dropEmptyTable(tableName, database) \\
 	\hline
 	\end{tabular}
-	\caption{The data secure transformations for database evolution which can be created as SQL functions.}
-	\label{tab:db-adv-evolution}
 \end{table} 
 
 
@@ -263,50 +266,43 @@ The evolution is described from the developer point of view, therefore the trans
 The evolution of the whole software is based on the atomic transformations specific for each software part, which are defined in Sec. \ref{sec:app-evolution} and \ref{sec:db-evolution}. This section introduces how these primitives can be used to manipulate the software elements.
 
 \paragraph{Basic Software Evolution} The basic evolutionary transformations of the software are based on basic evolution of an application. These transformation cannot be  mapped directly on the evolutionary transformations of the database, because properties and associations can be mapped as a column (foreign key respectively) or as a table, this has to be reflected during the evolution as shown on the example of creating a new property: 
-\begin{align*}
-& \Phi(newProperty(className, property, application)) = \\
-& \;\;\; = \begin{cases}
+\begin{align}
+& \Phi(newProperty(className, property, application)) = \nonumber \\
+& \;\;\; =  \begin{cases}
   addColumn(ORM(className), ORM(property), database) \\\mathbf{if} \; cardinality(property \leq 1)  \\\\
   addTable(ORM(property), database) \\
   \mathbf{if} \; cardinality(property > 1)  
  \end{cases}
-\end{align*}
+\end{align}
 
 Mapping between basic evolutionary transformations is provided in the shortened way in table \ref{tab:sw-basic-evolution}, there is the basic application transformation and possible mappings on database level according to to the cardinality.  
 
 \begin{table}
+	\caption{The mapping between evolution of the application to the database transformations.}
+	\label{tab:sw-basic-evolution}
 \centering
-	\begin{tabular}{|p{0.4\textwidth} p{0.5\textwidth}|}
-	\hline
+	\begin{tabular}{ll}
+		\hline
 	Application Transformation & Database Transformation \\
-	\multicolumn{2}{|c|}{\textbf{Software Creation}} \\
-	newProperty & addColumn  ($cardinality \leq 1$)\\
-	& addTable \\ 
-	& \\
-	newAssociation & addColumn ($cardinality \leq 1$)\\
-	& addTable \\
-	& \\
+	\hline
+	\\[-2ex] 
+	newProperty & \textbf{if} $cardinality \leq 1$ \textbf{then} addColumn \textbf{else} addTable \\ 
+
+	newAssociation & \textbf{if} $cardinality \leq 1$ \textbf{then} addColumn  \textbf{else} addTable \\
+
 	newClass & addTable \\
-	\multicolumn{2}{|c|}{\textbf{Application Alternation}} \\
-	renameProperty & renameColumn ($cardinality \leq 1$)\\
-	& renameTable \\
-	& \\
-	renameAssociation & renameForeignKey ($cardinality \leq 1$)\\
-	& renameTable \\
-	& \\
+	renameProperty & \textbf{if} $cardinality \leq 1$ \textbf{then}  renameColumn  \textbf{else} renameTable \\
+
+	renameAssociation & \textbf{if} $cardinality \leq 1$ \textbf{then} renameForeignKey \\ & \hspace{1in} \textbf{else} renameTable \\
+	
 	renameClass & renameTable \\
-	\multicolumn{2}{|c|}{\textbf{Application Disassembly}} \\
-	removeProperty & removeColumn ($cardinality \leq 1$)\\
-	& removeTable \\
-	& \\
-	removeAssociation & removeForeignKey ($cardinality \leq 1$)\\
-	& removeTable \\
-	& \\
+	removeProperty & \textbf{if} $cardinality \leq 1$ \textbf{then} removeColumn  \\ & \hspace{1in}\textbf{else} removeTable \\
+	
+	removeAssociation & \textbf{if} $cardinality \leq 1$ \textbf{then}  removeForeignKey \\ & \hspace{1in} \textbf{else} removeTable \\
+
 	removeClass & removeTable\\
 	\hline
 	\end{tabular}
-	\caption{The mapping between evolution of the application to the database transformations.}
-	\label{tab:sw-basic-evolution}
 \end{table}
 
 
@@ -326,57 +322,57 @@ All transformations presented so far has the same input information for both app
 The $copyProperty$ creates a duplicate of a property in a given class. It can rename the property so it can be used for creating duplicates of a property in the property owning class. If the mapping is not provided the transformation creates only a structural copy of the property otherwise it copies the values too. Therefore the  $copyProperty$ transformation is the simplest way to manipulate stored data.
 
 The  $copyProperty$ is the first transformation when an additional information has to be added to the usual code refactoring. It is because the $copyColumn$ transformation needs one more information to succeed - there has to be provided mapping between the source and target table to assure the data information consistency. %Moreover the source and target should have the same structure, type and constraints.
-\begin{align*}
-& \mathbf{copyProperty}(sourceClass, propertyName, targetClass, \\
+\begin{align}
+& \mathbf{copyProperty}(sourceClass, propertyName, targetClass, \nonumber  \\
 & \; \; \; mapping, software) 
-\end{align*}
+\end{align}
 The transformation is interpreted for both software components - in case of the application a new property is added:
-\begin{align*}
-& \Psi(copyProperty(sourceClass, property, targetClass, mapping, \\ 
+\begin{align}
+& \Psi(copyProperty(sourceClass, property, targetClass, mapping, \nonumber  \\ 
 &  \; \; \; software)) = newProperty(targetClass, property, application) 
-\end{align*}
+\end{align}
 in case of database the copy of a column or table is created according to property's cardinality and then values are copied:
-\begin{align*}
-& \Phi(copyProperty(sourceClass, property, targetClass, newName,  \\ 
+\begin{align}
+& \Phi(copyProperty(sourceClass, property, targetClass, newName, \nonumber \\ 
 &  \; \; \; mapping, software)) = \begin{cases}
  coypColumn(ORM(sourceClass),  \\ \;\;\; ORM(targetClass),  \\ \;\;\;alterColumnName(ORM(property), \\ \;\;\; ORM(newName)), mapping, database) \\ \; \mathbf{if} \; cardinality(property) \leq 1 \\\\
  copyTable(ORM(Property), \\ \;\;\; ORM(newName))
  \end{cases}
-\end{align*}
+\end{align}
 
 If there are no data in the target table an identity can be used as a mapping function instead of mapping above. 
 
 \paragraph{Move Property}
 The $moveProperty$ transformation is based on the $copy$ $Property$ transformation followed by the $removeProperty$ so its construction is easy. On the other hand special attention has to be paid to the provided mapping of instances, because it can cause data loses. The ideal case is when the mapping is a bijection among instances, then the transformation can not cause the lost of data. On the other hand the situation when the mapping does not provides pairs for all rows in a source table can lead to data loss. 
-\begin{align*}
-& moveProperty(sourceClass, property, targetClass, newName, \\
-& \;\;\; mapping, software) = removeProperty(sourceClass, property, \\
-& \;\;\; CopyProperty(sourceClass, property, targetClass, \\ 
+\begin{align}
+& moveProperty(sourceClass, property, targetClass, newName,\nonumber  \\
+& \;\;\; mapping, software) = removeProperty(sourceClass, property, \nonumber \\
+& \;\;\; CopyProperty(sourceClass, property, targetClass, \nonumber \\ 
 & \;\;\;newName, mapping, software))
-\end{align*}
+\end{align}
 
 \paragraph{Merge Classes}
 There occur situations when there is a need to merge two classes and the inlining transformation cannot be used because of name collisions among properties in such a case the $merge$ transformation can be used. It can be used in case structure of both classes (respectively tables) are equal. The transformation creates new rows in the new table - the primary keys from origin instances are replaced by a new ones.
-\begin{align*}
-& merge(firstClass, secondClass, newClassName, software) = \\
-& \; \; \; = removeClass(secondClass, removeClass(firstClass, \\
-& \; \; \; changeReference(secondClass, newClassName, \\
-& \; \; \; changeReference(firstClass, newClassName, \\
+\begin{align}
+& merge(firstClass, secondClass, newClassName, software) = \nonumber \\
+& \; \; \; = removeClass(secondClass, removeClass(firstClass,\nonumber  \\
+& \; \; \; changeReference(secondClass, newClassName, \nonumber \\
+& \; \; \; changeReference(firstClass, newClassName,\nonumber  \\
 & \; \; \; copyClass(firstClass, newClassName, software))))))
-\end{align*}
+\end{align}
 
 
 \paragraph{Extract and Inline Class}
 The extract and inline class are two opposite transformations. First of them extract a class from an existing class, second of them moves data from one class into another.
-\begin{align*}
-& extract(sourceClass, newClass, property*, software) = \\ 
-& \; \; \; = moveProperty(sourceClass, newClass, property*, \\ 
+\begin{align}
+& extract(sourceClass, newClass, property*, software) = \nonumber  \\ 
+& \; \; \; = moveProperty(sourceClass, newClass, property*, \nonumber \\ 
 & \; \; \; addClass(newClass, software))
-\\\\
-& inline(targetClass, classToInline, software)) = \\
-& \; \; \; = removeClass(classToInline, moveProperty(classToInline, \\
+\\ \nonumber  \\
+& inline(targetClass, classToInline, software)) =  \nonumber \\
+& \; \; \; = removeClass(classToInline, moveProperty(classToInline, \nonumber \\
 & \; \; \; targetClass, properties(classToInline), software))
-\end{align*}
+\end{align}
 
 The advanced refactoring cases are limited by the transformations they are created from.
 
@@ -393,12 +389,12 @@ Selected refactorings are:
 	\item \textbf{Extract Class} is often used refactoring in Eclipse and it is mentioned in Fowler's book too. It is introduced as an example of advanced refactorings in Sec. \ref{sec:sw-adv-evolution} together with its opposite transformation $inline$.
 	\item \textbf{Move field} from the Fowler's book is introduced as $moveProperty$ in Sec. \ref{sec:sw-basic-evolution}.
 	\item \textbf{Replace Data Value with Object} is a refactoring case which is not mentioned among the evolutionary transformations, on the other hand it can be composed from already defined transformations:
-	\begin{align*}
-& replaceDataWithObject(sourceClass, property, newObject, \\
-& \; \; \; software) = removeProperty(sourceClass, property, \\
-& \; \; \; newAssociation(sourceClass, newObject,  mapping, \\
-& \; \; \; copyProperty(sourceClass, property, newObject, \\ & \; \; \;  software)
-	\end{align*}
+	\begin{align}
+& replaceDataWithObject(sourceClass, property, newObject, \nonumber \\
+& \; \; \; software) = removeProperty(sourceClass, property, \nonumber \\
+& \; \; \; newAssociation(sourceClass, newObject,  mapping,\nonumber  \\
+& \; \; \; copyProperty(sourceClass, property, newObject, \nonumber \\ & \; \; \;  software)
+	\end{align}
 Where the mapping use the values copied in the first transformation as a matching point for creating connection between the old and the new class.
 \end{enumerate}
 The transformations proposed in this paper are able to implement all data refactorings used on Eclipse platform. There are some refactorings from Fowler which are not considered in the proposal: replace array with object, change unidirectional association to bidirectional (and reverse) and operations which replace types with polymorphism.
@@ -441,15 +437,15 @@ To improve the design of code the class Address has to be created which associat
 	\label{fig:case1}
 \end{figure}
 The first  step of is to extract two temporary classes representing address of a $Person$ or of a $LegalParty$. Temporary classes has to be connected with the origin classes by an association.
-\begin{align*}
- s' &= merge("Address\_tmp1", "Address\_tmp2", "Address", \\
-& \;\;\;\;  newAssociation("LegalParty", association("address", \\
-& \;\;\;\; "Address\_tmp2", 1, 1), mapping_2, extract("LegalParty", \\
-& \;\;\;\;  "Address\_tmp2", "street", "city", "zip", \varnothing  \\
-& \;\;\;\; newAssociation("Person", association("address", \\
-& \;\;\;\; "Address\_tmp1", 1, 1), mapping_1, extract("Person", \\
+\begin{align}
+ s' &= merge("Address\_tmp1", "Address\_tmp2", "Address", \nonumber \\
+& \;\;\;\;  newAssociation("LegalParty", association("address", \nonumber \\
+& \;\;\;\; "Address\_tmp2", 1, 1), mapping_2, extract("LegalParty", \nonumber \\
+& \;\;\;\;  "Address\_tmp2", "street", "city", "zip", \varnothing \nonumber  \\
+& \;\;\;\; newAssociation("Person", association("address",\nonumber  \\
+& \;\;\;\; "Address\_tmp1", 1, 1), mapping_1, extract("Person", \nonumber \\
 & \;\;\;\; "Address\_tmp1", "street", "city", "zip", \varnothing, software)))
-\end{align*}
+\end{align}
 Both $mapping_1$ and $mapping_2$ are identities so the creation of the association is straightforward. The result of the transformations is in the Fig. \ref{fig:case2}. 
 \begin{figure}
 \begin{subfigure}[b]{0.45\textwidth}
@@ -502,10 +498,37 @@ Both $mapping_1$ and $mapping_2$ are identities so the creation of the associati
 
 The example shows that defined transformations are able to perform regular data evolutions. It shows that usage of the transformations are sometimes not intuitive for user (e.g. creating temporary classes before merge).
 
+\section{Related Work}
+\label{sec:related-work}
+Research of data and database evolution is not limited to relational ones only, there are also works in the areas of object databases and XML databases. These works provide solutions specific to concrete types of databases using various ranges of solutions - domain specific languages \cite{SERF}, extensions of existing standards or MDD \cite{Evolution_vs_Reorganization} or formal specification \cite{Tresch:1991vi}. These solutions are inspiring, however the domain of the ORM has its specific issues, so a solution from another domain has to be adapted carefully.
+
+\paragraph{Informal definitions} The taxonomy of relational database evolution based on the entity-relationship model  is proposed in \cite{Roddick:TaxonomyOnERM}. The evolution is described as a change in entity-relationship model and change in relational database.  The semantics change patterns in context of conceptual schema is described in \cite{Wedemeijer:SemanticChangePatternsInConceptualSchema}, although its impact on database schema or data is not described. The main cases of data evolution are defined in both publications, however the description is informal. The extensive set of possible database refactorings is provided in \cite{Ambler:DbRefactoringBook}, where both schema and data evolution is discussed. The refactorings are intended to be used by database administrators, thus it assume database-first approach to evolution whereas this proposal is application-first.   
+
+\paragraph{Formal framework} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be used for comparison with our framework, where our framework consider stored data. The contribution of the formal framework is definition of equivalent structures in schemas.
+
+A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
+
+\paragraph{ORM Frameworks} There are many object-relational mapping frameworks available for developers, and some of them provide tools for database migration. Hibernate \cite{Hibernate} is one of the most popular ORM frameworks in the Java community which is capable of creating a new table or adding a new column according to a change in the application. Active Record \cite{Active_Record} is an ORM framework in the Ruby on Rails environment. Since its first version it has contained support for database evolution according to the create-update-delete principle, in the form of so-called migrations \cite{Rails:Migrations} which can be extended by adding user SQL commands. Entity Framework \cite{Entity_Framework} is Microsoft's ORM solution for the .NET platform. Its capabilities of data evolution support are similar to those of Active Record. Neither of the frameworks is capable of automatization of complex refactoring cases.
+
+
+
+\paragraph{Forward Round-Trip Engineering in Data Evolution} A round-trip approach for data evolution was described in \cite{VanPaesschen:2005to}, which was implemented in the SELF language. This approach proposed a forward-oriented evolution on all application levels in the software application. In contrast with our framework, the round-trip approach does not care about stored data because it is focused only on create, update and delete types of evolution.
+
+A meta-model based approach to data evolution is proposed in\cite{Aboulsamh:MetaModelBasedApproachToIsDataEvolution} and very similar solution for data evolution is proposed, which is based on extended UML meta-model. The solution provides similar capabilities of change of application and database as does our framework. In contrast our work is created with respect to ORM domain and therefore we extended the application meta-model with constructs typical for this domain.
+
+
+\paragraph{Tools for Database Evolution} The MeDEA project \cite{Meda:Main} offers a tool for evolution of both database schema and stored data based on model-driven approach. The project DB-MAIN \cite{Hick:DBMAIN} provides a MDD approach to data evolution on all the levels of software we do. The project DB-MAIN is well documented formally. The PRISM is a research project for data management under schema evolution \cite{PRISM} in contrast with our proposal, and with MeDEA, it extends the SQL command set by so-called schema modification operators which implements the schema evolution.  Very promising solution is Liquibase \cite{Liquibase} a tool for database refactoring and evolution. It is capable to migrate both database schema and stored data. The evolution is described in a form of a XML document which can be interpreted on various databases. 
+
+The difference between these frameworks and our proposal is that each has a different focus. All mentioned projects are aimed to  be used by database administrators; whereas our focus is on entities evolution, which is then propagated to a database with an emphasis on automatization. Our goal is to hide the entire database level from our users.
+
+
+
+
+
 
 \section{Conclusion}
 
-\bibliographystyle{plain}      % basic style, author-year citations
+\bibliographystyle{splncs03}      % basic style, author-year citations
 \bibliography{references}   % name your BibTeX data base
 
 \end{document}
