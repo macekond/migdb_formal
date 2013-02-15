@@ -131,9 +131,11 @@ The evolution of a software is a transformation from one consistent state to ano
 Application is defined as a sequence of classes and it creates the context for all structures used in the software persistent layer:
 \begin{align}
 & \mathbf{Application} = (Class*) \\
-& 	\mathbf{Class} = (label, Property*, Association*) \\
+& 	\mathbf{Class} = (label, Property*, Association*, Inheritance) \\
 & \mathbf{Property} = (label, AppType, DefaultValue, \nonumber \\ & \;\;\;\;  Cardinality, Mandatory) \\
 &	\mathbf{Association} = (label, classRef, startCardinality, endCardinality)  \\
+& \mathbf{Inheritance} = (class, InheritanceType) \\¨
+& \mathbf{InheritanceType} = SINGLETABLE \; | \; TABLE-PER-CLASS \\
 & \mathbf{AppType} = APPSTRING
 \end{align}
 
@@ -175,16 +177,19 @@ The only issue during deleting classes etc. from an application is the class can
 		& renameAssociation(className, oldName, newName, \\ &  \hspace{0.5in}application) \\
 		& renameClass(oldName, newName, application)\\
 		& changeReference(referncedClass, newReferencedClass) \\
-	Application Disassembly 
+		Application Disassembly 
 		& removeProperty(className, propertyName,\\ &  \hspace{0.5in} application) \\
 		& removeAssociation(className, associationName, \\ &  \hspace{0.5in}application) \\
 		& removeClass(className, application)\\
 	Copy Structure
 		& copyProperty(sourceClass, property, targetClass,\\ &  \hspace{0.5in} newName, application)  \\
 		& copyClass(class, newName, application) \\
+	Inheritance manipulation   & setParent(class, parentClass) \\
+		& removeParent(childClass) \\
+		& pushDown(class, property)\\
+		& pullUp(class, property)\\
 	\hline
 	\end{tabular}
-	
 \end{table}
 
 \subsection{Database Model}
@@ -332,10 +337,14 @@ Mapping between basic evolutionary transformations is provided in the shortened 
 	removeAssociation & \textbf{if} $cardinality \leq 1$ \textbf{then}  dropEmptyForeignKey \\ & \hspace{1in} \textbf{else} dropEmptyTable \\
 
 	removeClass & dropEmptyTable\\
+	setParent & \\
+	removeParent & \\
+	pushDown &\\
+	pullUp &\\
 	\hline
 	\end{tabular}
 \end{table}
-The transformations for data-secure removal are used as default removing transformations, although the classic drop- transformations can be used. This should lead to the more careful usage of removing trnasformations.
+The transformations for data-secure removal are used as default removing transformations, although the classic drop- transformations can be used. This should lead to the more careful usage of removing transformations.
 
 \subsection{Advanced Evolutionary Transformations}
 \label{sec:sw-adv-evolution}
@@ -399,6 +408,12 @@ There occur situations when there is a need to merge two classes and the inlinin
 & \; \; \;application)))))) 
 \end{align}
 The interpretation for the database level is more complicated as the transformation copies rows from different sources with different primary key sequences in the new (empty) table. Therefore the primary keys from origin instances has to be replaced by a new ones and all references (foreign keys) has to be updated accordingly. Next the \emph{merge} can be used only if the structure of classes and corresponding tables is the same or if the extra columns (foreign keys) are not constrained, because we are not able to automatically solve the  duplicity of values or missing values.
+
+\subsection{Inheritance Manipulation}
+\begin{align}
+& extractSuperClass(class, parentName, property*) \\
+  & extractCommonSuperClass(firstClass, secondClass, parentName,  property* ) \\
+\end{align}
 
 
 \section{Example of Usage}
