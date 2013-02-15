@@ -148,7 +148,9 @@ Application is defined as a sequence of classes and it creates the context for a
 
 \paragraph{Application type} Application type ($AppType$) represents primitive type in the application. There are usually defined types such as String, Integer, Boolean etc. in contrast there is only one type in our model, because we focus on structural and data changes and type casting operations are not important for us. The only $AppType$ type is called $APPSTRING$.
 
-%TODO consistency
+ There is not allowed multiple ancestors and of course a class can not be its own ancestor cyclically. We also assume there is only one type of inheritance type in the class hierarchy.
+
+
 
 \subsection{Application Manipulation}
 \label{sec:app-evolution}
@@ -181,9 +183,9 @@ The only issue during deleting classes etc. from an application is the class can
 		& removeProperty(className, propertyName,\\ &  \hspace{0.5in} application) \\
 		& removeAssociation(className, associationName, \\ &  \hspace{0.5in}application) \\
 		& removeClass(className, application)\\
-	Copy Structure
-		& copyProperty(sourceClass, property, targetClass,\\ &  \hspace{0.5in} newName, application)  \\
-		& copyClass(class, newName, application) \\
+%	Copy Structure
+%		& copyProperty(sourceClass, property, targetClass,\\ &  \hspace{0.5in} newName, application)  \\
+%		& copyClass(class, newName, application) \\
 	Inheritance manipulation   & setParent(class, parentClass) \\
 		& removeParent(childClass) \\
 		& pushDown(class, property)\\
@@ -222,7 +224,6 @@ The relational database consists of database schema which defines the structure 
 &	\mathbf{Pair} = (Label, Value) 
 \end{align}
 
-%TODO consistency
 
 \subsection{Database Manipulation}
 \label{sec:db-evolution}
@@ -259,7 +260,7 @@ The database consists of two parts - from database schema which defines the stru
 	Copy Structure
 	& copyColumnStructure(sourceTableName,\\ &  \hspace{0.5in} targetTableName,  sourceColumnName, \\ &  \hspace{0.5in} newName, database) \\
 	& copyTableStructure(sourceTable, newTableName, \\ &  \hspace{0.5in} database) \\
-	Copy Strucutre and Values
+	Copy Structure and Values
 	& copyColumn(sourceTable, targetTable, \\
 	& \hspace{0.5in} sourceColumnName, targetColumnName, \\ 
 	& \hspace{0.5in} mapping, database) \\
@@ -314,7 +315,7 @@ The basic evolutionary transformations of the software are based on basic evolut
 
 Mapping between basic evolutionary transformations is provided in the shortened way in table \ref{tab:sw-basic-evolution}, there is the basic application transformation and possible mappings on database level according to to the cardinality.  
 \begin{table}
-	\caption{The mapping between evolution of the application to the database transformations.}
+	\caption{The mapping between evolution of the application and database transformations. The  transformation connected with inheritance are in Sect.\ref{sec:inheritance}. }
 	\label{tab:sw-basic-evolution}
 \centering
 	\begin{tabular}{ll}
@@ -335,12 +336,7 @@ Mapping between basic evolutionary transformations is provided in the shortened 
 	removeProperty & \textbf{if} $cardinality \leq 1$ \textbf{then} dropEmptyColumn  \\ & \hspace{1in}\textbf{else} dropEmptyTable \\
 	
 	removeAssociation & \textbf{if} $cardinality \leq 1$ \textbf{then}  dropEmptyForeignKey \\ & \hspace{1in} \textbf{else} dropEmptyTable \\
-
 	removeClass & dropEmptyTable\\
-	setParent & \\
-	removeParent & \\
-	pushDown &\\
-	pullUp &\\
 	\hline
 	\end{tabular}
 \end{table}
@@ -410,10 +406,29 @@ There occur situations when there is a need to merge two classes and the inlinin
 The interpretation for the database level is more complicated as the transformation copies rows from different sources with different primary key sequences in the new (empty) table. Therefore the primary keys from origin instances has to be replaced by a new ones and all references (foreign keys) has to be updated accordingly. Next the \emph{merge} can be used only if the structure of classes and corresponding tables is the same or if the extra columns (foreign keys) are not constrained, because we are not able to automatically solve the  duplicity of values or missing values.
 
 \subsection{Inheritance Manipulation}
+\label{sec:inheritance}
+The inheritance is important part of object-oriented world. The impact of change of this relationship to the database depends on the type of inheritance mapping similarly as in the case of \emph{moveProperty}. The \emph{setParent} transformation is described as example:
 \begin{align}
-& extractSuperClass(class, parentName, property*) \\
-  & extractCommonSuperClass(firstClass, secondClass, parentName,  property* ) \\
+&\Phi(setParent(childClass, parentClass)) = \nonumber \\
+&= \begin{cases}
+mergeTables(ORM(childClass), ORM(parentClass),\\
+addColumn(column("inheritanceType", DBSTRING, "parentClass", \\ \; \; NOTNULL) ORM(parentClass), \\
+     addColumn(column("inheritanceType", DBSTRING, "childClass", \\ NOTNULL) ORM(childClass), database))) \\
+     \mathbf{if} \; inheritanceType = SINGLETABLE 
+     \\\\
+     addForeignKey(foreignKey("parent", ORM(parentClass), \\
+     \; \; (NOTNULL, UNIQUE)), ORM(childClass), database) \\
+     \mathbf{if} \; inheritanceType = TABLE-PER-CLASS \\ \wedge  
+     isEmpty(ORM(childClass)) \wedge isEmpty(ORM(parentClass))
+ \end{cases}
 \end{align}
+The inverse transformation \emph{removeParent} moves all columns from the parent table to the child table if there are data in the parent table, then the parent can be removed securely. This does not cover the case when the information from parent are not needed in its child, such as transformation has to be defined in several steps. 
+
+Next transformations connected with inheritance are \emph{pushDown} and \emph{pullUp}. Pull up moves a property from child to parent so the \emph{moveProperty} can be used, the mapping of instances is based on the parent-child relationship. It means the column cannot be constrained with $NOTNULL$ constraint if there are more siblings in the hierarchy. The \emph{pushDown} transformation works in opposite direction. The easiest situation is where there no sibling in the hierarchy, then the \emph{moveProperty} can be used, otherwise we assume there are no stored data in the siblings. It is because the change of parent changes affects the instances of its children, when a property is moved only into one children the information consistency is violated, therefore we forbid such transformation, because we cannot anticipate developers intents.
+
+The next two inheritance-related transformations are \emph{extractParent} and \emph{extractCommonParent} serves for extracting a parent class in based on given set of property from a class or from a couple of classes. The transformation is based on the \emph{extractClass} (and \emph{mergeClasses} in the second case). 
+
+
 
 
 \section{Example of Usage}
@@ -520,7 +535,7 @@ Research of data and database evolution is not limited to relational ones only, 
 
 \paragraph{Formal frameworks} A general formal framework for database evolution is defined in \cite{McBrien:formal-framework-transformation}. The framework is based on a set of basic graph transformations which are then extended to transformations of the entity-relationship model. The framework and the defined transformations can be implemented in our proposal too. The contribution of the formal framework is definition of equivalent structures in relational database schemas. Our proposal is aimed to be used in domain of object-oriented languages where the class model is more common than entity-relationship model which is respected in our proposal. 
 
-The formal definition of MDD approach to database schema evolution is proposed in \cite{Aboulsamh:FormalModelingEvolution}, where a changes of database conceptual schema is interpreted on both physical schema and data. In contrast our proposal is aimed to solve the problem of code refactoring and its impact on relational database, next we propose more complex transformations and examine the impact of platform specific constructs (such as foreign keys or constraints) on the evolution. 
+The formal definition of MDD approach to database schema evolution is proposed in \cite{Aboulsamh:FormalModelingEvolution}, where a changes of database conceptual schema is interpreted on both physical schema and data. In contrast our proposal is aimed to solve the problem of code refactoring and its impact on relational database, next we propose more complex transformations (such as \emph{copyProperty} or inheritance-related transformations) and examine the impact of platform specific constructs (such as foreign keys or constraints) on the evolution. 
 
 A categorical framework for migration of object-oriented systems is proposed in \cite{Schulz:CategoricalModel}. This framework defines the refactoring of objects, data and methods, which are the main objectives of the framework. The impact of the object change on a relational database is not considered in the paper as it is aimed at object-oriented systems only.
 
