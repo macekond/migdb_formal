@@ -5,7 +5,6 @@
 \setcounter{page}{1}
 
 \usepackage[dvipdfm]{hyperref}
-
 \usepackage{amssymb}
 \usepackage[fleqn]{amsmath}
 \usepackage{hyperref}
@@ -15,6 +14,7 @@
 \usepackage{subcaption}
 
 \title{Refactoring of Application Using Relational Database}
+
 \author{Ondrej Macek\inst{1}}
 \authorrunning{Ondrej Macek}
 \institute{Czech Technical University in Prague\\
@@ -34,11 +34,11 @@ The change of application source code caused by refactoring affected not only th
 
 \section{Introduction}
 \label{sec:intro}
-The evolution (change) of a software is a common issue during software development. It occurs from many reasons in all phases of software lifecycle. The evolution severity usually depends on number of changes which has to be made and on the number of affected software components. Refactoring \cite{Fowler:Refactoring} is very popular practice in object-oriented environment for evolving the source code and software architecture. The evolution of database schema and stored data is implemented separately from  source code refactoring, although the change of application affects the database too. There exist object-relational mapping (ORM) frameworks, which can help with propagation of evolution from application to database. However these framework are usually not capable to solve complex refactoring cases nor migrate data properly as shown in Sect. \ref{sec:problem}.
+Evolution (change) of a software is a common issue during the software development. It occurs from many reasons in all phases of the software lifecycle. The evolution severity usually depends on number of changes which have to be made and on number of affected software components. Refactoring \cite{Fowler:Refactoring} is very popular practice in object-oriented environment for evolving the source code and software architecture. Evolution of database schema and stored data is implemented separately from  source code refactoring, although the change of application affects the database too. Object-relational mapping (ORM) frameworks can help with propagation of the evolution from an application to a database. However these frameworks are usually not capable to solve complex refactoring cases nor migrate data properly as shown in Sect. \ref{sec:problem}.
 
 %The focus of this paper is in data evolution context of software implemented in object oriented language using relational database. It means that the data evolution affect at least two software components: persistent objects (entities) and the database. The evolution is based on developer's point of view in this paper as it origins in the need to evolve code. This kind of evolution is straightforward in case there are no data stored in the database, because the database schema can be generated according to an evolved code, moreover some object-relational mapping (ORM) frameworks are able to process basic evolutionary transformation on database with stored data. The evolution of an software with ORM become more difficult when there are stored data and when the evolutionary scenario is more complex. The data migration to the new database schema is usually processed manually, which is expensive and error prone.
 
-The problem of application and database evolution is discussed from developers point of view and the formal model of application refactoring and its impact is shown in Sect. \ref{sec:models}. There are introduced basic refactoring cases as well as the complex ones which are created as a sequences of the basic ones. The capabilities of proposed formal models are illustrated on the common refactoring issues in Sect. \ref{sec:case}.
+The problem of application and database evolution is discussed from developers point of view and the formal model of application refactoring and its impact is shown in Sect. \ref{sec:models}. Introduced are basic refactoring cases as well as the complex ones which are created as sequences of the basic ones. Capabilities of the proposed formal models are illustrated in the common refactoring issues in Sect. \ref{sec:case}.
 
 %This paper shows how the application refactoring can be used as the source for database migration. The approach based on changes in code is useful in case when there is no model of database as it is derived directly from code. Next it can help developers to understand impact  of code changes on database. The formal description of code refactoring impact on database and stored data can help with construction of a standalone migration framework or evolutionary extension for existing ORM frameworks.
 
@@ -46,21 +46,21 @@ The problem of application and database evolution is discussed from developers p
 
 \section{Refactoring in Context of ORM} 
 \label{sec:problem}
-A software implemented using an object-oriented language, which uses relational database as a data storage consists of four main components. There is the application itself, the database schema, stored data and the object-relational mapping. The refactoring affects not only the application but the database too as the database has to be evolved when the persistent layer of the application changed to fit the object-relational mapping used in the software. The common current solution is based on capabilities of object-relational mapping frameworks which are capable to create a database schema according to the given source code or model. The process of evolution then proceed in following steps:
+A software implemented by using an object-oriented language, which uses relational database as a data storage, consists of four main components. There is the application itself, the database schema, stored data and the object-relational mapping. The refactoring affects not only the application but the database as well, as the database has to be evolved when the persistent layer of the application changed to fit the object-relational mapping used in the software. The common current solution is based on capabilities of object-relational mapping frameworks which are capable to create a database schema according to the given source code or model. The process of evolution then proceeds in following steps:
 \begin{enumerate}
-	\item The code is refactored (usually using the developers IDE).
+	\item The code is refactored (usually by using the developers IDE).
 	\item The ORM framework generates a new database schema.
 	\item The data are migrated manually (if needed) from the old to the new database.
 \end{enumerate}
-The last step is error-prone as it is processed manually and the prone to error increases with complexity of refactoring. The evolution process require cooperation of a developer and a database administrator or it requires the developer has a knowledge of the database used by the software. The knowledge of the ORM is needed in both cases. Remarkable is the feasibility of data evolution has to be verified for each deployed software instance, because the data can differ. The data and information preservation is crucial issue of database evolution. Next observation is the evolution of the software is defined twice for one software - first for the application then for the database. 
+The last step is error-prone as it is processed manually and the prone to error increases with complexity of refactoring. The evolution process requires cooperation of a developer and a database administrator or it requires the developer to have a knowledge of the database used in the software. The knowledge of the ORM is needed in both cases. Remarkable is the fact that the feasibility of data evolution has to be verified for each deployed software instance, because the data can differ. The data and information preservation is a crucial issue of database evolution. The next observation is the evolution of the software is defined twice for one software - first for the application then for the database. 
 
-\paragraph{Example 1} Let us have only two classes \emph{A} and \emph{B} in the application which are not connected by an association and there are corresponding tables \emph{tab\_a} and \emph{tab\_b} in the database, which contain data. We decide to inline \emph{B} into \emph{A}  during the development. The class \emph{A} contains all properties of \emph{B} and \emph{B} is removed from the application, the database schema is generated by the ORM framework and it contains only the table \emph{tab\_a}'. The data migration has to be created manually - the developer has to define the evolution twice. The mapping between data in \emph{tab\_a} and \emph{tab\_b} has to be provided to merge stored data correctly and impact of this mapping the database has to be verified: is there data which can be lost during inlining and is this lost intentional? 
+\paragraph{Example 1} Let us have only two classes \emph{A} and \emph{B} in the application which are not connected by an association and there are corresponding tables \emph{tab\_a} and \emph{tab\_b} in the database, which contain some data. We decide to inline \emph{B} into \emph{A}  during the development. The class \emph{A} contains all properties of \emph{B} and \emph{B} is removed from the application, the database schema is generated by the ORM framework and it contains only the table \emph{tab\_a}'. The data migration has to be created manually - the developer has to define the evolution twice. The mapping between the data in \emph{tab\_a} and \emph{tab\_b} has to be provided to merge the stored data correctly and the impact of this mapping on the database has to be verified: are there any data which can be lost during inlining and is this lost intentional? 
 
 \subsection{Solution Proposal}
-We believe there exists better solution which automatize the process of database evolution according to the code refactoring. The solution is illustrated in the Fig. \ref{fig:evolution}. It is based on a change in the evolution process which assumes the ORM does not change during the evolution:
+We believe there exists a better solution which automatizes the process of database evolution according to the code refactoring. The solution is illustrated in the Fig. \ref{fig:evolution}. It is based on a change in the evolution process which assumes that the ORM does not change during the evolution:
 \begin{enumerate}
-	\item The evolution of the whole software is defined independently on application or database.
-	\item The evolution is interpreted for application and database.
+	\item The evolution of the whole software is defined independently on the application or the database.
+	\item The evolution is interpreted for the application and the database.
 	\item The evolution is executed.
 \end{enumerate}
 The process can decrease the human mistakes in the evolution process, because there is only one source for the evolution and the evolution is automatically interpreted for the application (as a refactoring) and database (as schema and data migration). The existence of the set of all possible software evolutions $E$ is based on a evolutionary transformations specific for application and database. Each transformation contains conditions of transformation feasibility, thus the feasibility of the evolution can be verified. 
@@ -274,13 +274,14 @@ The database consists of two parts - from database schema which defines the stru
 	\end{tabular}
 \end{table}
 
+\paragraph{Copying Database Elements} The transformations for copying the structure an values of a column or table serve more as helpers for advanced evolution cases, where they are discussed in detail.
 
-\paragraph{Copying Database Elements}The transformations for copying the structure of a column or table serves more as helpers for advanced evolution cases. The \emph{copyColumn} transformation contains a mapping between instances (stored data). The mapping to provides information which value from the source table rows is copied to which row in target table. The mapping is usually defined as: 
-\begin{align}\label{eq:mapping}
-&	mapping : select(ORM(sourceName), database) \nonumber \\ 
-& \;\;\;\;\; \rightarrow  (select(ORM(targetName), database) 
-\end{align}
-The result of the mapping has to respect the constraints on column (e.g. $NULL$ cannot be inserted into a column with $NOTNULL$ constraint defined) The character of transformation depend on the feature of provided mapping. There occurs no data lost if the mapping is surjective.
+%\paragraph{Copying Database Elements}The transformations for copying the structure of a column or table serves more as helpers for advanced evolution cases. The \emph{copyColumn} transformation contains a mapping between instances (stored data). The mapping to provides information which value from the source table rows is copied to which row in target table. The mapping is usually defined as: 
+%\begin{align}\label{eq:mapping}
+%&	mapping : select(ORM(sourceName), database) \nonumber \\ 
+%& \;\;\;\;\; \rightarrow  (select(ORM(targetName), database) 
+%\end{align}
+%The result of the mapping has to respect the constraints on column (e.g. $NULL$ cannot be inserted into a column with $NOTNULL$ constraint defined) The character of transformation depend on the feature of provided mapping. There occurs no data lost if the mapping is surjective.
 
 \paragraph{Data-secure Database Elements Removal} The transformation for remove elements from the database can have fatal impact on the data preservation, therefore the set of transformations is extended by a data secure transformations for removing database elements. These transformations are not part of the SQL standard, although they can be implemented as database functions. These transformations creates a secure way to remove elements from the database as they drops empty structural elements only. 
 
@@ -367,6 +368,12 @@ in case of database the copy of a column or table is created according to proper
  copyTable(ORM(Property), \\ \;\;\; ORM(newName))
  \end{cases}
 \end{align}
+The \emph{copyProperty} transformation gets a mapping between instances (stored data) on imput. The mapping to provides information which value from the source table rows is copied to which row in target table. The mapping is usually defined as: 
+\begin{align}\label{eq:mapping}
+&	mapping : select(ORM(sourceName), database) \nonumber \\ 
+& \;\;\;\;\; \rightarrow  (select(ORM(targetName), database) 
+\end{align}
+However different definitions can be used the only condition is the result of the mapping has to respect the structure of the instances and constraints on column (e.g. $NULL$ cannot be inserted into a column with $NOTNULL$ constraint defined) The character of transformation depend on the feature of provided mapping. There occurs no data lost if the mapping is surjective.
 
 \paragraph{Move Property}
 The $moveProperty$ transformation is based on the $copyProperty$ transformation followed by the $removeProperty$ so its construction is easy. On the other hand special attention has to be paid to the provided mapping of instances, because it can cause data loses. The ideal case is when the mapping is surjective, then the transformation can not cause the lost of data. %On the other hand the situation when the mapping does not provides pairs for all rows in a source table can lead to data loss. 
@@ -560,5 +567,23 @@ The main contribution is the new point of view on the application refactoring. T
 
 \bibliographystyle{splncs03}     
 \bibliography{references}   
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% For the final version of the paper: %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Author information
+%\vspace{4ex}\noindent
+%\textbf{Ondrej Macek} is\dots
+
+
+%% Reception and acceptance information
+%\bigskip
+%\paragraph{Received: Month DD, 20YY; Accepted: Month DD, 20YY.}
+
+%% Insert a blank page at the end if necessary, to keep the page count even
+%\newpage\mbox{}
+%\thispagestyle{empty}
 
 \end{document}
